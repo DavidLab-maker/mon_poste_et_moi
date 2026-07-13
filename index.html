@@ -1,0 +1,2609 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a6b5a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Mon poste & moi — le coach du corps au travail</title>
+<style>
+  :root{
+    --vert:#1a6b5a; --vert-clair:#e8f3f0; --vert-mid:#4a9d8a;
+    --encre:#22302c; --gris:#6b7a76; --fond:#f6f8f7; --blanc:#ffffff;
+    --ambre:#e8a13c; --rouge:#c96a5a; --radius:16px;
+    --ombre:0 2px 12px rgba(34,48,44,.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#dde5e2;color:var(--encre);min-height:100vh;display:flex;justify-content:center}
+  #phone{width:100%;max-width:430px;min-height:100vh;background:var(--fond);display:flex;flex-direction:column;position:relative;box-shadow:0 0 40px rgba(0,0,0,.15)}
+  .screen{display:none;flex:1;flex-direction:column;padding:28px 20px 104px;overflow-y:auto}
+  .screen.active{display:flex}
+  h1{font-size:26px;line-height:1.25;margin-bottom:10px}
+  h2{font-size:20px;margin-bottom:8px}
+  .sub{color:var(--gris);font-size:15px;line-height:1.6;margin-bottom:22px}
+  .btn{display:block;width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(120deg,var(--vert),var(--vert-mid));color:#fff;font-size:17px;font-weight:600;cursor:pointer;transition:transform .1s}
+  .btn:active{transform:scale(.98)}
+  .btn.secondaire{background:var(--vert-clair);color:var(--vert)}
+  .btn.fantome{background:transparent;color:var(--gris);font-weight:500}
+  .btn:disabled{opacity:.4}
+  .carte{background:var(--blanc);border-radius:var(--radius);padding:20px;box-shadow:var(--ombre);margin-bottom:16px}
+  input[type=text]{width:100%;padding:15px;border:1.5px solid #d5dedb;border-radius:12px;font-size:16px;background:#fff}
+  input[type=text]:focus{outline:none;border-color:var(--vert-mid)}
+  label.champ{display:block;font-weight:600;font-size:14px;margin:16px 0 6px}
+  /* choix cartes */
+  .choix{border:2px solid transparent;cursor:pointer;display:flex;align-items:center;gap:14px}
+  .choix .ico{font-size:26px;width:44px;height:44px;background:var(--vert-clair);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .choix .txt b{display:block;font-size:16px}
+  .choix .txt span{font-size:13px;color:var(--gris)}
+  .choix.sel{border-color:var(--vert);background:#f2faf7}
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+  .chip{padding:10px 16px;border-radius:999px;background:#fff;border:1.5px solid #d5dedb;font-size:14.5px;cursor:pointer;user-select:none}
+  .chip.sel{background:linear-gradient(120deg,var(--vert),var(--vert-mid));border-color:transparent;color:#fff}
+  /* échelle */
+  .echelle{display:flex;gap:8px;margin:10px 0 4px}
+  .echelle button{flex:1;padding:13px 0;border-radius:12px;border:1.5px solid #d5dedb;background:#fff;font-size:16px;font-weight:600;cursor:pointer;color:var(--gris)}
+  .echelle button.sel{background:var(--vert);color:#fff;border-color:var(--vert)}
+  .legende{display:flex;justify-content:space-between;font-size:12px;color:var(--gris);margin-bottom:6px}
+  /* barre progression bilan */
+  .prog{height:5px;background:#e0e8e5;border-radius:99px;margin-bottom:22px;overflow:hidden}
+  .prog i{display:block;height:100%;background:linear-gradient(90deg,var(--vert),var(--vert-mid) 70%,var(--ambre));border-radius:99px;transition:width .3s}
+  /* accueil */
+  .entete{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .badge-serie{background:linear-gradient(120deg,#fdf3e7,#fbe4c4);color:#a86a1e;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700}
+  .seance{display:flex;align-items:center;gap:14px;cursor:pointer}
+  .seance .pastille{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;background:linear-gradient(135deg,var(--vert-clair),#f8f0dd)}
+  .seance.faite{opacity:.55}
+  .seance.faite .pastille{background:#d9efe6}
+  .seance .infos{flex:1}
+  .seance .infos b{display:block;font-size:16px}
+  .seance .infos span{font-size:13px;color:var(--gris)}
+  .seance .etat{font-size:13px;font-weight:700;color:var(--vert)}
+  .moment{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin:26px 0 12px;
+    background:linear-gradient(115deg,var(--vert),var(--vert-mid) 65%,var(--ambre));
+    -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;width:fit-content}
+  /* corps interactif (choix des zones) */
+  .corps-zone{cursor:pointer}
+  .corps-zone .forme{fill:#ffffff;fill-opacity:.25;stroke:#9cc4b8;stroke-width:1.8;stroke-dasharray:5,4;transition:all .15s}
+  .corps-zone.zsel .forme{fill:#e05a4b;fill-opacity:.85;stroke:#c94a3b;stroke-dasharray:none}
+  .corps-zone text{font-size:9.5px;fill:var(--gris);pointer-events:none}
+  .corps-zone.zsel text{fill:#c0392b;font-weight:700}
+  .zcase{display:flex;align-items:center;gap:9px;padding:12px 13px;background:#fff;border:1.5px solid #d5dedb;border-radius:12px;font-size:13.5px;font-weight:600;cursor:pointer;user-select:none;transition:all .12s}
+  .zcase.sel{background:#fdecea;border-color:#e05a4b;color:#c0392b}
+  .zcase:active{transform:scale(.97)}
+  /* réalignement éclair, glissé dans le fil du rituel */
+  .mini-neutre{border:1.5px dashed #9cc4b8;background:linear-gradient(100deg,#e8f3f0 20%,#faf0dd);border-radius:13px;
+    padding:10px 14px;text-align:center;font-size:13px;cursor:pointer;user-select:none;margin:0 0 14px;
+    transition:transform .1s;box-shadow:0 1px 6px rgba(34,48,44,.06)}
+  .mini-neutre:active{transform:scale(.98)}
+  .mini-neutre .tg{font-weight:800;letter-spacing:.01em;
+    background:linear-gradient(115deg,var(--vert) 10%,var(--vert-mid) 55%,#c9871f);
+    -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+  .mini-neutre .ss{font-size:11px;color:var(--gris);font-weight:600}
+  /* confettis */
+  #s-fin{position:relative;overflow:hidden}
+  .confetti{position:absolute;top:-14px;border-radius:2px;pointer-events:none;animation:chuteConf linear forwards}
+  @keyframes chuteConf{to{transform:translateY(720px) rotate(680deg)}}
+  /* signature */
+  .signature{font-family:"Segoe Script","Bradley Hand",cursive;font-size:15px;opacity:.95}
+  /* carrousel de l'œil de l'ostéo */
+  #oeil-slides{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:14px;margin-top:8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  #oeil-slides::-webkit-scrollbar{display:none}
+  #oeil-slides > p{flex:0 0 100%;scroll-snap-align:start;font-size:14px;line-height:1.55;color:var(--gris);margin:0}
+  #oeil-dots{display:flex;gap:6px;justify-content:center;margin-top:12px}
+  #oeil-dots span{width:7px;height:7px;border-radius:50%;background:#e6dcc4;transition:background .2s}
+  /* typo de marque */
+  .titre-app{font-size:30px;font-weight:900;letter-spacing:.03em;line-height:1.15;text-transform:uppercase;text-align:center;
+    background:linear-gradient(115deg,#1a6b5a 15%,#4a9d8a 60%,#e8a13c);
+    -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+  .titre-mini{font-weight:900;font-size:16.5px;letter-spacing:.04em;text-transform:uppercase;
+    background:linear-gradient(115deg,#1a6b5a 20%,#4a9d8a 70%,#e8a13c);
+    -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+  .devise{display:flex;gap:8px;justify-content:center;margin:2px 0 18px;flex-wrap:wrap}
+  .devise span{font-size:11px;font-weight:800;letter-spacing:.09em;color:var(--vert);background:var(--vert-clair);border-radius:999px;padding:6px 12px}
+  /* un peu de vie */
+  .carte{animation:apparait .35s ease-out both}
+  @keyframes apparait{from{opacity:0;transform:translateY(8px)}}
+  .seance:active{transform:scale(.98)}
+  .bandeau{background:linear-gradient(135deg,var(--vert),var(--vert-mid));color:#fff;border-radius:var(--radius);padding:14px 15px;margin-bottom:8px}
+  .bandeau b{font-size:15px}
+  .bandeau p{font-size:13.5px;opacity:.94;margin-top:4px;line-height:1.5}
+  /* player */
+  .player-tete{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .fermer{width:38px;height:38px;border-radius:12px;border:none;background:#fff;box-shadow:var(--ombre);font-size:17px;cursor:pointer}
+  .cercle-wrap{display:flex;flex-direction:column;align-items:center;margin:14px 0}
+  .cercle{position:relative;width:210px;height:210px}
+  .cercle svg{transform:rotate(-90deg)}
+  .cercle .temps{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .cercle .temps b{font-size:44px;font-variant-numeric:tabular-nums}
+  .cercle .temps span{font-size:13px;color:var(--gris)}
+  .etape-texte{text-align:center;font-size:18px;line-height:1.5;min-height:84px;padding:0 6px;font-weight:500}
+  .etape-num{text-align:center;color:var(--gris);font-size:13px;margin-bottom:8px}
+  .player-boutons{display:flex;gap:10px;margin-top:18px}
+  .player-boutons .btn{flex:1}
+  /* ressenti */
+  .zone-slider{margin-bottom:18px}
+  .zone-slider .ligne{display:flex;justify-content:space-between;font-size:15px;font-weight:600;margin-bottom:6px}
+  .zone-slider .val{color:var(--vert);font-weight:700}
+  input[type=range]{width:100%;accent-color:var(--vert)}
+  .histo-item{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid #eef2f0;font-size:14.5px}
+  .histo-item:last-child{border:none}
+  .tendance{font-weight:700}
+  .tendance.mieux{color:var(--vert)}
+  .tendance.moins{color:var(--rouge)}
+  /* nav bas */
+  #nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;border-top:1px solid #e6ebe9;display:none;justify-content:space-around;padding:10px 0 max(14px, env(safe-area-inset-bottom));z-index:50}
+  #nav button{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--gris);cursor:pointer;font-weight:600}
+  #nav button.actif{color:var(--vert)}
+  #nav button .n-ico{font-size:21px}
+  .note-legale{font-size:12px;color:var(--gris);line-height:1.5;text-align:center;margin-top:16px;padding:0 8px}
+  .alerte{background:#fdf3e7;border:1px solid #f3ddc0;border-radius:12px;padding:13px;font-size:13.5px;line-height:1.5;color:#7a5a2e;margin-top:14px}
+  .fin-check{font-size:64px;text-align:center;margin:30px 0 10px}
+  /* bouton SOS stress */
+  /* bouton SOS flottant, présent sur toutes les pages */
+  #sos-fab{position:fixed;bottom:100px;right:max(14px, calc(50% - 215px + 14px));border-radius:999px;
+    padding:11px 20px;background:linear-gradient(135deg,#f0806f,#d63f2e);color:#fff;display:none;
+    align-items:center;gap:10px;z-index:70;cursor:pointer;user-select:none;border:2.5px solid #fff;
+    box-shadow:0 5px 16px rgba(214,63,46,.45);animation:pulseSOS 1.5s ease-out infinite;transition:transform .1s}
+  #sos-fab:active{transform:scale(.94)}
+  #sos-fab .sos-ico{font-size:22px;line-height:1}
+  #sos-fab b{font-size:16px;letter-spacing:.06em;line-height:1.1;display:block}
+  #sos-fab span{font-size:11px;font-weight:700;opacity:.95;letter-spacing:.02em;display:block}
+  /* menu SOS (stress / fatigue) */
+  #sos-menu{position:fixed;inset:0;z-index:90;display:none}
+  #sos-menu .fond{position:absolute;inset:0;background:rgba(20,30,27,.45)}
+  #sos-menu .feuille{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;
+    background:var(--fond);border-radius:22px 22px 0 0;padding:22px 20px calc(18px + env(safe-area-inset-bottom));
+    animation:monteSOS .22s ease-out}
+  @keyframes monteSOS{from{transform:translate(-50%,50px);opacity:.4}}
+  @keyframes pulseSOS{0%{box-shadow:0 5px 16px rgba(214,63,46,.45),0 0 0 0 rgba(224,90,75,.5)}70%{box-shadow:0 5px 16px rgba(214,63,46,.45),0 0 0 15px rgba(224,90,75,0)}100%{box-shadow:0 5px 16px rgba(214,63,46,.45),0 0 0 0 rgba(224,90,75,0)}}
+  .centre{text-align:center}
+  .logo-rond{width:74px;height:74px;border-radius:22px;background:linear-gradient(135deg,var(--vert),var(--vert-mid));display:flex;align-items:center;justify-content:center;font-size:36px;margin:40px auto 22px}
+  .profil-ligne{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid #eef2f0;font-size:15px}
+  .profil-ligne span:first-child{color:var(--gris)}
+  .profil-ligne span:last-child{font-weight:600;text-align:right;max-width:60%}
+</style>
+</head>
+<body>
+<div id="phone">
+
+  <!-- ======= ACCUEIL / BIENVENUE ======= -->
+  <section class="screen active" id="s-bienvenue">
+    <div style="display:flex;justify-content:center;margin:36px 0 16px" id="logo-accueil"></div>
+    <h1 class="titre-app">Mon poste &amp; moi</h1>
+    <p class="sub centre" style="margin:10px 0 14px">Votre copilote santé &amp; bien-être au travail.</p>
+    <div class="devise"><span>PRÉVENIR</span><span>BOUGER</span><span>SOULAGER</span></div>
+    <div class="carte" style="display:flex;gap:12px;align-items:center">
+      <div style="width:46px;height:46px;border-radius:50%;background:var(--vert-clair);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🧑‍⚕️</div>
+      <p class="sub" style="margin:0;font-size:13.5px"><b style="color:var(--encre)">Conçue par Claire Betriu, ostéopathe D.O.</b><br>En cabinet libéral depuis 2008 — les conseils donnés en consultation, adaptés à votre journée de travail.</p>
+    </div>
+    <div class="carte">
+      <b>Comment ça marche&nbsp;?</b>
+      <p class="sub" style="margin:8px 0 0">1. Un bilan de 3 minutes sur votre métier, votre poste et vos habitudes.<br>2. Chaque jour, votre rituel guidé : réveil du corps, pauses actives, détente du midi.<br>3. Des conseils concrets pour aménager votre poste de travail.</p>
+    </div>
+    <div style="flex:1"></div>
+    <button class="btn" onclick="allerBilan()">Commencer mon bilan</button>
+    <p class="note-legale">Mon poste &amp; moi est un outil de bien-être et de prévention. Il ne remplace pas l'avis d'un professionnel de santé. En cas de douleur persistante ou inhabituelle, consultez un médecin ou un professionnel qualifié.</p>
+  </section>
+
+  <!-- ======= BILAN (wizard) ======= -->
+  <section class="screen" id="s-bilan">
+    <div class="prog"><i id="bilan-prog" style="width:16%"></i></div>
+    <div id="bilan-etapes"></div>
+  </section>
+
+  <!-- ======= AUJOURD'HUI ======= -->
+  <section class="screen" id="s-accueil">
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px">
+      <span id="logo-mini"></span>
+      <span class="titre-mini" style="font-size:21px">Mon poste &amp; moi</span>
+    </div>
+    <div class="entete">
+      <div><h1 id="salut" style="font-size:19px">Bonjour</h1><p class="sub" id="date-jour" style="margin:0;font-size:13.5px"></p></div>
+      <div class="badge-serie" id="serie">🔥 0 j</div>
+    </div>
+    <div class="bandeau" id="bandeau-conseil" style="margin-top:14px"></div>
+    <div id="programme"></div>
+    <div class="alerte">💡 Une gêne ou une douleur qui persiste malgré les pauses&nbsp;? N'attendez pas&nbsp;: parlez-en à un professionnel de santé.</div>
+  </section>
+
+  <!-- ======= PLAYER SÉQUENCE ======= -->
+  <section class="screen" id="s-player">
+    <div class="player-tete">
+      <button class="fermer" onclick="quitterSeance()">✕</button>
+      <div style="flex:1"><b id="p-titre"></b><br><span style="font-size:13px;color:var(--gris)" id="p-sous"></span></div>
+      <button class="fermer" id="p-voix" onclick="basculerVoix()" title="Voix guide">🔊</button>
+    </div>
+    <p class="etape-num" id="p-num"></p>
+    <div id="p-visuel" style="text-align:center;background:#fff;border-radius:14px;padding:10px;box-shadow:var(--ombre);margin-bottom:6px">
+      <span id="p-visuel-ico" style="font-size:34px">🎬</span>
+      <div style="font-size:11.5px;color:var(--gris)">Démonstration en GIF/vidéo — à venir</div>
+    </div>
+    <div class="cercle-wrap">
+      <div class="cercle">
+        <svg width="210" height="210">
+          <defs><linearGradient id="gradAnneau" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1a6b5a"/><stop offset=".65" stop-color="#4a9d8a"/><stop offset="1" stop-color="#e8a13c"/>
+          </linearGradient></defs>
+          <circle cx="105" cy="105" r="94" fill="none" stroke="#e0e8e5" stroke-width="10"/>
+          <circle id="p-anneau" cx="105" cy="105" r="94" fill="none" stroke="url(#gradAnneau)" stroke-width="10" stroke-linecap="round" stroke-dasharray="590.6" stroke-dashoffset="0"/>
+        </svg>
+        <div class="temps"><b id="p-temps">0:00</b><span>restant</span></div>
+      </div>
+    </div>
+    <div id="p-pos-bloc" style="display:flex;align-items:center;justify-content:center;gap:10px;margin:2px 0 10px"></div>
+    <p class="etape-texte" id="p-texte"></p>
+    <div class="player-boutons">
+      <button class="btn secondaire" id="p-pause" onclick="pauseReprendre()">Pause</button>
+      <button class="btn" onclick="etapeSuivante()">Étape suivante ›</button>
+    </div>
+  </section>
+
+  <!-- ======= FIN DE SÉANCE ======= -->
+  <section class="screen" id="s-fin">
+    <div style="flex:1"></div>
+    <div class="fin-check">✅</div>
+    <h1 class="centre">Bien joué&nbsp;!</h1>
+    <p class="sub centre" id="fin-msg">Votre corps vous dit merci.</p>
+    <div style="flex:1"></div>
+    <button class="btn" onclick="retourAccueil()">Retour à mon programme</button>
+  </section>
+
+  <!-- ======= MON POSTE (aménagement) ======= -->
+  <section class="screen" id="s-poste">
+    <h1>Mon poste de travail</h1>
+    <p class="sub">Vos conseils d'aménagement, d'après votre bilan. Un poste bien réglé travaille pour vous toute la journée.</p>
+    <div id="conseils-poste"></div>
+  </section>
+
+  <!-- ======= CHANGEMENT DE PROGRAMME (activité du jour) ======= -->
+  <section class="screen" id="s-changement">
+    <h1>Changement de programme</h1>
+    <p class="sub">Une activité inhabituelle aujourd'hui ? Choisissez-la : le rituel s'adapte <b>pour aujourd'hui seulement</b>, sans toucher à vos réglages.</p>
+    <div id="liste-changement"></div>
+    <button class="btn fantome" onclick="retourAccueil()">‹ Retour</button>
+  </section>
+
+  <!-- ======= CHOIX DE ZONE À SOULAGER ======= -->
+  <section class="screen" id="s-zones">
+    <h1>Soulager une zone</h1>
+    <p class="sub">Choisissez la zone qui vous tiraille, ou enchaînez vos zones en une seule pause.</p>
+    <div id="liste-zones"></div>
+    <button class="btn fantome" onclick="retourAccueil()">‹ Retour</button>
+  </section>
+
+  <!-- ======= POINT DE LA SEMAINE (suivi des douleurs) ======= -->
+  <section class="screen" id="s-checkin">
+    <h1>Point de la semaine</h1>
+    <p class="sub" id="checkin-sub">1 minute pour mesurer l'évolution de vos tensions — c'est ce qui permet de voir si le rituel et les aménagements fonctionnent vraiment.</p>
+    <div class="carte" id="checkin-form"></div>
+    <h2 style="margin-top:10px">Votre évolution</h2>
+    <div class="carte" id="checkin-histo"><p class="sub" style="margin:0">Premier point cette semaine — il servira de référence.</p></div>
+    <button class="btn fantome" onclick="retourAccueil()">‹ Retour</button>
+  </section>
+
+  <!-- ======= PROFIL ======= -->
+  <section class="screen" id="s-profil">
+    <h1>Mon profil</h1>
+    <p class="sub">Votre programme est construit à partir de ces informations.</p>
+    <div class="carte" id="profil-detail"></div>
+    <div class="carte">
+      <b style="font-size:15px">🔄 Signaler un changement</b>
+      <p class="sub" style="margin:6px 0 10px;font-size:13px">Une nouvelle tension, un poste qui a changé, un état différent ? Mettez à jour la section concernée, sans tout refaire.</p>
+      <div class="chips">
+        <span class="chip" onclick="editerSection('zones')">🎯 Mes tensions</span>
+        <span class="chip" onclick="editerSection('amenagement')">🪑 Mon poste</span>
+        <span class="chip" onclick="editerSection('etat')">⚡ Mon état</span>
+      </div>
+    </div>
+    <button class="btn secondaire" onclick="refaireBilan()">Refaire tout mon bilan</button>
+    <p class="note-legale">Vos données restent sur cet appareil (version prototype). Aucune information n'est transmise à votre employeur.</p>
+  </section>
+
+  <!-- ======= BOUTON SOS FLOTTANT (stress ou coup de fatigue) ======= -->
+  <div id="sos-fab" onclick="ouvrirSOS()" title="SOS — stress ou fatigue">
+    <span class="sos-ico">🆘</span>
+    <div><b>SOS</b><span>stress · fatigue</span></div>
+  </div>
+
+  <!-- ======= MENU SOS ======= -->
+  <div id="sos-menu">
+    <div class="fond" onclick="fermerSOS()"></div>
+    <div class="feuille">
+      <h2 style="text-align:center;margin-bottom:4px">Besoin d'une pause, là maintenant ?</h2>
+      <p class="sub centre" style="margin-bottom:16px;font-size:13.5px">2 minutes suffisent. Choisissez ce qui vous arrive :</p>
+      <div class="carte seance" onclick="fermerSOS();lancerSeance('sos_stress')" style="border:1.5px solid var(--ambre);background:#fdf6ec">
+        <div class="pastille" style="background:#fbe8cf">🧯</div>
+        <div class="infos"><b>Montée de stress</b><span>Contracté-relâché + respiration pour faire redescendre la pression</span></div>
+        <div class="etat" style="color:var(--ambre)">›</div>
+      </div>
+      <div class="carte seance" id="sos-fatigue" onclick="fermerSOS();lancerFatigue()">
+        <div class="pastille">🥱</div>
+        <div class="infos"><b>Coup de fatigue</b><span id="sos-fatigue-desc"></span></div>
+        <div class="etat">›</div>
+      </div>
+      <button class="btn fantome" onclick="fermerSOS()">Annuler</button>
+    </div>
+  </div>
+
+  <!-- ======= NAV ======= -->
+  <nav id="nav">
+    <button id="nav-accueil" class="actif" onclick="montrerOnglet('accueil')"><span class="n-ico">🏠</span>Ma journée</button>
+    <button id="nav-poste" onclick="montrerOnglet('poste')"><span class="n-ico">🪑</span>Mon poste</button>
+    <button id="nav-profil" onclick="montrerOnglet('profil')"><span class="n-ico">👤</span>Profil</button>
+  </nav>
+</div>
+
+<script>
+/* =========================================================
+   MON POSTE & MOI — prototype
+   Contenus à valider/corriger par l'ostéopathe.
+   ========================================================= */
+
+/* ---------- Logo (SVG) ---------- */
+function logoSVG(px){
+  /* La tête ambre + la colonne vertébrale blanche qui ondule : posture, alignement, mouvement. */
+  return `<svg viewBox="0 0 64 64" width="${px}" height="${px}" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="lgM" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a6b5a"/><stop offset="1" stop-color="#4a9d8a"/>
+    </linearGradient></defs>
+    <rect x="2" y="2" width="60" height="60" rx="17" fill="url(#lgM)"/>
+    <circle cx="33" cy="15" r="7" fill="#e8a13c"/>
+    <path d="M33 25 C 23 32, 43 39, 32 51" stroke="#ffffff" stroke-width="6.5" fill="none" stroke-linecap="round"/>
+    <circle cx="33" cy="25" r="2.6" fill="#ffffff"/>
+    <circle cx="27.5" cy="32" r="2.6" fill="#dff0ea"/>
+    <circle cx="36" cy="39.5" r="2.6" fill="#dff0ea"/>
+    <circle cx="32" cy="51" r="2.6" fill="#ffffff"/>
+  </svg>`;
+}
+
+/* ---------- Bibliothèque de séquences (exemples) ---------- */
+const SEQUENCES = {
+  nuque_reveil: {
+    titre:"Libérer nuque & cervicales", ico:"🦒", zone:"nuque / cervicales", duree:"2 min",
+    etapes:[
+      {t:"Asseyez-vous le dos droit, épaules relâchées. Inspirez par le nez, soufflez lentement par la bouche.", s:15},
+      {t:"Inclinez doucement l'oreille droite vers l'épaule droite, sans forcer. Respirez calmement. Puis revenez dans l'axe et répétez lentement ce mouvement.", s:20},
+      {t:"Même chose de l'autre côté : oreille gauche vers l'épaule gauche. Laissez le poids de la tête faire le travail.", s:20},
+      {t:"Rentrez légèrement le menton (comme pour faire un double menton), puis relâchez. Répétez lentement.", s:25},
+      {t:"Rotation des cervicales en amenant le menton d'une épaule à l'autre, très lentement.", s:25},
+      {t:"Terminez : montez les épaules vers les oreilles, tenez 3 secondes, relâchez d'un coup. Trois fois.", s:15},
+    ]},
+  epaules_libres: {
+    titre:"Épaules libres", ico:"🪽", zone:"épaules", duree:"2 min",
+    etapes:[
+      {t:"Debout ou assis le dos droit, mains sur les épaules : faites de grands cercles d'épaules vers l'arrière, lentement.", s:25},
+      {t:"Entrelacez les doigts derrière le dos, tendez doucement les bras et ouvrez la poitrine. Respirez.", s:25},
+      {t:"Amenez le bras droit tendu devant vous, tirez-le doucement vers la poitrine et vers la gauche avec la main gauche.", s:20},
+      {t:"Même étirement avec le bras gauche.", s:20},
+      {t:"Terminez : secouez doucement bras et mains, comme pour vous débarrasser de la tension.", s:15},
+    ]},
+  dos_derouler: {
+    titre:"Dérouler le dos", ico:"🌊", zone:"haut du dos", duree:"2,5 min",
+    etapes:[
+      {t:"Assis au bord de la chaise, mains sur les genoux. Arrondissez lentement le dos en soufflant, menton vers la poitrine.", s:20},
+      {t:"Puis creusez doucement le dos en inspirant, regard vers l'avant, poitrine ouverte. Alternez lentement.", s:30},
+      {t:"Croisez les bras sur la poitrine et tournez doucement le buste à droite, puis à gauche, sans à-coups.", s:30},
+      {t:"Penchez-vous en avant, laissez les bras pendre vers le sol, tête lourde. Respirez profondément.", s:25},
+      {t:"Remontez très lentement, vertèbre par vertèbre, la tête en dernier.", s:20},
+    ]},
+  bas_dos: {
+    titre:"Soulager le bas du dos", ico:"🧘", zone:"bas du dos", duree:"2,5 min",
+    etapes:[
+      {t:"Assis, pieds bien à plat. Basculez lentement le bassin vers l'avant puis vers l'arrière, comme un balancier.", s:30},
+      {t:"Debout, mains sur les hanches : dessinez de grands cercles lents avec le bassin, dans un sens…", s:20},
+      {t:"…puis dans l'autre sens. Gardez les genoux souples.", s:20},
+      {t:"Debout, ramenez un genou vers la poitrine avec les mains, tenez, puis changez de jambe.", s:30},
+      {t:"Terminez debout : grandissez-vous en inspirant, bras vers le ciel, puis relâchez tout en soufflant.", s:20},
+    ]},
+  poignets: {
+    titre:"Pause poignets & mains", ico:"🖐️", zone:"poignets", duree:"1,5 min",
+    etapes:[
+      {t:"Bras tendu devant vous, paume vers le ciel : avec l'autre main, tirez doucement les doigts vers le bas.", s:20},
+      {t:"Même chose paume vers le sol : tirez doucement le dos de la main vers vous. Puis changez de bras.", s:25},
+      {t:"Faites des cercles lents avec les poignets, dans les deux sens.", s:20},
+      {t:"Ouvrez grand les doigts en étoile, puis serrez le poing. Répétez une dizaine de fois.", s:20},
+    ]},
+  reset_1min: {
+    titre:"Recentrage express", ico:"🧭", zone:"posture", duree:"1 min",
+    etapes:[
+      {t:"Debout ou assis : posez les deux pieds bien à plat et sentez leurs appuis au sol.", s:12},
+      {t:"Imaginez un fil qui tire doucement le sommet de votre crâne vers le haut. Grandissez-vous.", s:15},
+      {t:"Relâchez les épaules, desserrez la mâchoire, posez le regard au loin.", s:15},
+      {t:"Prenez trois grandes respirations lentes, en allongeant l'expiration.", s:18},
+    ]},
+  respiration_46: {
+    titre:"Respiration anti-stress", ico:"🌬️", zone:"stress", duree:"2 min",
+    etapes:[
+      {t:"Installez-vous confortablement, dos soutenu, épaules basses. Fermez les yeux si possible.", s:12},
+      {t:"Inspirez par le nez en comptant jusqu'à 4… soufflez lentement par la bouche en comptant jusqu'à 6.", s:30},
+      {t:"Continuez ce rythme 4-6. Sentez le ventre et la poitrine se gonfler à l'inspiration.", s:40},
+      {t:"Dernières respirations : à chaque expiration, sentez le ventre se dégonfler et relâchez un peu plus la nuque, les épaules, les mains.", s:30},
+    ]},
+  sos_stress: {
+    titre:"SOS montée de stress", ico:"🧯", zone:"stress", duree:"2 min",
+    etapes:[
+      {t:"Posez les deux pieds au sol, redressez-vous doucement. On va faire redescendre la pression.", s:10},
+      {t:"Inspirez par le nez en montant les épaules vers les oreilles, le plus haut possible… bloquez 2 secondes… puis relâchez-les d'un coup en soufflant fort par la bouche.", s:15},
+      {t:"Encore : épaules au maximum à l'inspiration… et lâchez tout d'un coup à l'expiration. Répétez à votre rythme.", s:25},
+      {t:"Maintenant, respiration lente : inspirez 4 secondes par le nez… soufflez 6 secondes par la bouche, ventre souple.", s:35},
+      {t:"Continuez ce rythme. À chaque expiration, relâchez un peu plus la mâchoire, les épaules, les mains.", s:25},
+      {t:"Terminez : posez le regard au loin, trois dernières respirations amples. Repartez quand vous êtes prêt·e.", s:15},
+    ]},
+  jambes_circulation: {
+    titre:"Jambes légères", ico:"🦵", zone:"jambes", duree:"2,5 min",
+    etapes:[
+      {t:"Debout, montez lentement sur la pointe des pieds, puis redescendez. Répétez une dizaine de fois.", s:30},
+      {t:"Basculez le poids du corps d'une jambe sur l'autre, en douceur, comme un balancement.", s:20},
+      {t:"Pliez légèrement les genoux puis tendez-les, sans verrouiller. Répétez lentement.", s:25},
+      {t:"Quelques pas sur place en déroulant bien le pied, du talon aux orteils.", s:25},
+      {t:"Pour finir, asseyez-vous et posez la jambe à masser sur l'autre — cheville droite sur le genou gauche, par exemple. Massez le mollet en profondeur, de la cheville vers le genou, pressions lentes et remontantes. Puis changez de jambe.", s:35},
+    ]},
+  hanches: {
+    titre:"Ouvrir les hanches", ico:"🚶", zone:"hanches", duree:"2 min",
+    etapes:[
+      {t:"Debout, faites un grand pas en avant et pliez le genou avant : sentez l'étirement devant la hanche arrière.", s:25},
+      {t:"Changez de jambe. Gardez le buste droit, respirez.", s:25},
+      {t:"Debout, genoux souples, dessinez des cercles avec le bassin, amples et lents.", s:25},
+      {t:"Assis, posez la cheville droite sur le genou gauche et penchez-vous légèrement en avant. Puis changez.", s:35},
+    ]},
+  yeux_focus: {
+    titre:"Reposer les yeux", ico:"👁️", zone:"yeux", duree:"1,5 min",
+    etapes:[
+      {t:"Détournez le regard de l'écran. Fixez un point le plus loin possible (fenêtre, fond de la pièce).", s:20},
+      {t:"Clignez volontairement des yeux une dizaine de fois pour réhydrater.", s:12},
+      {t:"Frottez vos paumes l'une contre l'autre, puis posez-les en coque sur vos yeux fermés. Obscurité, chaleur, détente.", s:30},
+      {t:"Rouvrez doucement. Regardez loin, puis près, puis loin, pour refaire la mise au point.", s:18},
+    ]},
+  recup_charges: {
+    titre:"Récupération après effort", ico:"📦", zone:"bas du dos", duree:"2 min",
+    etapes:[
+      {t:"Debout, pieds écartés largeur de bassin. Penchez-vous doucement en avant, genoux souples, laissez le dos s'allonger.", s:25},
+      {t:"Remontez lentement. Puis mains dans le bas du dos, au niveau des lombaires, ouvrez doucement la poitrine vers le ciel, sans forcer.", s:20},
+      {t:"Étirez le côté droit : bras droit au-dessus de la tête, inclinez-vous vers la gauche. Puis inversez.", s:30},
+      {t:"Terminez par trois grandes respirations, épaules relâchées.", s:20},
+    ]},
+  neutre_30: {
+    titre:"Retour au neutre", ico:"📐", zone:"posture", duree:"30 s",
+    etapes:[
+      {t:"Où que vous soyez — assis, au volant ou debout : roulez lentement le bassin d'avant en arrière, 3 ou 4 fois… puis laissez-le se poser au milieu, en position neutre.", s:12},
+      {t:"Maintenant les épaules : roulez-les vers l'arrière, 3 ou 4 fois… puis laissez-les retomber à leur place, détendues.", s:9},
+      {t:"Et la tête pour finir : un petit « oui »… un petit « non »… 3 ou 4 fois chacun, tout en douceur — et laissez-la s'équilibrer au centre. Vous voilà réaligné·e.", s:11},
+    ]},
+  boost_dynamique: {
+    titre:"Coup de boost", ico:"⚡", zone:"énergie", duree:"2 min",
+    etapes:[
+      {t:"Debout ! On va réveiller la machine en 2 minutes. Commencez par secouer bras et jambes, sans retenue.", s:12},
+      {t:"Montées de genoux sur place, rythme soutenu mais confortable. Respirez largement, le regard droit devant.", s:30},
+      {t:"Grands cercles de bras vers l'arrière, énergiques, en accélérant progressivement.", s:20},
+      {t:"Petites flexions de jambes dynamiques, enchaînées sur un bon rythme — les mini-squats qui réveillent.", s:25},
+      {t:"Boxez doucement dans le vide devant vous, épaules souples : une dizaine de coups de chaque bras.", s:20},
+      {t:"Terminez : trois grandes inspirations toniques par le nez, bras qui montent… souffle actif à la descente. C'est reparti !", s:15},
+    ]},
+  detente_douce: {
+    titre:"Détente douce", ico:"🍃", zone:"récupération", duree:"2 min",
+    etapes:[
+      {t:"Posez-vous un instant, assis si possible. On ralentit tout, en douceur.", s:12},
+      {t:"Étirez lentement la nuque : oreille vers l'épaule, en respirant profondément. Un côté, puis l'autre.", s:30},
+      {t:"Bras vers le ciel à l'inspiration… redescendez-les lentement en soufflant. Trois fois, sans forcer.", s:25},
+      {t:"Penchez-vous doucement en avant, dos rond, laissez le poids partir vers le sol. Respirez.", s:25},
+      {t:"Respiration lente : inspirez 4 secondes… soufflez 6. Sentez les épaules descendre à chaque souffle.", s:30},
+      {t:"Revenez tranquillement. Le système s'est apaisé — repartez en douceur.", s:12},
+    ]},
+  genoux: {
+    titre:"Genoux en douceur", ico:"🦿", zone:"genoux", duree:"2 min",
+    etapes:[
+      {t:"Assis au bord de la chaise : tendez lentement une jambe jusqu'à sentir l'arrière du genou s'étirer, puis reposez. Alternez.", s:30},
+      {t:"Debout, mains en appui : pliez légèrement les genoux puis remontez, sans jamais les verrouiller. Répétez une dizaine de fois.", s:25},
+      {t:"Debout sur une jambe (appui possible), attrapez votre cheville derrière vous : l'étirement se sent devant la cuisse. Puis changez.", s:35},
+      {t:"Terminez par quelques pas souples en déroulant bien le pied — les genoux aiment le mouvement, pas les positions figées.", s:20},
+    ]},
+  marche_consciente: {
+    titre:"Micro-marche active", ico:"👟", zone:"global", duree:"3 min",
+    etapes:[
+      {t:"Levez-vous et marchez : couloir, escalier, tour du bâtiment… L'important est de bouger.", s:60},
+      {t:"En marchant, grandissez-vous, relâchez les épaules, balancez naturellement les bras.", s:60},
+      {t:"Sur la fin, ralentissez et respirez profondément trois fois avant de vous rasseoir.", s:40},
+    ]},
+
+  /* ---------- Les gestes de Claire (dictés au cabinet) ---------- */
+  etirement_ciel: {
+    titre:"Étirement vers le ciel", ico:"🙌", zone:"épaules · poignets", duree:"40 s",
+    etapes:[
+      {t:"Assis ou debout, dos droit : entrelacez les doigts, retournez les paumes vers le ciel et poussez les mains vers le haut, bras tendus. Grandissez-vous en respirant.", s:20},
+      {t:"Relâchez doucement les bras… puis recommencez, en cherchant un peu plus haut à chaque expiration.", s:20},
+    ]},
+  cercles_tete: {
+    titre:"Cercles de tête", ico:"💫", zone:"nuque / cervicales", duree:"40 s",
+    etapes:[
+      {t:"Assis ou debout, dos droit : dessinez de grands cercles lents avec la tête, dans un sens, sans forcer.", s:20},
+      {t:"Puis dans l'autre sens, toujours en douceur, en laissant les épaules détendues.", s:20},
+    ]},
+  cercles_epaules: {
+    titre:"Grands cercles d'épaules", ico:"⭕", zone:"épaules", duree:"40 s",
+    etapes:[
+      {t:"Assis ou debout, mains posées sur les épaules : dessinez cinq grands cercles vers l'arrière, amples et lents.", s:20},
+      {t:"Puis cinq grands cercles vers l'avant, en gardant le dos droit et la respiration régulière.", s:20},
+    ]},
+  poignets_croises: {
+    titre:"Ronds de poignets croisés", ico:"🤝", zone:"poignets", duree:"30 s",
+    etapes:[
+      {t:"Crochetez les doigts des deux mains l'une dans l'autre… et dessinez des cercles avec les deux poignets, souples et réguliers, dans un sens.", s:15},
+      {t:"Puis dans l'autre sens, sans serrer — les poignets restent moelleux.", s:15},
+    ]},
+  etirement_trapeze: {
+    titre:"Étirement du trapèze", ico:"🧣", zone:"nuque / cervicales · épaules", duree:"50 s",
+    etapes:[
+      {t:"Assis ou debout, dos droit : passez la main droite par-dessus la tête et posez-la sur l'oreille gauche. Épaule gauche basse, inclinez doucement la tête vers la droite. Ne tirez pas — le poids du bras suffit. Respirez.", s:25},
+      {t:"Changez de côté : main gauche sur l'oreille droite, épaule droite basse, inclinaison douce vers la gauche. Toujours sans forcer.", s:25},
+    ]},
+  rotation_buste: {
+    titre:"Rotations du buste", ico:"🔃", zone:"haut du dos · bas du dos", duree:"40 s",
+    etapes:[
+      {t:"Assis, dos droit, mains sur les cuisses ou bras croisés : tournez lentement le buste vers la droite, revenez au centre… cinq fois, en respirant.", s:20},
+      {t:"Même chose vers la gauche : cinq rotations lentes, le bassin qui reste stable, le regard qui accompagne.", s:20},
+    ]},
+  ouverture_hanche: {
+    titre:"Ouverture de hanche debout", ico:"🌀", zone:"hanches", duree:"50 s",
+    etapes:[
+      {t:"Debout — tenez-vous au bureau si besoin. Levez le genou droit à hauteur de hanche et dessinez cinq cercles en ouverture vers l'arrière, amples et contrôlés.", s:25},
+      {t:"Changez de jambe : cinq cercles en ouverture avec le genou gauche, buste droit, appui stable.", s:25},
+    ]},
+  ronds_genoux: {
+    titre:"Ronds de genoux", ico:"⚙️", zone:"genoux", duree:"40 s",
+    etapes:[
+      {t:"Debout, genoux souplement fléchis, une main posée sur chaque genou : dessinez des cercles avec les genoux, dans un sens, pour réchauffer l'articulation.", s:20},
+      {t:"Puis dans l'autre sens, toujours en douceur, sans forcer l'amplitude.", s:20},
+    ]},
+  cercles_chevilles: {
+    titre:"Cercles de chevilles", ico:"🦶", zone:"jambes", duree:"50 s",
+    etapes:[
+      {t:"Assis, posez la cheville droite sur le genou gauche et tenez votre pied : dessinez des cercles amples avec la cheville, dans un sens puis dans l'autre.", s:25},
+      {t:"Changez de côté : cheville gauche sur le genou droit — la cheville se délie, la circulation repart.", s:25},
+    ]},
+  pompes_chevilles: {
+    titre:"Pointes & flexions de chevilles", ico:"↕️", zone:"jambes", duree:"30 s",
+    etapes:[
+      {t:"Assis, jambes tendues devant vous : enchaînez pointes de pieds tendues… puis flexions, orteils vers vous. Dix allers-retours réguliers — la pompe qui relance la circulation.", s:30},
+    ]},
+  montees_pointes: {
+    titre:"Montées sur pointes", ico:"🩰", zone:"jambes", duree:"30 s",
+    etapes:[
+      {t:"Debout, appui possible sur le bureau : montez sur la pointe des pieds… redescendez lentement. Dix répétitions, en contrôlant bien la descente.", s:30},
+    ]},
+  plongeon_colonne: {
+    titre:"Le plongeon déroulé", ico:"🐬", zone:"bas du dos · haut du dos", duree:"1 min",
+    etapes:[
+      {t:"Assis, jambes légèrement écartées : plongez doucement le buste vers l'avant, les mains qui descendent entre les jambes vers le sol. Laissez la tête lourde.", s:15},
+      {t:"Remontez en déroulant la colonne, vertèbre par vertèbre, la tête en dernier. Quatre plongeons lents, au rythme de votre respiration.", s:45},
+    ]},
+  respi_4temps: {
+    titre:"Respiration du diaphragme", ico:"🫁", zone:"stress", duree:"1,5 min",
+    etapes:[
+      {t:"Installez-vous, dos droit, épaules souples. On va respirer en quatre temps, pour réveiller le diaphragme et faire baisser la pression.", s:10},
+      {t:"Inspirez en gonflant d'abord le thorax… puis le ventre… et enchaînez l'expiration en vidant le ventre… puis le thorax. Un premier cycle complet, à votre rythme, sans jamais bloquer l'air.", s:20},
+      {t:"Continuez à votre rythme : thorax, ventre à l'inspiration… ventre, thorax à l'expiration. Encore trois cycles complets, de plus en plus amples.", s:50},
+    ]},
+  plexus_solaire: {
+    titre:"Automassage du plexus", ico:"🪷", zone:"stress", duree:"50 s",
+    etapes:[
+      {t:"Repérez le creux du plexus, juste sous la pointe du sternum. Posez-y deux ou trois doigts, à plat.", s:10},
+      {t:"Massez en petits cercles doux, sans appuyer fort, en soufflant longuement à chaque cercle. C'est la zone qui aide le diaphragme à se relâcher.", s:40},
+    ]},
+  massage_trapezes: {
+    titre:"Automassage des trapèzes", ico:"💆", zone:"nuque / cervicales · épaules", duree:"50 s",
+    etapes:[
+      {t:"Placez chaque main derrière le dos, à hauteur des omoplates : attrapez la peau et le muscle du trapèze entre les doigts et la paume.", s:10},
+      {t:"Crochetez… et tractez vers l'avant jusqu'à l'épaule, comme pour faire rouler le muscle sous les doigts. Dix passages, en respirant profondément.", s:40},
+    ]},
+  massage_avant_bras: {
+    titre:"Automassage avant-bras & paumes", ico:"👍", zone:"poignets", duree:"1 min",
+    etapes:[
+      {t:"Paume vers le ciel : avec le pouce de l'autre main, massez en profondeur l'avant-bras, en remontant lentement du coude jusqu'au poignet, ligne par ligne.", s:25},
+      {t:"Terminez par la paume, en appuis circulaires du pouce… puis changez de bras.", s:25},
+      {t:"L'allié des mains qui fourmillent ou fatiguent. Mais si les fourmillements persistent ou vous réveillent la nuit, parlez-en à un professionnel de santé.", s:10},
+    ]},
+  mini_squats: {
+    titre:"Mini-squats réveil", ico:"🏋️", zone:"énergie · jambes", duree:"30 s",
+    etapes:[
+      {t:"Debout, pieds largeur de bassin : fléchissez les genoux comme pour vous asseoir, puis remontez. Dix petits squats, dos droit, à votre rythme — le coup de fouet naturel contre la fatigue.", s:30},
+    ]},
+  dos_rond_creux: {
+    titre:"Dos rond, dos creux", ico:"🐈", zone:"haut du dos · bas du dos", duree:"40 s",
+    etapes:[
+      {t:"Assis, mains sur les genoux : arrondissez le dos en soufflant, du bassin jusqu'au haut du dos, menton vers la poitrine…", s:20},
+      {t:"…puis creusez en inspirant, bassin basculé, poitrine ouverte. Cinq allers-retours fluides, au rythme de la respiration.", s:20},
+    ]},
+  etirement_flancs: {
+    titre:"Inclinaisons latérales", ico:"🌙", zone:"haut du dos · bas du dos", duree:"50 s",
+    etapes:[
+      {t:"Debout, pieds écartés largeur de bassin. Main droite sur la hanche, bras gauche tendu vers le ciel : inclinez-vous vers la droite pour étirer tout le flanc gauche. Respirez.", s:25},
+      {t:"Changez de côté : main gauche sur la hanche, bras droit vers le ciel, inclinaison vers la gauche. Sans casser le buste vers l'avant.", s:25},
+    ]},
+  etirement_triceps: {
+    titre:"Étirement du triceps", ico:"💪", zone:"épaules", duree:"50 s",
+    etapes:[
+      {t:"Laissez tomber la main gauche derrière le dos, entre les omoplates. Avec la main droite, attrapez le coude gauche et inclinez doucement : l'arrière du bras s'étire.", s:25},
+      {t:"Changez de côté : main droite entre les omoplates, la gauche guide le coude. Toujours en douceur, épaules basses.", s:25},
+    ]},
+  etirement_ischios: {
+    titre:"Arrière de jambe étiré", ico:"🙇", zone:"jambes · genoux", duree:"50 s",
+    etapes:[
+      {t:"Assis au bord de la chaise : tendez la jambe droite devant vous, talon au sol, pointe relevée. Descendez doucement le buste vers l'avant — l'étirement se sent derrière le genou et dans le mollet.", s:25},
+      {t:"Changez de jambe : jambe gauche tendue, buste qui plonge en douceur, dos long.", s:25},
+    ]},
+  auto_etreinte: {
+    titre:"L'auto-étreinte en rotation", ico:"🤗", zone:"haut du dos · épaules", duree:"40 s",
+    etapes:[
+      {t:"Croisez les bras devant vous et attrapez vos omoplates, comme pour vous serrer dans vos bras — les omoplates s'écartent.", s:10},
+      {t:"Dans cette position, tournez lentement le buste à droite… puis à gauche. Cinq rotations de chaque côté, en respirant.", s:30},
+    ]},
+  etirement_cervicales: {
+    titre:"Étirement des cervicales", ico:"🌿", zone:"nuque / cervicales", duree:"45 s",
+    etapes:[
+      {t:"Croisez les doigts et posez les mains sur le haut du crâne. Rentrez le menton et laissez venir une légère flexion — sans tirer, le poids des bras suffit.", s:20},
+      {t:"Puis, progressivement, laissez la tête et le haut du dos s'enrouler vers l'avant. Respirez dans l'étirement… et remontez tout doucement.", s:25},
+    ]},
+  mobilite_coudes: {
+    titre:"Flexions-extensions de coudes", ico:"🦾", zone:"coudes", duree:"45 s",
+    etapes:[
+      {t:"Coudes près du corps : pliez les avant-bras en amenant les mains vers les épaules… puis tendez, sans verrouiller. Une dizaine d'allers-retours, fluides.", s:25},
+      {t:"Encore une série de dix, plus ample et plus souple, en relâchant les épaules.", s:20},
+    ]},
+  massage_cervicales: {
+    titre:"Automassage des cervicales", ico:"🤲", zone:"nuque / cervicales", duree:"45 s",
+    etapes:[
+      {t:"Amenez les mains derrière le cou, les doigts qui se rejoignent de part et d'autre de la colonne.", s:10},
+      {t:"Crochetez le muscle du bout des doigts, puis tirez et massez vers l'extérieur, comme pour l'écarter de la colonne. Dix passages, tête souple, en respirant.", s:35},
+    ]},
+  massage_lombaires: {
+    titre:"Automassage des lombaires", ico:"🫸", zone:"bas du dos", duree:"45 s",
+    etapes:[
+      {t:"Placez les paumes de chaque côté de la colonne, tout en bas du dos.", s:10},
+      {t:"Massez en remontant, de bas en haut, par pressions appuyées et circulaires. Recommencez plusieurs fois, en soufflant à chaque montée.", s:35},
+    ]},
+  massage_visage: {
+    titre:"Massage du visage", ico:"😌", zone:"yeux / tête", duree:"1 min",
+    etapes:[
+      {t:"Commencez par les tempes : petits cercles doux du bout des doigts, yeux fermés si possible.", s:15},
+      {t:"Puis au-dessus des sourcils, en lissant vers l'extérieur… ensuite sous les yeux, toujours sans appuyer fort.", s:20},
+      {t:"Descendez le long du nez, puis autour de la bouche jusqu'au menton. Reprenez le trajet complet — trois passages en tout.", s:25},
+    ]},
+};
+
+/* ---------- Position de travail par séquence (et par étape si elle change) ----------
+   Les étapes sont regroupées : au plus UNE transition assis/debout par séance. */
+const POS_SEQ = {
+  nuque_reveil:"assis", epaules_libres:"libre", dos_derouler:"assis", bas_dos:"debout",
+  poignets:"libre", reset_1min:"libre", respiration_46:"assis", sos_stress:"libre",
+  neutre_30:"libre", boost_dynamique:"debout", detente_douce:"assis",
+  jambes_circulation:"debout", hanches:"debout", yeux_focus:"libre",
+  recup_charges:"debout", marche_consciente:"debout", genoux:"debout", reveil_dyn:"libre",
+  etirement_ciel:"libre", cercles_tete:"libre", cercles_epaules:"libre", poignets_croises:"libre",
+  etirement_trapeze:"libre", rotation_buste:"assis", ouverture_hanche:"debout",
+  ronds_genoux:"debout", cercles_chevilles:"assis", pompes_chevilles:"assis", montees_pointes:"debout",
+  plongeon_colonne:"assis", respi_4temps:"libre", plexus_solaire:"libre", massage_trapezes:"libre",
+  massage_avant_bras:"libre", mini_squats:"debout", dos_rond_creux:"assis", etirement_flancs:"debout",
+  etirement_triceps:"libre", etirement_ischios:"assis", auto_etreinte:"libre",
+};
+const POS_ETAPE = {
+  bas_dos:{0:"assis"},              // bascule du bassin assise, puis tout debout
+  hanches:{3:"assis"},              // figure 4 assise en fin de séance
+  genoux:{0:"assis"},               // extension de jambe assise, puis debout
+  jambes_circulation:{4:"assis"},   // massage des mollets assis, en clôture
+};
+function posEtape(seqId, idx){
+  return (POS_ETAPE[seqId] && POS_ETAPE[seqId][idx]) || POS_SEQ[seqId] || "libre";
+}
+const POS_LABEL = { assis:"Assis", debout:"Debout", libre:"Assis ou debout" };
+
+/* Icônes de position, dessinées dans le style de la marque */
+function svgPos(pos, px=42){
+  const defs = `<defs><linearGradient id="lgP" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a6b5a"/><stop offset="1" stop-color="#4a9d8a"/>
+    </linearGradient></defs>
+    <rect x="1.5" y="1.5" width="45" height="45" rx="13" fill="url(#lgP)"/>`;
+  let figure = "";
+  if(pos==="assis"){
+    figure = `
+      <path d="M14.5 15 v20 M14.5 34 h9" stroke="#ffffff" opacity=".45" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="24" cy="13.5" r="4.6" fill="#e8a13c"/>
+      <path d="M24 18.5 v9.5" stroke="#fff" stroke-width="4.2" stroke-linecap="round"/>
+      <path d="M24 28 h8.5" stroke="#fff" stroke-width="4.2" stroke-linecap="round"/>
+      <path d="M32.5 28 v8.5" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`;
+  } else if(pos==="debout"){
+    figure = `
+      <circle cx="24" cy="12.5" r="4.6" fill="#e8a13c"/>
+      <path d="M24 17.5 v13" stroke="#fff" stroke-width="4.2" stroke-linecap="round"/>
+      <path d="M24 21 l-6.5 5.5 M24 21 l6.5 5.5" stroke="#fff" stroke-width="3.6" stroke-linecap="round"/>
+      <path d="M24 30.5 l-5 8.5 M24 30.5 l5 8.5" stroke="#fff" stroke-width="3.8" stroke-linecap="round"/>`;
+  } else {
+    figure = `
+      <circle cx="16" cy="13.5" r="3.8" fill="#e8a13c"/>
+      <path d="M16 17.5 v10" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/>
+      <path d="M16 27.5 l-4 8 M16 27.5 l4 8" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+      <circle cx="33" cy="14.5" r="3.8" fill="#e8a13c"/>
+      <path d="M33 18.5 v7.5" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/>
+      <path d="M33 26 h6" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/>
+      <path d="M39 26 v7" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M27 34.5 v-19" stroke="#ffffff" opacity=".35" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+  }
+  return `<svg viewBox="0 0 48 48" width="${px}" height="${px}" xmlns="http://www.w3.org/2000/svg" fill="none">${defs}${figure}</svg>`;
+}
+
+/* ---------- Profils métier → zones à risque et séquences ---------- */
+const PROFILS = {
+  bureau:   { label:"Travail sur écran", ico:"💻", zones:["nuque/cervicales","épaules","poignets","bas du dos","yeux"],
+              matin:["dos_derouler","nuque_reveil","etirement_ciel","dos_rond_creux"], midi:["marche_consciente","bas_dos","rotation_buste","plongeon_colonne","etirement_flancs"],
+              aprem:["nuque_reveil","epaules_libres","poignets","yeux_focus","etirement_trapeze","cercles_epaules","poignets_croises","cercles_tete","massage_trapezes","pompes_chevilles","massage_avant_bras","auto_etreinte","etirement_ischios","etirement_cervicales","massage_cervicales","massage_visage","mobilite_coudes"] },
+  debout:   { label:"Travail debout / piétinement", ico:"🧍", zones:["jambes","bas du dos","hanches"],
+              matin:["reset_1min","bas_dos","etirement_ciel","ronds_genoux"], midi:["jambes_circulation","hanches","ouverture_hanche","montees_pointes","etirement_flancs"],
+              aprem:["bas_dos","jambes_circulation","cercles_epaules","cercles_chevilles","plongeon_colonne","etirement_ischios","auto_etreinte","massage_lombaires"] },
+  physique: { label:"Port de charges / gestes répétitifs", ico:"🏗️", zones:["bas du dos","épaules","poignets"],
+              matin:["reset_1min","epaules_libres","cercles_epaules","ronds_genoux","mini_squats"], midi:["recup_charges","poignets","etirement_ciel","massage_avant_bras","mobilite_coudes"],
+              aprem:["recup_charges","bas_dos","etirement_trapeze","poignets_croises","massage_trapezes","plongeon_colonne","etirement_triceps","auto_etreinte","massage_lombaires"] },
+  mobile:   { label:"Conduite / déplacements", ico:"🚗", zones:["nuque/cervicales","bas du dos","hanches"],
+              matin:["nuque_reveil","reset_1min","cercles_tete","mini_squats"], midi:["hanches","marche_consciente","ouverture_hanche","pompes_chevilles","etirement_ischios"],
+              aprem:["bas_dos","nuque_reveil","rotation_buste","etirement_trapeze","massage_trapezes","massage_avant_bras","etirement_flancs","etirement_cervicales","massage_lombaires"] },
+};
+
+const ZONES = ["nuque / cervicales","épaules","haut du dos","bas du dos","coudes","poignets","hanches","genoux","jambes","yeux / tête"];
+const SEQ_PAR_ZONE = {
+  "nuque / cervicales":"nuque_reveil","épaules":"epaules_libres","haut du dos":"dos_derouler","bas du dos":"bas_dos",
+  "coudes":"mobilite_coudes","poignets":"poignets","hanches":"hanches","genoux":"genoux","jambes":"jambes_circulation","yeux / tête":"yeux_focus"
+};
+const ZONE_ICO = {
+  "nuque / cervicales":"🦒","épaules":"🪽","haut du dos":"🌊","bas du dos":"🧘",
+  "coudes":"🦾","poignets":"🖐️","hanches":"🚶","genoux":"🦿","jambes":"🦵","yeux / tête":"👁️"
+};
+
+/* ---------- Répertoire de métiers → profil de base + zones prioritaires ---------- */
+const METIERS = [
+  {id:"admin",       l:"Administratif / assistanat",      ico:"🗂️", base:"bureau",   zones:["nuque / cervicales","épaules","poignets"]},
+  {id:"info",        l:"Informatique / digital",          ico:"💻", base:"bureau",   zones:["nuque / cervicales","poignets","yeux / tête"]},
+  {id:"compta",      l:"Comptabilité / finance",          ico:"🧮", base:"bureau",   zones:["nuque / cervicales","bas du dos","yeux / tête"]},
+  {id:"telecons",    l:"Téléconseil / centre d'appels",   ico:"🎧", base:"bureau",   zones:["nuque / cervicales","épaules","haut du dos"]},
+  {id:"crea",        l:"Graphisme / création",            ico:"🎨", base:"bureau",   zones:["poignets","nuque / cervicales","épaules"]},
+  {id:"soin",        l:"Soins / aide à la personne",      ico:"🩺", base:"physique", zones:["bas du dos","épaules","poignets"]},
+  {id:"coiffure",    l:"Coiffure / esthétique",           ico:"✂️", base:"debout",   zones:["épaules","nuque / cervicales","jambes"]},
+  {id:"vente",       l:"Vente / caisse",                  ico:"🛒", base:"debout",   zones:["jambes","bas du dos","poignets"]},
+  {id:"resto",       l:"Restauration / hôtellerie",       ico:"🍽️", base:"debout",   zones:["jambes","bas du dos","épaules"]},
+  {id:"enseignement",l:"Enseignement / formation",        ico:"📚", base:"debout",   zones:["nuque / cervicales","haut du dos","jambes"]},
+  {id:"btp",         l:"BTP / chantier",                  ico:"👷", base:"physique", zones:["bas du dos","épaules","hanches"]},
+  {id:"logistique",  l:"Logistique / manutention",        ico:"📦", base:"physique", zones:["bas du dos","épaules","poignets"]},
+  {id:"artisan",     l:"Artisanat",                       ico:"🔨", base:"physique", zones:["épaules","poignets","bas du dos"]},
+  {id:"chauffeur",   l:"Conduite / livraison",            ico:"🚚", base:"mobile",   zones:["bas du dos","nuque / cervicales","hanches"]},
+  {id:"commercial",  l:"Commercial itinérant",            ico:"💼", base:"mobile",   zones:["nuque / cervicales","bas du dos","hanches"]},
+];
+function metierDe(id){ return METIERS.find(m=>m.id===id); }
+function posteEffectif(b){ return (b.metier && b.metier!=="autre") ? metierDe(b.metier).base : b.poste; }
+
+/* ---------- Bilan d'aménagement du poste (questions par profil) ---------- */
+const AMENAGEMENT = {
+  bureau: [
+    {id:"nb_ecrans", type:"choix", q:"Sur combien d'écrans travaillez-vous ?",
+     options:[{v:"1",l:"Un seul"},{v:"2",l:"Deux"},{v:"3",l:"Trois ou plus"}]},
+    {id:"pos_ecrans", type:"choix", dependsOn:{id:"nb_ecrans",sauf:"1"}, q:"Comment vos écrans sont-ils positionnés ?",
+     options:[
+       {v:"principal_face", l:"Le principal en face de moi, le(s) autre(s) sur le côté"},
+       {v:"symetrique", l:"Côte à côte, aucun vraiment en face",
+        conseil:"Placez l'écran que vous utilisez le plus face à vous, l'autre légèrement incliné vers vous en arc de cercle. Travailler la tête tournée en continu est l'une des premières causes de tensions cervicales."},
+       {v:"variable", l:"Ça dépend des jours / je ne sais pas",
+        conseil:"Prenez ce réflexe simple : l'écran le plus utilisé toujours en face de vous, les autres orientés vers vous en arc de cercle."}]},
+    {id:"ecran_hauteur", q:"Le haut de votre écran principal est-il à la hauteur de vos yeux ?",
+     conseil:"Rehaussez votre écran (support, ou une pile de livres) : le haut de l'écran à hauteur des yeux évite de garder la nuque fléchie des heures durant."},
+    {id:"portable_seul", q:"Travaillez-vous sur un ordinateur portable seul, sans clavier ni écran externes ?", inverse:true,
+     conseil:"Ajoutez un clavier et une souris externes, et surélevez le portable. C'est l'aménagement le plus rentable qui existe pour la nuque et les épaules."},
+    {id:"siege", q:"Votre siège est-il réglable (hauteur et dossier) ?",
+     conseil:"Réglez votre assise : pieds à plat au sol — ajoutez un repose-pieds s'ils ne touchent pas le sol —, genoux à angle droit, bas du dos en contact avec le dossier."},
+    {id:"avant_bras", q:"Vos avant-bras reposent-ils sur le bureau ou les accoudoirs quand vous tapez ?",
+     conseil:"Rapprochez-vous du bureau ou réglez les accoudoirs pour poser les avant-bras : épaules relâchées, poignets dans l'axe."},
+    {id:"lumiere", q:"Votre écran est-il placé sans reflet de fenêtre ni contre-jour ?",
+     conseil:"Placez l'écran perpendiculaire aux fenêtres : moins de reflets, c'est moins de fatigue visuelle et moins de postures compensatoires."},
+    {id:"tel_frequent", q:"Passez-vous régulièrement des appels téléphoniques au travail ?", neutre:true},
+    {id:"tel_casque", dependsOn:{id:"tel_frequent",val:true}, q:"Utilisez-vous un casque ou des écouteurs pour ces appels ?",
+     conseil:"Équipez-vous d'un casque ou d'écouteurs : le combiné coincé entre l'oreille et l'épaule est l'un des pires gestes pour les cervicales, et le tenir à la main immobilise l'épaule et le coude pendant tout l'appel."},
+    {id:"docs_imprimes", q:"Travaillez-vous régulièrement avec des documents imprimés à côté de l'écran ?", neutre:true},
+    {id:"porte_doc", dependsOn:{id:"docs_imprimes",val:true}, q:"Utilisez-vous un porte-document vertical, près de l'écran ?",
+     conseil:"Installez un porte-document vertical entre le clavier et l'écran (ou juste à côté de l'écran) : lire ses documents à plat sur le bureau impose aux cervicales des allers-retours haut-bas répétés toute la journée."},
+  ],
+  debout: [
+    {id:"sol", q:"Disposez-vous d'un sol souple ou d'un tapis anti-fatigue à votre poste ?",
+     conseil:"Un tapis anti-fatigue (ou des semelles amortissantes) réduit nettement la charge sur les jambes et le bas du dos en station debout prolongée."},
+    {id:"chaussures", q:"Portez-vous des chaussures avec un bon amorti et un bon maintien ?",
+     conseil:"Investissez dans des chaussures adaptées à la station debout : c'est votre premier équipement de travail."},
+    {id:"assis_ponctuel", q:"Avez-vous la possibilité de vous asseoir, même brièvement, dans la journée ?",
+     conseil:"Négociez un siège assis-debout ou des moments assis courts : alterner les positions vaut mieux que n'importe quelle « bonne » position tenue."},
+    {id:"hauteur_plan", q:"Votre plan de travail est-il à la bonne hauteur (coudes à angle droit) ?",
+     conseil:"Ajustez selon votre situation : plan trop haut → un marchepied pour vous rehausser ; en position assise → réglez la hauteur de la chaise ; plan trop bas → demandez un siège assis-debout ou surélevez le plan. Trop bas, c'est le dos qui compense ; trop haut, ce sont les épaules."},
+  ],
+  physique: [
+    {id:"aides", q:"Disposez-vous d'aides à la manutention (diable, chariot, lève-charge…) ?",
+     conseil:"Utilisez systématiquement les aides disponibles, et signalez leur absence : c'est le levier n°1 de prévention pour le port de charges."},
+    {id:"hauteur_charge", q:"Les charges à manipuler sont-elles stockées entre la hauteur des genoux et des épaules ?",
+     conseil:"Réorganisez le stockage quand c'est possible : les charges lourdes entre genoux et épaules, jamais au sol ni en hauteur."},
+    {id:"pres_du_corps", q:"Pouvez-vous porter les charges près du corps, sans torsion du buste ?",
+     conseil:"Rapprochez-vous de la charge avant de soulever, pivotez avec les pieds plutôt qu'avec le dos."},
+    {id:"gants", q:"Vos équipements (gants, outils) sont-ils adaptés à vos mains et à la tâche ?",
+     conseil:"Des outils mal dimensionnés surchargent poignets et coudes : demandez du matériel à votre taille."},
+  ],
+  mobile: [
+    {id:"reglage_siege", q:"Votre siège de conduite est-il réglé (soutien lombaire, distance aux pédales) ?",
+     conseil:"Prenez 2 minutes pour régler le siège : bassin au fond, dossier légèrement incliné, soutien lombaire ajusté, volant proche."},
+    {id:"pauses_2h", q:"Faites-vous une pause en sortant du véhicule au moins toutes les 2 heures ?",
+     conseil:"Toutes les 2 heures, sortez du véhicule ne serait-ce que 3 minutes : marchez, grandissez-vous, ouvrez les hanches."},
+    {id:"chargement", q:"Évitez-vous de porter des charges immédiatement après une longue conduite ?",
+     conseil:"Après une longue conduite, le dos est vulnérable : marchez une minute avant de décharger quoi que ce soit."},
+  ],
+};
+function questionsVisibles(poste, eq){
+  eq = eq||{};
+  return (AMENAGEMENT[poste]||[]).filter(q=>{
+    if(!q.dependsOn) return true;
+    const v = eq[q.dependsOn.id];
+    if(q.dependsOn.val!==undefined) return v===q.dependsOn.val;
+    if(q.dependsOn.sauf!==undefined) return v!==undefined && v!==q.dependsOn.sauf;
+    return true;
+  });
+}
+const CONSEILS_TELETRAVAIL = [
+  "En télétravail, recréez un vrai poste : clavier externe, portable surélevé, chaise digne de ce nom — la table du salon n'est pas un bureau.",
+  "Changez de position plus souvent qu'au bureau : à la maison, on bouge naturellement moins (pas de collègues, pas de réunions ailleurs).",
+];
+
+/* ---------- Stockage local (avec repli mémoire) ---------- */
+let memoire = {};
+function sauver(cle,val){ try{ localStorage.setItem("eq_"+cle, JSON.stringify(val)); }catch(e){ memoire[cle]=val; } }
+function lire(cle){ try{ const v=localStorage.getItem("eq_"+cle); return v?JSON.parse(v):(memoire[cle]??null); }catch(e){ return memoire[cle]??null; } }
+
+let profil = lire("profil");
+let checkins = lire("checkins") || [];
+
+/* ---------- Navigation ---------- */
+function montrer(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  // le bouton SOS flotte sur toutes les pages, sauf onboarding, séance en cours et fin de séance
+  const sansSOS = ["s-bienvenue","s-bilan","s-player","s-fin"];
+  const fab = document.getElementById("sos-fab");
+  if(fab) fab.style.display = sansSOS.includes(id) ? "none" : "flex";
+  window.scrollTo(0,0);
+}
+function montrerOnglet(nom){
+  ["accueil","poste","profil"].forEach(n=>{
+    document.getElementById("nav-"+n).classList.toggle("actif", n===nom);
+  });
+  if(nom==="accueil"){ rendreAccueil(); montrer("s-accueil"); }
+  if(nom==="poste"){ rendrePoste(); montrer("s-poste"); }
+  if(nom==="profil"){ rendreProfil(); montrer("s-profil"); }
+}
+function navVisible(v){ document.getElementById("nav").style.display = v?"flex":"none"; }
+
+/* =========================================================
+   BILAN
+   ========================================================= */
+let bilan = {}; let etapeBilan = 0;
+function etapesBilan(){
+  // Bilan allégé : la typologie d'activité suffit (la liste des métiers alourdissait le parcours)
+  const e = ["identite","poste"];
+  if(bilan.poste==="bureau") e.push("lieu");
+  e.push("heures","zones","etat","amenagement");
+  return e;
+}
+
+let editionSeule=false, etapeUnique=null;
+function allerBilan(){ bilan={}; etapeBilan=0; editionSeule=false; etapeUnique=null; rendreBilan(); montrer("s-bilan"); }
+function refaireBilan(){ navVisible(false); allerBilan(); }
+
+/* Édition ciblée : modifier UNE section du bilan (tensions, poste, état) sans tout refaire */
+function editerSection(sec){
+  bilan = JSON.parse(JSON.stringify(profil));
+  editionSeule = true; etapeUnique = sec;
+  navVisible(false); rendreBilan(); montrer("s-bilan");
+}
+function sauverEdition(){
+  profil = {...profil, ...bilan};
+  sauver("profil", profil);
+  sauver("derniere_maj", new Date().toISOString());
+  const retourPoste = etapeUnique==="amenagement";
+  editionSeule=false; etapeUnique=null;
+  navVisible(true); montrerOnglet(retourPoste ? "poste" : "accueil");
+}
+function annulerEdition(){
+  editionSeule=false; etapeUnique=null;
+  navVisible(true); montrerOnglet("accueil");
+}
+function rienASignaler(){
+  sauver("derniere_maj", new Date().toISOString());
+  rendreAccueil();
+}
+
+function rendreBilan(){
+  const conteneur = document.getElementById("bilan-etapes");
+  const EB = etapesBilan();
+  document.getElementById("bilan-prog").style.width = editionSeule ? "100%" : ((etapeBilan+1)/EB.length*100)+"%";
+  const e = etapeUnique || EB[etapeBilan];
+  let html = "";
+
+  if(e==="metier"){
+    html = `<h1>Votre métier</h1><p class="sub">Votre programme sera construit à partir des contraintes types de votre métier.</p>
+      <div class="chips">` +
+      METIERS.map(m=>`<span class="chip ${bilan.metier===m.id?'sel':''}" onclick="bilan.metier='${m.id}';rendreBilan()">${m.ico} ${m.l}</span>`).join("") +
+      `<span class="chip ${bilan.metier==='autre'?'sel':''}" onclick="bilan.metier='autre';rendreBilan()">✏️ Autre métier</span></div>` +
+      (bilan.metier && bilan.metier!=="autre" ? `<p class="sub" style="font-size:13px;margin-top:12px">Zones souvent sollicitées dans ce métier : <b>${metierDe(bilan.metier).zones.join(", ")}</b></p>` : "");
+  }
+  if(e==="lieu"){
+    html = `<h1>Où travaillez-vous le plus souvent&nbsp;?</h1><p class="sub">Le télétravail change souvent l'équipement disponible — vos conseils d'aménagement en tiendront compte.</p>
+      <div class="chips" style="flex-direction:column;align-items:stretch">${[["site","Sur site"],["teletravail","En télétravail"],["mixte","Les deux (mixte)"]].map(([k,l])=>
+        `<span class="chip ${bilan.lieu===k?'sel':''}" style="text-align:center;padding:14px" onclick="bilan.lieu='${k}';rendreBilan()">${l}</span>`).join("")}</div>`;
+  }
+
+  if(e==="identite"){
+    html = `<h1>Faisons connaissance</h1><p class="sub">Ces informations servent uniquement à personnaliser votre programme.</p>
+      <label class="champ">Votre prénom</label>
+      <input type="text" id="in-prenom" value="${bilan.prenom||""}" placeholder="Ex. Claire">
+      <label class="champ">Code entreprise <span style="color:var(--gris);font-weight:400">(facultatif)</span></label>
+      <input type="text" id="in-code" value="${bilan.code||""}" placeholder="Fourni par votre employeur">
+      <p class="sub" style="font-size:13px;margin-top:10px">Si vous utilisez Mon poste &amp; moi via votre entreprise, vos réponses individuelles ne lui sont jamais communiquées.</p>`;
+  }
+  if(e==="poste"){
+    html = `<h1>Votre activité principale</h1><p class="sub">Choisissez ce qui décrit le mieux vos journées de travail.</p>` +
+      Object.entries(PROFILS).map(([k,p])=>`
+        <div class="carte choix ${bilan.poste===k?'sel':''}" onclick="bilan.poste='${k}';rendreBilan()">
+          <div class="ico">${p.ico}</div>
+          <div class="txt"><b>${p.label}</b><span>Zones souvent sollicitées : ${p.zones.slice(0,3).join(", ")}</span></div>
+        </div>`).join("");
+  }
+  if(e==="heures"){
+    html = `<h1>Combien d'heures par jour dans cette position&nbsp;?</h1><p class="sub">En comptant les journées types.</p>
+      <div class="chips">${["Moins de 4 h","4 à 6 h","6 à 8 h","Plus de 8 h"].map(h=>
+        `<span class="chip ${bilan.heures===h?'sel':''}" onclick="bilan.heures='${h}';rendreBilan()">${h}</span>`).join("")}</div>`;
+  }
+  if(e==="zones"){
+    bilan.zones = bilan.zones||[];
+    html = `<h1>Où sentez-vous des tensions&nbsp;?</h1><p class="sub">Touchez les zones concernées sur la silhouette (vue de dos) — même légères ou occasionnelles.</p>
+      ${svgCorps()}
+      <p class="centre sub" style="margin:12px 0 8px;font-size:13.5px">${bilan.zones.length ? "Sélection : <b>"+bilan.zones.join(", ")+"</b>" : "Aucune zone sélectionnée pour l'instant"}</p>
+      <div class="chips" style="justify-content:center">
+        <span class="chip ${bilan.zones.length===0&&bilan.zonesVide?'sel':''}" onclick="bilan.zones=[];bilan.zonesVide=true;rendreBilan()">✨ Aucune tension particulière</span>
+      </div>`;
+  }
+  if(e==="etat"){
+    html = `<h1>Votre état général en ce moment</h1>
+      <label class="champ">Niveau de stress au travail</label>
+      <div class="echelle">${[1,2,3,4,5].map(n=>`<button class="${bilan.stress===n?'sel':''}" onclick="bilan.stress=${n};rendreBilan()">${n}</button>`).join("")}</div>
+      <div class="legende"><span>très calme</span><span>très stressé·e</span></div>
+      <label class="champ">Niveau de fatigue en fin de journée</label>
+      <div class="echelle">${[1,2,3,4,5].map(n=>`<button class="${bilan.fatigue===n?'sel':''}" onclick="bilan.fatigue=${n};rendreBilan()">${n}</button>`).join("")}</div>
+      <div class="legende"><span>en forme</span><span>épuisé·e</span></div>`;
+  }
+  if(e==="amenagement"){
+    bilan.equipement = bilan.equipement||{};
+    const qs = questionsVisibles(bilan.poste, bilan.equipement);
+    html = `<h1>Votre poste de travail</h1><p class="sub">Quelques questions sur votre équipement${bilan.lieu==="teletravail"?" (pensez à votre installation à la maison)":bilan.lieu==="mixte"?" (pensez à votre installation la plus fréquente)":""}. Vos conseils d'aménagement en découleront.</p>` +
+      qs.map(q=>{
+        let choix;
+        if(q.type==="choix"){
+          choix = q.options.map(o=>
+            `<span class="chip ${bilan.equipement[q.id]===o.v?'sel':''}" onclick="repondreEquip('${q.id}','${o.v}')">${o.l}</span>`).join("");
+        } else {
+          choix = `<span class="chip ${bilan.equipement[q.id]===true?'sel':''}" onclick="repondreEquip('${q.id}',true)">Oui</span>
+                   <span class="chip ${bilan.equipement[q.id]===false?'sel':''}" onclick="repondreEquip('${q.id}',false)">Non</span>`;
+        }
+        return `<div class="carte" style="padding:14px">
+          <p style="font-size:15px;font-weight:600;margin-bottom:10px">${q.q}</p>
+          <div class="chips">${choix}</div>
+        </div>`;
+      }).join("");
+  }
+
+  if(editionSeule){
+    html += `<div style="flex:1;min-height:20px"></div>
+      <button class="btn" id="btn-continuer" onclick="sauverEdition()">Enregistrer ✔</button>
+      <button class="btn fantome" onclick="annulerEdition()">Annuler</button>`;
+  } else {
+    const derniere = etapeBilan===EB.length-1;
+    html += `<div style="flex:1;min-height:20px"></div>
+      <button class="btn" id="btn-continuer" onclick="bilanSuivant()">${derniere?"Créer mon programme ✨":"Continuer"}</button>`;
+    if(etapeBilan>0) html += `<button class="btn fantome" onclick="etapeBilan--;rendreBilan()">‹ Retour</button>`;
+  }
+  conteneur.innerHTML = html;
+  majBoutonBilan();
+}
+/* ---------- Silhouette interactive (vue de dos) ---------- */
+function svgCorps(){
+  const Z = bilan.zones||[];
+  const zone=(nom,formes,lx,ly,label)=>`<g class="corps-zone ${Z.includes(nom)?'zsel':''}" onclick="basculeZone('${nom}')">${formes}<text x="${lx}" y="${ly}" text-anchor="middle">${label}</text></g>`;
+  return `<svg viewBox="0 0 220 285" style="width:80%;max-width:250px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
+    <g fill="#dde8e4">
+      <circle cx="110" cy="34" r="22"/>
+      <path d="M88 58 q22 -8 44 0 l8 62 q2 34 -8 46 h-44 q-10 -12 -8 -46 Z"/>
+      <path d="M86 64 q-18 10 -22 44 l-5 38 12 3 9 -40 z"/>
+      <path d="M134 64 q18 10 22 44 l5 38 -12 3 -9 -40 z"/>
+      <rect x="88" y="166" width="18" height="88" rx="9"/>
+      <rect x="114" y="166" width="18" height="88" rx="9"/>
+    </g>
+    ${zone("yeux / tête", `<circle class="forme" cx="110" cy="32" r="18"/>`,110,10,"tête / yeux")}
+    ${zone("nuque / cervicales", `<rect class="forme" x="97" y="50" width="26" height="15" rx="6"/>`,163,60,"nuque")}
+    ${zone("épaules", `<ellipse class="forme" cx="82" cy="72" rx="16" ry="10"/><ellipse class="forme" cx="138" cy="72" rx="16" ry="10"/>`,40,60,"épaules")}
+    ${zone("haut du dos", `<rect class="forme" x="90" y="86" width="40" height="30" rx="8"/>`,110,104,"haut dos")}
+    ${zone("bas du dos", `<rect class="forme" x="92" y="118" width="36" height="24" rx="8"/>`,110,133,"bas dos")}
+    ${zone("hanches", `<rect class="forme" x="87" y="144" width="46" height="19" rx="9"/>`,110,157,"hanches")}
+    ${zone("coudes", `<circle class="forme" cx="63" cy="108" r="10"/><circle class="forme" cx="157" cy="108" r="10"/>`,190,112,"coudes")}
+    ${zone("poignets", `<circle class="forme" cx="56" cy="152" r="11"/><circle class="forme" cx="164" cy="152" r="11"/>`,56,177,"poignets")}
+    ${zone("jambes", `<rect class="forme" x="88" y="170" width="18" height="26" rx="8"/><rect class="forme" x="114" y="170" width="18" height="26" rx="8"/><rect class="forme" x="88" y="222" width="18" height="30" rx="8"/><rect class="forme" x="114" y="222" width="18" height="30" rx="8"/>`,110,272,"jambes")}
+    ${zone("genoux", `<circle class="forme" cx="97" cy="208" r="11"/><circle class="forme" cx="123" cy="208" r="11"/>`,168,212,"genoux")}
+  </svg>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+    ${ZONES.map(z=>`<div class="zcase ${Z.includes(z)?'sel':''}" onclick="basculeZone('${z}')">
+      <span style="font-size:18px">${ZONE_ICO[z]||"•"}</span><span style="flex:1">${z}</span>
+      <span style="font-size:15px">${Z.includes(z)?"🔴":"⚪"}</span>
+    </div>`).join("")}
+  </div>`;
+}
+
+function repondreEquip(id,val){
+  bilan.equipement[id]=val;
+  // purge les réponses aux questions devenues invisibles
+  const visibles = new Set(questionsVisibles(bilan.poste,bilan.equipement).map(q=>q.id));
+  Object.keys(bilan.equipement).forEach(k=>{ if(!visibles.has(k)) delete bilan.equipement[k]; });
+  rendreBilan();
+}
+function basculeZone(z){ bilan.zonesVide=false; const i=bilan.zones.indexOf(z); i>=0?bilan.zones.splice(i,1):bilan.zones.push(z); rendreBilan(); }
+function majBoutonBilan(){
+  const e = etapeUnique || etapesBilan()[etapeBilan]; let ok=true;
+  if(e==="identite"){ const el=document.getElementById("in-prenom"); ok = el && el.value.trim().length>0; }
+  if(e==="metier") ok = !!bilan.metier;
+  if(e==="poste") ok = !!bilan.poste;
+  if(e==="lieu") ok = !!bilan.lieu;
+  if(e==="heures") ok = !!bilan.heures;
+  if(e==="etat") ok = bilan.stress && bilan.fatigue;
+  if(e==="amenagement"){ const qs=questionsVisibles(posteEffectif(bilan),bilan.equipement); ok = qs.every(q=> q.type==="choix" ? typeof (bilan.equipement||{})[q.id]==="string" : typeof (bilan.equipement||{})[q.id]==="boolean"); }
+  const b=document.getElementById("btn-continuer"); if(b) b.disabled=!ok;
+}
+document.addEventListener("input", ev=>{ if(ev.target.id==="in-prenom") majBoutonBilan(); });
+
+function bilanSuivant(){
+  const EB=etapesBilan();
+  const e=EB[etapeBilan];
+  if(e==="identite"){ bilan.prenom=document.getElementById("in-prenom").value.trim(); bilan.code=document.getElementById("in-code").value.trim(); }
+  if(e==="metier" && bilan.metier!=="autre"){ bilan.poste = metierDe(bilan.metier).base; }
+  if(etapeBilan<etapesBilan().length-1){ etapeBilan++; rendreBilan(); }
+  else {
+    profil = {...bilan, cree: new Date().toISOString()};
+    sauver("profil", profil);
+    sauver("derniere_maj", new Date().toISOString());
+    navVisible(true); montrerOnglet("accueil");
+  }
+}
+
+/* =========================================================
+   GÉNÉRATION DU PROGRAMME DU JOUR
+   ========================================================= */
+/* Réveil du corps : échauffement multi-zones construit selon le métier */
+const REVEIL_BASE = {
+  bureau:["dos_derouler","nuque_reveil","epaules_libres"],
+  debout:["bas_dos","jambes_circulation","hanches"],
+  physique:["bas_dos","epaules_libres","hanches"],
+  mobile:["nuque_reveil","bas_dos","hanches"],
+};
+function construireReveil(jour){
+  const m = profil.metier && profil.metier!=="autre" ? metierDe(profil.metier) : null;
+  let sources = m ? m.zones.map(z=>SEQ_PAR_ZONE[z]).filter(Boolean) : [];
+  if(sources.length<3) sources = REVEIL_BASE[posteDuJour()]||REVEIL_BASE.bureau;
+  sources = sources.slice(0,3);
+  const etapes = [{t:"En position debout ou assise : grandissez-vous, inspirez profondément par le nez… soufflez lentement par la bouche. On réveille le corps en douceur.", s:12}];
+  sources.forEach(id=>{
+    const s = SEQUENCES[id];
+    const idx = jour % Math.min(2, s.etapes.length);
+    etapes.push({...s.etapes[idx], pos: posEtape(id, idx)});
+  });
+  etapes.push({t:"Terminez : trois grandes respirations, épaules relâchées. Votre corps est prêt — bonne journée !", s:14});
+  const total = etapes.reduce((a,e)=>a+e.s,0);
+  SEQUENCES.reveil_dyn = {titre:"Réveil du corps", ico:"☀️", zone:"multi-zones",
+    duree:(total/60).toFixed(1).replace(".",",")+" min", etapes};
+  return "reveil_dyn";
+}
+
+/* Changement de programme : activité ponctuelle pour AUJOURD'HUI seulement.
+   Le profil enregistré (bilan, équipement, zones) reste intact ; demain, retour à la normale. */
+function posteDuJour(){ return lire("postej_"+clesJour()) || profil.poste; }
+function choisirPosteJour(k){ sauver("postej_"+clesJour(), k); navVisible(true); montrerOnglet("accueil"); }
+function annulerPosteJour(){ sauver("postej_"+clesJour(), null); navVisible(true); montrerOnglet("accueil"); }
+function ouvrirChangement(){
+  const pjour = posteDuJour();
+  const enChangement = pjour !== profil.poste;
+  let html = "";
+  if(enChangement){
+    html += `<div class="carte" style="border-left:4px solid var(--ambre);background:#fffaf2;padding:14px 16px">
+        <p class="sub" style="margin:0;font-size:13px">Aujourd'hui : <b>${PROFILS[pjour].ico} ${PROFILS[pjour].label}</b> — au lieu de ${PROFILS[profil.poste].label}.</p>
+      </div>
+      <div class="carte seance" onclick="annulerPosteJour()" style="border:1.5px solid var(--vert-mid);background:#f2faf7">
+        <div class="pastille">↩️</div>
+        <div class="infos"><b>Revenir à mon activité habituelle</b><span>${PROFILS[profil.poste].ico} ${PROFILS[profil.poste].label}</span></div>
+        <div class="etat">›</div>
+      </div>
+      <p class="moment">Ou une autre activité</p>`;
+  }
+  html += Object.entries(PROFILS)
+    .filter(([k])=>k!==pjour && k!==profil.poste)
+    .map(([k,p])=>`<div class="carte seance" onclick="choisirPosteJour('${k}')">
+        <div class="pastille">${p.ico}</div>
+        <div class="infos"><b>${p.label}</b><span>Rituel du jour adapté : ${p.zones.slice(0,3).join(", ")}</span></div>
+        <div class="etat">Choisir ›</div>
+      </div>`).join("");
+  document.getElementById("liste-changement").innerHTML = html;
+  navVisible(false); montrer("s-changement");
+}
+
+/* Lieu du jour : fixe pour site/télétravail purs, à cocher chaque jour si mixte */
+function lieuDuJour(){
+  if(profil.lieu==="teletravail") return "teletravail";
+  if(profil.lieu==="mixte") return lire("lieuj_"+clesJour()) || "site";
+  return "site";
+}
+function choisirLieuJour(l){ sauver("lieuj_"+clesJour(), l); rendreAccueil(); }
+
+/* =========================================================
+   MOTEUR DE COCKTAILS — les pauses « sur place » sont composées
+   chaque jour en piochant 2-3 gestes dans toute la bibliothèque.
+   Déterministe (même mix toute la journée), quasi jamais identique
+   d'un jour à l'autre, et budget total plafonné à ~12 min/jour.
+   ========================================================= */
+function rngJour(seed){
+  let a = seed>>>0;
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a>>>15), 1 | a);
+    t = (t + Math.imul(t ^ (t>>>7), 61 | t)) ^ t;
+    return ((t ^ (t>>>14)) >>> 0) / 4294967296;
+  };
+}
+function dureeSeq(id){ const s=SEQUENCES[id]; return s ? s.etapes.reduce((a,e)=>a+e.s,0) : 0; }
+
+function composerMix(jour, slot, pool, premier, exclure){
+  const r = rngJour(jour*101 + slot*17 + 5);
+  let dispo = pool.filter(id=>!(exclure||[]).includes(id) && dureeSeq(id)<=135);
+  const choisis = []; let total = 0;
+  if(premier && SEQUENCES[premier]){
+    choisis.push(premier); total += dureeSeq(premier);
+    dispo = dispo.filter(id=>id!==premier);
+  }
+  let garde = 0;
+  while(total < 95 && choisis.length < 3 && dispo.length && garde < 30){
+    garde++;
+    const ix = Math.floor(r()*dispo.length);
+    const cand = dispo[ix]; dispo.splice(ix,1);
+    if(total + dureeSeq(cand) <= 135){ choisis.push(cand); total += dureeSeq(cand); }
+  }
+  if(!choisis.length) choisis.push(pool[jour % pool.length]);
+  // regrouper par position (assis → au choix → debout) : 1 transition max
+  const rang = {assis:0, libre:1, debout:2};
+  choisis.sort((a,b)=>(rang[POS_SEQ[a]||"libre"]) - (rang[POS_SEQ[b]||"libre"]));
+  const etapes=[], titres=[], zones=new Set();
+  choisis.forEach(id=>{
+    const s = SEQUENCES[id];
+    titres.push(s.titre);
+    (s.zone||"").split("·").forEach(z=>{ z=z.trim(); if(z) zones.add(z); });
+    s.etapes.forEach((e,i)=>etapes.push({...e, pos: posEtape(id,i)}));
+  });
+  const tot = etapes.reduce((a,e)=>a+e.s,0);
+  const mid = "mix_"+slot;
+  SEQUENCES[mid] = {
+    titre: choisis.length>1 ? "Cocktail : "+titres.join(" + ") : titres[0],
+    ico:"🎲", zone:[...zones].slice(0,3).join(" · "),
+    duree:(tot/60).toFixed(1).replace(".",",")+" min", etapes, _src:choisis
+  };
+  return mid;
+}
+
+function programmeDuJour(){
+  /* LE RITUEL DU JOUR — le même squelette pour tous, adapté au métier,
+     même sans douleur déclarée :
+     1. Réveil du corps (échauffement léger, adapté au métier)
+     2. Matinée : pause active sur place (zone prioritaire)
+     3. Repas : détente / baisse de stress
+     4. Après-midi : pause déplacement & mobilité
+     5. Fin d'après-midi : pause active sur place (2e zone)   */
+  const pj = posteDuJour(); // activité du jour (ponctuellement différente du profil enregistré)
+  const p = PROFILS[pj];
+  const d = new Date();
+  const jour = Math.floor((d - new Date(d.getFullYear(),0,0)) / 864e5); // jour de l'année : la rotation ne se répète pas chaque semaine
+  // zones prioritaires : celles déclarées par l'utilisateur, sinon les zones types de son métier
+  const m = profil.metier && profil.metier!=="autre" ? metierDe(profil.metier) : null;
+  const zonesSource = (profil.zones&&profil.zones.length) ? profil.zones : (m ? m.zones : []);
+  const zonesSeq = zonesSource.map(z=>SEQ_PAR_ZONE[z]).filter(Boolean);
+  const DEPLACEMENT = ["marche_consciente","jambes_circulation","hanches"];
+  const tt = (pj==="bureau") && lieuDuJour()==="teletravail";
+
+  /* Anti-lassitude : les deux pauses « sur place » sont des COCKTAILS composés
+     chaque jour (2-3 gestes piochés dans toute la bibliothèque du profil).
+     La zone déclarée ouvre le cocktail du matin les jours pairs, celui de
+     l'après-midi les jours impairs : elle est servie chaque jour, mais jamais
+     dans le même mélange. Budget total : ~10-12 minutes. */
+  const vivier = [...new Set([...zonesSeq, ...p.midi, ...p.aprem, ...p.matin])].filter(id=>SEQUENCES[id]);
+  const deplJour = DEPLACEMENT[(jour + (tt?1:0)) % DEPLACEMENT.length];
+  const zoneJour = zonesSeq.length ? zonesSeq[(jour>>1) % zonesSeq.length] : null;
+  const poolMix = vivier.filter(id=>!DEPLACEMENT.includes(id));
+
+  const mixAm = composerMix(jour, "am", poolMix, (jour%2===0) ? zoneJour : null, [deplJour]);
+  const mixPm = composerMix(jour, "pm", poolMix, (jour%2===1) ? zoneJour : null,
+                            [deplJour, ...(SEQUENCES.mix_am ? SEQUENCES.mix_am._src : [])]);
+
+  /* En télétravail : plus de marche, de déplacement et de mobilité,
+     moins de gestion du stress (moins de facteurs aggravants qu'au bureau). */
+  const prog = [
+    {moment:"☀️ Réveil du corps — multi-zones", id: construireReveil(jour)},
+    {moment:"🎯 Matinée — pause active sur place", id: mixAm},
+    tt ? {moment:"🍽️ Pause repas — sortez marcher", id:"marche_consciente"}
+       : {moment:"🍽️ Pause repas — on relâche", id: ["sos_stress","respiration_46","respi_4temps","plexus_solaire"][jour % 4]},
+    {moment:"🚶 Après-midi — on bouge", id: deplJour},
+    tt && profil.stress>=4
+       ? {moment:"🧘 Fin d'après-midi — on souffle", id:"respiration_46"}
+       : {moment:"🧘 Fin d'après-midi — sur place", id: mixPm},
+  ];
+  return prog;
+}
+
+function clesJour(){ return new Date().toISOString().slice(0,10); }
+function idsDu(dk){ return (lire("fait_"+dk)||[]).map(x=>typeof x==="string"?x:x.id); }
+function faitesAujourdhui(){ return idsDu(clesJour()); }
+function marquerFaite(id){
+  const l = lire("fait_"+clesJour())||[];
+  if(!l.some(x=>(typeof x==="string"?x:x.id)===id)) l.push({id:id, t:new Date().toISOString()});
+  sauver("fait_"+clesJour(), l); majSerie();
+}
+function dernierePause(){
+  const l = lire("fait_"+clesJour())||[];
+  const ts = l.map(x=>x.t).filter(Boolean).map(t=>new Date(t).getTime());
+  return ts.length ? Math.max(...ts) : null;
+}
+function majSerie(){
+  let n=0; const d=new Date();
+  for(let i=0;i<60;i++){ const k=new Date(d-864e5*i).toISOString().slice(0,10);
+    if(idsDu(k).length>0) n++; else if(i>0) break; }
+  sauver("serie", n); return n;
+}
+
+/* ---------- Score de prévention (0-100) ----------
+   60 pts : jusqu'à 3 micro-pauses (20 chacune)
+   10 pts : variété (au moins 1 mobilité ET 1 anti-stress)
+   30 pts : régularité (3 pts par jour consécutif, plafonné) */
+const IDS_STRESS = new Set(["respiration_46","sos_stress","detente_douce","respi_4temps","plexus_solaire"]);
+function scoreBase(dk){
+  const u = [...new Set(idsDu(dk))];
+  let p = Math.min(u.length,3)*20;
+  const s = u.some(id=>IDS_STRESS.has(id)), m = u.some(id=>!IDS_STRESS.has(id));
+  if(s&&m) p += 10;
+  return p;
+}
+function serieAu(dk){
+  let n=0; const base=new Date(dk+"T12:00:00Z");
+  for(let i=0;i<60;i++){ const k=new Date(base-864e5*i).toISOString().slice(0,10);
+    if(idsDu(k).length>0) n++; else if(i>0) break; }
+  return n;
+}
+function scoreTotal(dk){ return Math.min(100, scoreBase(dk)+Math.min(serieAu(dk)*3,30)); }
+function barresScores(){
+  let out=""; const w=25, gap=5; const JOURS=["D","L","M","M","J","V","S"];
+  for(let i=6;i>=0;i--){
+    const d=new Date(Date.now()-i*864e5), k=d.toISOString().slice(0,10);
+    const s=scoreTotal(k), h=Math.max(3, s*0.38), x=(6-i)*(w+gap)+2, y=44-h;
+    out += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="${i===0?'url(#gradBarre)':'#bcd8cf'}"/>
+            <text x="${x+w/2}" y="55" font-size="8.5" text-anchor="middle" fill="#6b7a76" font-family="sans-serif">${JOURS[d.getDay()]}</text>`;
+  }
+  return `<svg viewBox="0 0 212 58" style="width:100%;margin-top:10px" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="gradBarre" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#1a6b5a"/><stop offset=".7" stop-color="#4a9d8a"/><stop offset="1" stop-color="#e8a13c"/>
+    </linearGradient></defs>${out}</svg>`;
+}
+
+/* ---------- Lien douleurs déclarées ↔ défauts du poste ----------
+   Chaque défaut d'aménagement est relié aux zones qu'il sollicite. */
+const LIEN_ZONES = {
+  pos_ecrans:["nuque / cervicales","yeux / tête"], ecran_hauteur:["nuque / cervicales","yeux / tête"],
+  portable_seul:["nuque / cervicales","épaules"], siege:["bas du dos"],
+  avant_bras:["épaules","poignets"], lumiere:["yeux / tête","nuque / cervicales"],
+  tel_casque:["nuque / cervicales","épaules","coudes","poignets"], porte_doc:["nuque / cervicales"],
+  sol:["jambes","genoux","bas du dos"], chaussures:["jambes","genoux","bas du dos"], assis_ponctuel:["jambes","bas du dos","genoux"],
+  hauteur_plan:["bas du dos","épaules","nuque / cervicales"], aides:["bas du dos","genoux","coudes","poignets"], hauteur_charge:["bas du dos","genoux","coudes","poignets"],
+  pres_du_corps:["bas du dos","genoux"], gants:["poignets","coudes","épaules"], reglage_siege:["bas du dos","nuque / cervicales","jambes"],
+  pauses_2h:["bas du dos","hanches"], chargement:["bas du dos","genoux"],
+};
+const CAUSES = {
+  pos_ecrans:"le positionnement de vos écrans", ecran_hauteur:"la hauteur de votre écran",
+  portable_seul:"le travail sur portable seul", siege:"le réglage de votre siège",
+  avant_bras:"vos avant-bras non soutenus", lumiere:"les reflets sur votre écran",
+  tel_casque:"vos appels sans casque", porte_doc:"la lecture de documents à plat sur le bureau",
+  sol:"le sol dur sous vos pieds", chaussures:"des chaussures peu adaptées",
+  assis_ponctuel:"la station debout ininterrompue", hauteur_plan:"la hauteur de votre plan de travail",
+  aides:"le port de charges sans aide mécanique", hauteur_charge:"le stockage des charges hors de la bonne zone",
+  pres_du_corps:"le port de charges loin du corps", gants:"un outillage mal adapté à vos mains",
+  reglage_siege:"le réglage de votre siège de conduite", pauses_2h:"la conduite prolongée sans pause",
+  chargement:"le déchargement juste après la conduite",
+};
+function defautsActifs(){
+  const qs = questionsVisibles(profil.poste, profil.equipement);
+  const eq = profil.equipement||{};
+  const ids=[];
+  qs.forEach(q=>{
+    if(q.neutre) return;
+    if(q.type==="choix"){ const o=q.options.find(x=>x.v===eq[q.id]); if(o&&o.conseil) ids.push(q.id); }
+    else { const pb = q.inverse ? eq[q.id]===true : eq[q.id]===false; if(pb) ids.push(q.id); }
+  });
+  return ids;
+}
+function liensDouleurPoste(){
+  const zones = profil.zones||[];
+  if(!zones.length) return [];
+  const liens=[];
+  defautsActifs().forEach(id=>{
+    (LIEN_ZONES[id]||[]).forEach(z=>{
+      if(zones.includes(z)) liens.push({zone:z, id:id, cause:CAUSES[id]});
+    });
+  });
+  return liens;
+}
+const ZONES_PLURIELLES = new Set(["épaules","coudes","poignets","hanches","genoux","jambes","yeux / tête"]);
+function tournureOeil(l, i){
+  const pl = ZONES_PLURIELLES.has(l.zone);
+  const det = pl ? "vos" : "votre";
+  const Det = pl ? "Vos" : "Votre";
+  const tournures = [
+    Det+" « "+l.zone+" » "+(pl?"vous rappellent":"vous rappelle")+" à l'ordre ces temps-ci ? Petit indice d'ostéo : "+l.cause+" y est sûrement pour quelque chose. Un réglage vite fait dans « Mon poste », et on en reparle dans une semaine 😉",
+    "Entre nous : si "+det+" « "+l.zone+" » "+(pl?"protestent":"proteste")+", ce n'est probablement pas un hasard — "+l.cause+" travaille contre vous toute la journée. La bonne nouvelle ? Ça se règle en 5 minutes, direction « Mon poste » !",
+    "Mon petit doigt d'ostéo me dit que "+det+" « "+l.zone+" » et "+l.cause+" sont liés… Corrigez ce détail, votre corps vous le rendra au centuple 💚",
+  ];
+  return tournures[i % tournures.length];
+}
+function messagesOeil(){
+  return liensDouleurPoste().map((l,i)=>tournureOeil(l,i));
+}
+
+/* ---------- Coach contextuel (basé sur ce que l'app mesure vraiment) ---------- */
+function messageCoach(){
+  const faites = faitesAujourdhui();
+  const h = new Date().getHours();
+  const lp = dernierePause();
+  if(faites.length>=3) return "Programme du jour bouclé — belle discipline. Chaque pause compte, et votre corps les enregistre toutes.";
+  if(faites.length===0){
+    if(h<10)  return "Nouvelle journée : lancez-la avec 2 minutes d'activation, avant que les mails ne prennent le dessus.";
+    if(h<14)  return "Aucune micro-pause encore aujourd'hui — sans doute concentré·e depuis un bon moment. C'est exactement le signal pour en faire une.";
+    return "La journée avance et le corps n'a pas encore eu sa pause. Deux minutes maintenant valent mieux qu'un long étirement ce soir.";
+  }
+  if(lp && (Date.now()-lp) > 2*3600e3){
+    const heures = Math.floor((Date.now()-lp)/3600e3);
+    return "Plus de "+heures+" h depuis votre dernière pause — probablement autant dans la même position. Votre prochaine micro-pause vous attend.";
+  }
+  if(profil.stress>=4 && h>=14) return "Journée dense ? Le bouton SOS est là pour ça — 2 minutes suffisent à faire redescendre la pression.";
+  return "Bien parti·e ! La régularité compte plus que la durée : gardez le rythme jusqu'à la prochaine pause.";
+}
+
+/* ---------- Rendu accueil ---------- */
+const CONSEILS = [
+  "La meilleure posture est celle qui change souvent : variez vos positions au fil de la journée.",
+  "Un écran à hauteur des yeux, c'est une nuque qui travaille moitié moins.",
+  "Boire de l'eau régulièrement, c'est aussi une excuse parfaite pour se lever.",
+  "Deux minutes de pause active valent mieux que vingt minutes d'étirements le dimanche.",
+  "Le stress se loge dans la mâchoire et les épaules : pensez à les relâcher, là, maintenant.",
+  "Téléphone ? Profitez-en pour marcher pendant l'appel.",
+  "L'expiration longue est le bouton « calme » de votre système nerveux.",
+  "Règle 20-20-20 : toutes les 20 minutes, regardez à 20 mètres pendant 20 secondes.",
+  "Vos pieds à plat au sol, c'est la base de la pyramide : tout le dos s'appuie dessus.",
+  "L'imprimante la plus éloignée est la meilleure amie de votre dos.",
+  "Assis, debout, en appui… l'important n'est pas LA bonne position, c'est d'en changer.",
+  "Une réunion à deux ? Proposez-la en marchant — ou debout autour d'une table haute si vous travaillez assis.",
+  "Le corps aime les rappels : associez vos micro-pauses à un rituel (café, e-mails, réunion).",
+  "Épaules qui montent vers les oreilles = signal de tension. Soufflez, relâchez-les.",
+  "Croiser les jambes n'est pas interdit — y rester une heure, si.",
+  "La fatigue visuelle se propage à la nuque : reposez vos yeux, votre cou vous remerciera.",
+  "Un grand verre d'eau + 10 pas = la plus courte des pauses actives valables.",
+  "Le soir, 3 respirations lentes avant de quitter le poste : on ne ramène pas les tensions à la maison.",
+  "Poignets posés, pas cassés : vos avant-bras doivent faire une ligne droite avec vos mains.",
+  "Mâchoire serrée sans raison ? C'est souvent le premier signe que le corps est sous pression.",
+  "Se lever 2 minutes toutes les heures fait plus que n'importe quelle chaise ergonomique.",
+  "Le week-end aussi, votre corps aime bouger un peu chaque jour — pas seulement le samedi matin.",
+  "La lumière naturelle le matin aide le corps à réguler énergie et sommeil : ouvrez ces volets.",
+  "Un appel qui s'éternise ? Levez-vous, étirez-vous, personne ne vous voit.",
+  "Les tensions d'aujourd'hui sont les douleurs de demain : 2 minutes maintenant, c'est de la prévention.",
+  "Dormir, c'est aussi de la récupération musculaire : la prévention commence la veille au soir.",
+  "Votre chaise a des réglages que vous n'avez jamais touchés. Aujourd'hui, c'est le jour.",
+  "Grandissez-vous là, maintenant : un fil tire le sommet de votre crâne. Voilà, c'est mieux.",
+  "Escaliers plutôt qu'ascenseur : 30 secondes d'effort, des heures de circulation relancée.",
+  "Le sac toujours sur la même épaule ? Changez de côté aujourd'hui.",
+];
+/* ---------- Tips ostéo catégorisés (rotation quotidienne, avec note d'impact) ---------- */
+const TIPS_ERGO = [
+  {t:"La souris collée au clavier : chaque centimètre gagné vers vous, c'est de l'épaule épargnée toute la journée.", n:3},
+  {t:"Vos objets fréquents (téléphone, carnet, tasse) à moins de 30 cm : la zone d'atteinte directe, sans tendre le bras.", n:2},
+  {t:"L'écran à une longueur de bras (50-70 cm) : ni penché en avant pour lire, ni reculé pour fuir.", n:2},
+  {t:"Le dossier légèrement incliné en arrière (100-110°) repose mieux le dos que le 90° strict des manuels.", n:2},
+  {t:"Pieds qui ne touchent pas le sol ? Un repose-pieds change tout — même une ramette de papier fait l'affaire.", n:2},
+  {t:"Document, écran, clavier : les trois alignés face à vous. C'est le triangle qui sauve la nuque.", n:3},
+  {t:"Debout prolongé : un pied posé en alternance sur un petit rehausseur soulage nettement les lombaires.", n:2},
+  {t:"Réunion visio ? Caméra à hauteur des yeux, pas en contre-plongée depuis le bureau.", n:1},
+];
+const TIPS_ERREURS = [
+  {t:"Le combiné calé entre l'oreille et l'épaule : LE classique des tensions cervicales. Casque, toujours.", n:3},
+  {t:"S'étirer fort dès que ça tire : sur une zone irritée, c'est la douceur qui répare, pas la force.", n:3},
+  {t:"Le portefeuille dans la poche arrière, et s'asseoir dessus toute la journée : bassin en déséquilibre garanti.", n:2},
+  {t:"Attraper un objet lourd à bout de bras au lieu de se rapprocher : le dos paie la flemme des pieds.", n:3},
+  {t:"Serrer la souris comme un frein à main : la main doit rester molle, le clic est un effleurement.", n:2},
+  {t:"S'affaler « pour reposer le dos » : sans appui, il travaille encore plus. Se caler, oui ; s'effondrer, non.", n:2},
+  {t:"Attendre d'avoir mal pour bouger : la pause se prend AVANT le signal, c'est ça la prévention.", n:3},
+  {t:"Le sac lourd toujours sur la même épaule, année après année. Changez de côté, ou passez au sac à dos.", n:2},
+];
+function tipDuJour(jourAnnee){
+  const CAT = [
+    {label:"💡 L'ASTUCE DE CLAIRE", fond:"var(--vert-clair)", coul:"var(--vert)", liste:CONSEILS.map(t=>({t:t,n:2}))},
+    {label:"🪑 LE CONSEIL ERGONOMIE", fond:"#e8eff6", coul:"#33608a", liste:TIPS_ERGO},
+    {label:"⚠️ L'ERREUR FRÉQUENTE", fond:"#fdf3e7", coul:"#a86a1e", liste:TIPS_ERREURS},
+  ];
+  const c = CAT[jourAnnee % CAT.length];
+  const tip = c.liste[Math.floor(jourAnnee/CAT.length) % c.liste.length];
+  return {label:c.label, fond:c.fond, coul:c.coul, txt:tip.t, note:"💚".repeat(tip.n)+"🤍".repeat(3-tip.n)};
+}
+
+function rendreAccueil(){
+  const d = new Date();
+  document.getElementById("salut").textContent = "Bonjour "+(profil.prenom||"")+" 👋";
+  document.getElementById("date-jour").textContent = d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+  document.getElementById("serie").textContent = "🔥 "+majSerie()+" j";
+  // Rotation 4 fois par jour (matin / fin de matinée / après-midi / soirée)
+  const jourAnnee = Math.floor((d - new Date(d.getFullYear(),0,0)) / 864e5);
+  const h = d.getHours();
+  const creneau = h<10 ? 0 : h<13 ? 1 : h<16 ? 2 : 3;
+  const tick = jourAnnee*4 + creneau;
+
+  // Le mot de Claire : message contextuel + tip du moment, fusionnés dans un seul encart
+  const tip = tipDuJour(tick);
+  const b=document.getElementById("bandeau-conseil");
+  b.innerHTML = `<div style="display:flex;gap:10px;align-items:flex-start">
+      <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;border:2px solid rgba(255,255,255,.5)">🧑‍⚕️</div>
+      <div style="flex:1">
+        <b>☕ Le mot de Claire</b>
+        <p>${messageCoach()}</p>
+        <div style="margin-top:8px;background:rgba(255,255,255,.16);border-radius:10px;padding:8px 11px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <b style="font-size:12px;letter-spacing:.03em">${tip.label}</b>
+            <span style="font-size:11px" title="Impact prévention">${tip.note}</span>
+          </div>
+          <p style="font-size:13px;margin-top:4px;line-height:1.5">${tip.txt}</p>
+        </div>
+        <p class="signature" style="text-align:right;margin-top:6px;font-size:13px">Claire — ostéopathe D.O.</p>
+      </div>
+    </div>`;
+  // Bloc 2 — l'œil de l'ostéo : carrousel de TOUTES les remarques issues du bilan
+  const oeil = messagesOeil();
+  const htmlInsight = oeil.length ? `<div class="carte" style="border-left:4px solid var(--ambre);background:#fffaf2;padding:13px 15px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <b style="font-size:14.5px">🔍 L'œil de l'ostéo</b>
+        ${oeil.length>1?`<span class="sub" style="margin:0;font-size:11px" id="oeil-num">1/${oeil.length}</span>`:""}
+      </div>
+      <div id="oeil-slides">${oeil.map(m=>`<p style="font-size:13.5px;line-height:1.55">${m}</p>`).join("")}</div>
+      ${oeil.length>1?`<div id="oeil-dots">${oeil.map((_,k)=>`<span${k===0?' style="background:var(--ambre)"':''}></span>`).join("")}</div>
+      <p class="sub" style="font-size:10.5px;margin:6px 0 0;text-align:center">← faites glisser pour voir les ${oeil.length} observations →</p>`:""}
+    </div>` : "";
+  // Outil rapide sous le rituel (le réalignement vit désormais DANS le rituel)
+  const htmlOutils = `<div class="carte seance" onclick="ouvrirZones()" style="margin-top:14px;padding:13px 16px">
+      <div style="font-size:22px">🎯</div>
+      <div class="infos"><b style="font-size:14px">Une zone qui tire&nbsp;?</b><span style="font-size:12px">zone par zone, ou toutes en une pause</span></div>
+      <div class="etat">Choisir ›</div>
+    </div>`;
+
+  const sc = scoreTotal(clesJour());
+  const scHier = scoreTotal(new Date(Date.now()-864e5).toISOString().slice(0,10));
+  const tendance = sc>scHier ? "▲" : (sc<scHier ? "▼" : "→");
+  const htmlScore = `<div class="carte" style="padding:14px 18px;margin-top:10px;cursor:pointer" onclick="ouvrirCheckin()">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <b style="font-size:13.5px;color:var(--gris)">🏆 Score de prévention</b>
+        <span style="font-size:19px;font-weight:800;color:var(--vert)">${sc}<span style="font-size:11.5px;color:var(--gris)">/100 ${tendance}</span></span>
+      </div>
+      ${barresScores()}
+      <p class="sub" style="font-size:11px;margin:4px 0 0">60 pts micro-pauses (3 suffisent) · 10 pts variété · 30 pts régularité</p>
+      <p style="font-size:12px;font-weight:700;color:var(--vert);margin:8px 0 0;text-align:center">📊 Touchez pour ${checkinDu()?"faire votre point de la semaine":"voir l'évolution de vos tensions"} ›</p>
+    </div>`;
+
+  // Rappel du point hebdo en fin de semaine (vendredi → dimanche)
+  let htmlCheckin = "";
+  const jsem = d.getDay();
+  if(checkinDu() && (jsem===5 || jsem===6 || jsem===0)){
+    htmlCheckin = `<div class="carte seance" onclick="ouvrirCheckin()" style="border:1.5px solid var(--vert);background:#f2faf7">
+        <div class="pastille">📊</div>
+        <div class="infos"><b>Point de la semaine</b><span>1 min · vos tensions ont-elles évolué ?${profil.code?" · bilan collectif anonyme":""}</span></div>
+        <div class="etat">Faire ›</div>
+      </div>`;
+  }
+
+  // Point hebdomadaire : au bout de 7 jours, on demande si quelque chose a changé
+  let htmlMaj = "";
+  const dm = lire("derniere_maj");
+  if(dm && (Date.now() - new Date(dm)) > 7*864e5){
+    htmlMaj = `<div class="carte" style="border:1.5px solid var(--vert);background:#f2faf7">
+      <b style="font-size:15px">🔄 Petit point hebdo</b>
+      <p class="sub" style="margin:6px 0 10px;font-size:13.5px">Ça fait une semaine — du nouveau côté tensions, poste ou état général ? Signalez-le en 30 secondes, sans refaire le bilan.</p>
+      <div class="chips">
+        <span class="chip" onclick="editerSection('zones')">🎯 Mes tensions</span>
+        <span class="chip" onclick="editerSection('amenagement')">🪑 Mon poste</span>
+        <span class="chip" onclick="editerSection('etat')">⚡ Mon état</span>
+        <span class="chip" onclick="rienASignaler()">👍 Rien à signaler</span>
+      </div>
+    </div>`;
+  }
+
+  // Aiguillage quotidien pour les profils mixtes : où êtes-vous aujourd'hui ?
+  let htmlLieu = "";
+  if(profil.lieu==="mixte"){
+    const lj = lire("lieuj_"+clesJour());
+    htmlLieu = `<div class="carte" style="padding:14px 18px;${lj?"":"border:1.5px solid var(--vert)"}">
+      <b style="font-size:14px">Aujourd'hui, vous travaillez :</b>
+      <div class="chips" style="margin-top:10px">
+        <span class="chip ${lj==='site'?'sel':''}" onclick="choisirLieuJour('site')">🏢 Sur site</span>
+        <span class="chip ${lj==='teletravail'?'sel':''}" onclick="choisirLieuJour('teletravail')">🏠 En télétravail</span>
+      </div>
+      ${lj==='teletravail'?`<p class="sub" style="font-size:12px;margin:8px 0 0">Rituel adapté : plus de marche et de mobilité — à la maison, on bouge naturellement moins.</p>`:""}
+    </div>`;
+  }
+
+  // Changement de programme : petit encart discret, le choix se fait sur une page dédiée
+  const pjour = posteDuJour();
+  const enChangement = pjour !== profil.poste;
+  const htmlChangement = `<div class="carte seance" onclick="ouvrirChangement()" style="padding:11px 16px;${enChangement?"border:1.5px solid var(--ambre);background:#fffaf2":""}">
+      <div style="font-size:20px">🔁</div>
+      <div class="infos">
+        <b style="font-size:13.5px">Changement de programme</b>
+        <span style="font-size:11.5px">${enChangement ? "Aujourd'hui : "+PROFILS[pjour].ico+" "+PROFILS[pjour].label : "activité inhabituelle aujourd'hui ?"}</span>
+      </div>
+      <div class="etat" style="font-size:12px">${enChangement?"Modifier ›":"›"}</div>
+    </div>`;
+
+  const prog = programmeDuJour(); const faites = faitesAujourdhui();
+  const nbFaites = prog.filter(x=>faites.includes(x.id)).length;
+  const totalMin = Math.round(prog.reduce((a,x)=>a+dureeSeq(x.id),0)/60);
+  const htmlRituel = htmlLieu + htmlChangement + `<p class="moment" style="font-size:13px;color:var(--vert)">📿 Votre rituel du jour — ${nbFaites}/${prog.length} ${nbFaites>1?"faites":"faite"} · ≈ ${totalMin} min${enChangement?` · adapté ${PROFILS[pjour].ico}`:""}</p>
+    <p class="sub" style="font-size:13px;margin:-4px 0 4px">Le même fil rouge chaque jour, avec ou sans tension : c'est la régularité qui protège.</p>`;
+  // Réalignement éclair : glissé dans le fil du rituel (matinée + après-midi), hors décompte
+  const neutreFait = faites.includes("neutre_30");
+  const miniNeutre = `<div class="mini-neutre" onclick="lancerSeance('neutre_30')">
+      📐 <span class="tg">Réalignement éclair · 30 s</span> ${neutreFait?"✅":"›"}<br>
+      <span class="ss">bassin · épaules · tête — retrouvez votre position neutre</span>
+    </div>`;
+
+  document.getElementById("programme").innerHTML = htmlMaj + htmlInsight + htmlCheckin + htmlRituel + prog.map((x,i)=>{
+    const s=SEQUENCES[x.id]; const faite=faites.includes(x.id);
+    return `<p class="moment">${x.moment}</p>
+      <div class="carte seance ${faite?'faite':''}" onclick="lancerSeance('${x.id}')">
+        <div class="pastille">${faite?'✔️':s.ico}</div>
+        <div class="infos"><b>${s.titre}</b><span>${s.duree} · ${s.zone}</span></div>
+        <div class="etat">${faite?'Faite':'Lancer ›'}</div>
+      </div>` + ((i===1||i===3) ? miniNeutre : "");
+  }).join("") + htmlOutils + htmlScore;
+  initOeil();
+}
+function initOeil(){
+  const s=document.getElementById("oeil-slides");
+  if(!s || s.children.length<2) return;
+  s.addEventListener("scroll", ()=>{
+    const i=Math.round(s.scrollLeft/s.clientWidth);
+    document.querySelectorAll("#oeil-dots span").forEach((d,k)=>{ d.style.background = k===i ? "var(--ambre)" : "#e6dcc4"; });
+    const num=document.getElementById("oeil-num");
+    if(num) num.textContent=(Math.min(i,s.children.length-1)+1)+"/"+s.children.length;
+  },{passive:true});
+}
+
+/* =========================================================
+   SOS — stress ou coup de fatigue (adapté au profil)
+   ========================================================= */
+function estSedentaire(){ const pj = posteDuJour(); return profil && (pj==="bureau" || pj==="mobile"); }
+function ouvrirSOS(){
+  const desc = document.getElementById("sos-fatigue-desc");
+  if(desc) desc.textContent = estSedentaire()
+    ? "Pause dynamique : mobilité énergique pour réveiller le système nerveux"
+    : "Pause détente : étirements doux + respiration pour apaiser le système nerveux";
+  document.getElementById("sos-menu").style.display = "block";
+}
+function fermerSOS(){ document.getElementById("sos-menu").style.display = "none"; }
+function lancerFatigue(){ lancerSeance(estSedentaire() ? "boost_dynamique" : "detente_douce"); }
+
+/* =========================================================
+   PAUSES À LA CARTE — par zone, ou multi-zones
+   ========================================================= */
+function ouvrirZones(){
+  const declarees = profil.zones||[];
+  let html = `<div class="carte seance" onclick="lancerMix()" style="border:1.5px solid var(--vert);background:#f2faf7">
+      <div class="pastille">🔄</div>
+      <div class="infos"><b>Pause multi-zones</b><span>${declarees.length ? "vos zones : "+declarees.join(", ") : "un tour complet du corps"} · ≈ 3 min</span></div>
+      <div class="etat">Lancer ›</div>
+    </div>
+    <p class="moment">Ou zone par zone</p>`;
+  html += ZONES.map(z=>{
+    const s = SEQUENCES[SEQ_PAR_ZONE[z]];
+    const fav = declarees.includes(z);
+    return `<div class="carte seance" onclick="lancerSeance('${SEQ_PAR_ZONE[z]}')">
+      <div class="pastille">${s.ico}</div>
+      <div class="infos"><b>${z.charAt(0).toUpperCase()+z.slice(1)}${fav?" ⭐":""}</b><span>${s.titre} · ${s.duree}</span></div>
+      <div class="etat">›</div>
+    </div>`;
+  }).join("");
+  html += `<p class="sub" style="font-size:12.5px;margin-top:8px">⭐ = zones déclarées dans votre bilan</p>`;
+  // Les gestes de Claire : les exercices dictés au cabinet, en accès direct
+  const GESTES_CLAIRE = ["etirement_ciel","cercles_tete","cercles_epaules","poignets_croises","etirement_trapeze","rotation_buste","ouverture_hanche",
+    "ronds_genoux","cercles_chevilles","pompes_chevilles","montees_pointes","plongeon_colonne","respi_4temps","plexus_solaire","massage_trapezes",
+    "massage_avant_bras","mini_squats","dos_rond_creux","etirement_flancs","etirement_triceps","etirement_ischios","auto_etreinte",
+    "etirement_cervicales","mobilite_coudes","massage_cervicales","massage_lombaires","massage_visage"];
+  html += `<p class="moment">🧑‍⚕️ Les gestes de Claire</p>` +
+    GESTES_CLAIRE.map(id=>{
+      const s = SEQUENCES[id];
+      return `<div class="carte seance" onclick="lancerSeance('${id}')">
+        <div class="pastille">${s.ico}</div>
+        <div class="infos"><b>${s.titre}</b><span>${s.duree} · ${s.zone}</span></div>
+        <div class="etat">›</div>
+      </div>`;
+    }).join("");
+  document.getElementById("liste-zones").innerHTML = html;
+  montrer("s-zones"); navVisible(false);
+}
+function lancerMix(){
+  const zones = (profil.zones&&profil.zones.length ? profil.zones : ["nuque / cervicales","bas du dos","épaules"]).slice(0,3);
+  const etapes = [];
+  zones.forEach(z=>{
+    const id = SEQ_PAR_ZONE[z];
+    const s = SEQUENCES[id];
+    etapes.push(...s.etapes.slice(0,2).map((e,i)=>({...e, pos: posEtape(id, i)})));
+  });
+  etapes.push({t:"Pour finir : grandissez-vous, inspirez largement… et soufflez lentement en relâchant tout le corps.", s:12});
+  const total = etapes.reduce((a,e)=>a+e.s,0);
+  SEQUENCES.mix_perso = {titre:"Pause multi-zones", ico:"🔄", zone:zones.join(" · "),
+    duree:(total/60).toFixed(1).replace(".",",")+" min", etapes};
+  lancerSeance("mix_perso");
+}
+
+/* =========================================================
+   PLAYER
+   ========================================================= */
+let seanceEnCours=null, etapeIdx=0, secRestantes=0, timer=null, enPause=false;
+const CIRCONF = 590.6;
+
+/* ---------- Sons (Web Audio, aucun fichier nécessaire) ---------- */
+let audioCtx=null;
+function initAudio(){
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==="suspended") audioCtx.resume();
+  }catch(e){ audioCtx=null; }
+}
+function son(freq, duree=0.12, vol=0.18, type="sine", delai=0){
+  if(!audioCtx) return;
+  const t=audioCtx.currentTime+delai;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type=type; o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,t);
+  g.gain.exponentialRampToValueAtTime(0.001,t+duree);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(t); o.stop(t+duree);
+}
+function sonDecompte(){ son(660,0.1); }                 // bip des 3 dernières secondes
+function sonEtape(){ son(880,0.15); }                   // passage à l'étape suivante
+function sonFin(){ son(523,0.15,.2); son(659,0.15,.2,"sine",0.16); son(784,0.3,.2,"sine",0.32); } // jingle de fin
+
+/* ---------- Voix guide (synthèse vocale du téléphone) ---------- */
+let voixActive = lire("voix"); if(voixActive===null) voixActive = true;
+let voixChoisie = null;
+function choisirVoix(){
+  try{
+    const fr = speechSynthesis.getVoices().filter(v=>v.lang && v.lang.toLowerCase().startsWith("fr"));
+    if(!fr.length) return null;
+    // priorité aux voix de qualité (naturelles/premium) quand le téléphone en propose
+    const qualite = /am[ée]lie|thomas|audrey|marie|google|siri|premium|enhanced|neural|natural/i;
+    return fr.find(v=>qualite.test(v.name)) || fr[0];
+  }catch(e){ return null; }
+}
+if("speechSynthesis" in window){
+  voixChoisie = choisirVoix();
+  speechSynthesis.onvoiceschanged = ()=>{ voixChoisie = choisirVoix(); };
+}
+function parler(txt){
+  if(!voixActive || !("speechSynthesis" in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(txt);
+    u.lang = "fr-FR"; u.rate = 0.92; u.pitch = 1.02;
+    if(!voixChoisie) voixChoisie = choisirVoix();
+    if(voixChoisie) u.voice = voixChoisie;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function stopVoix(){ try{ speechSynthesis.cancel(); }catch(e){} }
+function basculerVoix(){
+  voixActive = !voixActive; sauver("voix", voixActive);
+  document.getElementById("p-voix").textContent = voixActive ? "🔊" : "🔇";
+  if(!voixActive) stopVoix();
+  else { const s=SEQUENCES[seanceEnCours]; if(s) parler(s.etapes[etapeIdx].t); }
+}
+
+let secLecture=0;
+function lancerSeance(id){
+  initAudio();
+  seanceEnCours=id; etapeIdx=0; enPause=false;
+  const s=SEQUENCES[id];
+  document.getElementById("p-titre").textContent=s.titre;
+  document.getElementById("p-sous").textContent=s.duree+" · "+s.zone;
+  document.getElementById("p-visuel-ico").textContent=s.ico;
+  document.getElementById("p-voix").textContent = voixActive ? "🔊" : "🔇";
+  montrer("s-player"); navVisible(false);
+  demarrerEtape();
+}
+function demarrerEtape(){
+  const s=SEQUENCES[seanceEnCours]; const e=s.etapes[etapeIdx];
+  document.getElementById("p-num").textContent="Étape "+(etapeIdx+1)+" / "+s.etapes.length;
+  const pos = e.pos || posEtape(seanceEnCours, etapeIdx);
+  document.getElementById("p-pos-bloc").innerHTML = svgPos(pos) +
+    `<span style="font-weight:800;color:var(--vert);font-size:15px">${POS_LABEL[pos]}</span>`;
+  document.getElementById("p-texte").textContent=e.t;
+  parler(e.t); // voix guide : la consigne est lue à voix haute
+  secRestantes=e.s;
+  secLecture=4; // temps de lecture de la consigne avant le décompte
+  document.getElementById("p-temps").textContent="📖";
+  document.querySelector("#s-player .temps span").textContent="lisez la consigne";
+  document.getElementById("p-anneau").style.strokeDashoffset=0;
+  clearInterval(timer);
+  timer=setInterval(()=>{
+    if(enPause) return;
+    if(secLecture>0){
+      secLecture--;
+      if(secLecture===0){ document.querySelector("#s-player .temps span").textContent="restant"; majTemps(); }
+      return;
+    }
+    secRestantes--;
+    if(secRestantes<=0){ etapeSuivante(); return; }
+    if(secRestantes<=3) sonDecompte();
+    majTemps();
+  },1000);
+}
+function majTemps(){
+  const s=SEQUENCES[seanceEnCours]; const e=s.etapes[etapeIdx];
+  const m=Math.floor(secRestantes/60), sec=secRestantes%60;
+  document.getElementById("p-temps").textContent=m+":"+String(sec).padStart(2,"0");
+  document.getElementById("p-anneau").style.strokeDashoffset = CIRCONF*(1-secRestantes/e.s);
+}
+function etapeSuivante(){
+  const s=SEQUENCES[seanceEnCours];
+  if(etapeIdx < s.etapes.length-1){ sonEtape(); etapeIdx++; demarrerEtape(); }
+  else {
+    clearInterval(timer);
+    sonFin();
+    parler("Bien joué, séance terminée.");
+    marquerFaite(seanceEnCours);
+    const msgs=["Votre corps vous dit merci.","Chaque pause compte. Vraiment.","Deux minutes pour vous : c'est ça, la prévention.","Régularité > intensité. Vous êtes sur la bonne voie."];
+    document.getElementById("fin-msg").textContent=msgs[Math.floor(Math.random()*msgs.length)];
+    montrer("s-fin");
+    lancerConfettis();
+  }
+}
+function lancerConfettis(){
+  const ecran=document.getElementById("s-fin");
+  const couleurs=["#1a6b5a","#4a9d8a","#e8a13c","#e05a4b","#8fbcb0","#f4c95d"];
+  for(let i=0;i<55;i++){
+    const c=document.createElement("span");
+    c.className="confetti";
+    c.style.left=(Math.random()*100)+"%";
+    c.style.width=(6+Math.random()*6)+"px";
+    c.style.height=(9+Math.random()*8)+"px";
+    c.style.background=couleurs[i%couleurs.length];
+    c.style.animationDuration=(1.6+Math.random()*1.6)+"s";
+    c.style.animationDelay=(Math.random()*0.7)+"s";
+    ecran.appendChild(c);
+    setTimeout(()=>c.remove(), 4200);
+  }
+}
+function pauseReprendre(){ enPause=!enPause; document.getElementById("p-pause").textContent=enPause?"Reprendre":"Pause"; if(enPause) stopVoix(); }
+function quitterSeance(){ clearInterval(timer); stopVoix(); navVisible(true); montrerOnglet("accueil"); }
+function retourAccueil(){ navVisible(true); montrerOnglet("accueil"); }
+
+/* =========================================================
+   MON POSTE — conseils d'aménagement issus du bilan
+   ========================================================= */
+
+/* Titre de chaque correction = le bon aménagement à atteindre */
+const TITRES = {
+  pos_ecrans:    "L'écran principal en face de vous",
+  ecran_hauteur: "Le haut de l'écran à hauteur des yeux",
+  portable_seul: "Portable surélevé + clavier et souris externes",
+  siege:         "Un siège réglé : pieds à plat, genoux à 90°",
+  avant_bras:    "Les avant-bras posés, épaules relâchées",
+  lumiere:       "L'écran perpendiculaire aux fenêtres",
+  tel_casque:    "Un casque ou des écouteurs pour téléphoner",
+  porte_doc:     "Un porte-document vertical près de l'écran",
+  sol:           "Un sol amortissant sous vos pieds",
+  chaussures:    "Des chaussures qui amortissent et maintiennent",
+  assis_ponctuel:"Alterner debout et assis dans la journée",
+  hauteur_plan:  "Le plan de travail à hauteur des coudes",
+  aides:         "Les aides à la manutention, systématiquement",
+  hauteur_charge:"Les charges stockées entre genoux et épaules",
+  pres_du_corps: "La charge près du corps, pivoter avec les pieds",
+  gants:         "Des outils et des gants à votre taille",
+  reglage_siege: "Un siège de conduite bien réglé",
+  pauses_2h:     "Sortir du véhicule toutes les 2 heures",
+  chargement:    "Marcher une minute avant de décharger",
+};
+
+/* Mini-schéma du bon aménagement, par correction (SVG de principe) */
+const T="#2a3f39", V="#1a6b5a", VC="#8fbcb0", G="#4a9d8a";
+function svgW(contenu,h=90){ return `<svg viewBox="0 0 120 ${h}" style="width:100%" xmlns="http://www.w3.org/2000/svg" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="1.5" y="1.5" width="117" height="${h-3}" rx="12" fill="#eef6f3" stroke="#dcebe5" stroke-width="1"/>
+  ${contenu}
+  <circle cx="105" cy="15" r="8.5" fill="${V}"/>
+  <path d="M100.8 15 l3.2 3.2 5.6-6.6" stroke="#fff" stroke-width="2.2"/>
+</svg>`; }
+const SCHEMAS = {
+  pos_ecrans: svgW(`
+    <rect x="26" y="12" width="46" height="10" rx="3" fill="${V}"/>
+    <rect x="29" y="15" width="40" height="4" rx="1.5" fill="#ffffff" opacity=".35"/>
+    <rect x="76" y="15" width="32" height="9" rx="3" fill="${VC}" transform="rotate(22 76 17)"/>
+    <ellipse cx="49" cy="70" rx="14" ry="7" fill="${VC}"/>
+    <circle cx="49" cy="64" r="9" fill="${T}"/>
+    <line x1="49" y1="26" x2="49" y2="51" stroke="${G}" stroke-width="1.8" stroke-dasharray="4,3"/>`),
+  ecran_hauteur: svgW(`
+    <circle cx="24" cy="27" r="8" fill="${T}"/>
+    <path d="M24 35 v26" stroke="${T}" stroke-width="4.5"/>
+    <rect x="12" y="58" width="26" height="7" rx="3.5" fill="${VC}"/>
+    <line x1="50" y1="64" x2="114" y2="64" stroke="${T}" stroke-width="3"/>
+    <rect x="76" y="20" width="9" height="34" rx="3" fill="${V}"/>
+    <line x1="80" y1="54" x2="80" y2="64" stroke="${T}" stroke-width="2.5"/>
+    <rect x="72" y="62" width="17" height="4" rx="2" fill="${T}"/>
+    <line x1="33" y1="24" x2="74" y2="22" stroke="${G}" stroke-width="1.8" stroke-dasharray="4,3"/>`),
+  portable_seul: svgW(`
+    <line x1="8" y1="66" x2="114" y2="66" stroke="${T}" stroke-width="2.5"/>
+    <polygon points="74,66 98,66 98,36" fill="#e8f3f0" stroke="${T}" stroke-width="2"/>
+    <rect x="92" y="26" width="7" height="26" rx="2" fill="${V}" transform="rotate(14 92 26)"/>
+    <rect x="26" y="58" width="28" height="7" rx="2" fill="${V}"/>
+    <circle cx="64" cy="61" r="3.5" fill="${VC}"/>`),
+  siege: svgW(`
+    <circle cx="50" cy="14" r="7" stroke="${T}" stroke-width="2.5"/>
+    <line x1="50" y1="21" x2="50" y2="48" stroke="${T}" stroke-width="2.5"/>
+    <line x1="50" y1="48" x2="72" y2="48" stroke="${T}" stroke-width="2.5"/>
+    <line x1="72" y1="48" x2="72" y2="74" stroke="${T}" stroke-width="2.5"/>
+    <line x1="66" y1="76" x2="82" y2="76" stroke="${T}" stroke-width="3"/>
+    <line x1="42" y1="18" x2="42" y2="52" stroke="${VC}" stroke-width="3"/>
+    <line x1="40" y1="52" x2="58" y2="52" stroke="${VC}" stroke-width="4"/>
+    <line x1="49" y1="52" x2="49" y2="78" stroke="${VC}" stroke-width="3"/>
+    <rect x="66" y="42" width="6" height="6" fill="none" stroke="${G}" stroke-width="1.5"/>`),
+  avant_bras: svgW(`
+    <circle cx="34" cy="16" r="7" stroke="${T}" stroke-width="2.5"/>
+    <line x1="34" y1="23" x2="34" y2="50" stroke="${T}" stroke-width="2.5"/>
+    <line x1="34" y1="30" x2="50" y2="44" stroke="${T}" stroke-width="2.5"/>
+    <line x1="50" y1="44" x2="86" y2="44" stroke="${V}" stroke-width="3.5"/>
+    <line x1="28" y1="48" x2="112" y2="48" stroke="${T}" stroke-width="2.5"/>`),
+  lumiere: svgW(`
+    <rect x="8" y="16" width="6" height="52" fill="#cfe3ee" stroke="${T}" stroke-width="1.5"/>
+    <line x1="20" y1="24" x2="34" y2="24" stroke="${G}" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <line x1="20" y1="42" x2="34" y2="42" stroke="${G}" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <line x1="20" y1="60" x2="34" y2="60" stroke="${G}" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <rect x="52" y="38" width="42" height="7" rx="2" fill="${V}"/>
+    <circle cx="73" cy="70" r="8" stroke="${T}" stroke-width="2.5"/>`),
+  porte_doc: svgW(`
+    <line x1="14" y1="66" x2="112" y2="66" stroke="${T}" stroke-width="3"/>
+    <rect x="26" y="20" width="9" height="36" rx="3" fill="${V}"/>
+    <rect x="22" y="64" width="17" height="4" rx="2" fill="${T}"/>
+    <path d="M56 62 l6 -34 h20 l-6 34 Z" fill="#ffffff" stroke="${T}" stroke-width="2.5"/>
+    <line x1="63" y1="36" x2="76" y2="36" stroke="${VC}" stroke-width="2"/>
+    <line x1="61" y1="43" x2="75" y2="43" stroke="${VC}" stroke-width="2"/>
+    <line x1="60" y1="50" x2="73" y2="50" stroke="${VC}" stroke-width="2"/>
+    <line x1="52" y1="62" x2="82" y2="62" stroke="${T}" stroke-width="3"/>
+    <rect x="88" y="52" width="20" height="10" rx="2" fill="${VC}"/>`),
+  tel_casque: svgW(`
+    <circle cx="60" cy="46" r="16" stroke="${T}" stroke-width="2.5"/>
+    <path d="M42 44 A18 18 0 0 1 78 44" stroke="${V}" stroke-width="4"/>
+    <circle cx="43" cy="48" r="4.5" fill="${V}"/>
+    <circle cx="77" cy="48" r="4.5" fill="${V}"/>
+    <line x1="77" y1="53" x2="70" y2="64" stroke="${V}" stroke-width="2.5"/>
+    <circle cx="69" cy="65" r="2" fill="${V}"/>`),
+  sol: svgW(`
+    <rect x="20" y="54" width="80" height="16" rx="7" fill="${VC}" stroke="${V}" stroke-width="1.5"/>
+    <line x1="30" y1="62" x2="90" y2="62" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="6,5"/>
+    <rect x="38" y="26" width="15" height="26" rx="7" fill="${T}"/>
+    <rect x="64" y="26" width="15" height="26" rx="7" fill="${T}"/>
+    <rect x="38" y="44" width="15" height="8" rx="4" fill="${V}"/>
+    <rect x="64" y="44" width="15" height="8" rx="4" fill="${V}"/>`),
+  chaussures: svgW(`
+    <path d="M24 60 q1 -20 17 -21 h13 q4 0 6 4 q4 9 18 13 q16 4 18 4 v4 H24 Z" fill="#ffffff" stroke="${T}" stroke-width="2.5"/>
+    <path d="M22 66 h76" stroke="${V}" stroke-width="6"/>
+    <line x1="46" y1="46" x2="54" y2="42" stroke="${T}" stroke-width="2"/>
+    <line x1="48" y1="52" x2="57" y2="48" stroke="${T}" stroke-width="2"/>`),
+  assis_ponctuel: svgW(`
+    <circle cx="28" cy="14" r="7" stroke="${T}" stroke-width="2.5"/>
+    <line x1="28" y1="21" x2="28" y2="56" stroke="${T}" stroke-width="2.5"/>
+    <line x1="28" y1="56" x2="21" y2="78" stroke="${T}" stroke-width="2.5"/>
+    <line x1="28" y1="56" x2="35" y2="78" stroke="${T}" stroke-width="2.5"/>
+    <line x1="46" y1="48" x2="60" y2="48" stroke="${G}" stroke-width="2" stroke-dasharray="4,3"/>
+    <line x1="70" y1="40" x2="94" y2="40" stroke="${V}" stroke-width="3.5"/>
+    <line x1="74" y1="40" x2="70" y2="74" stroke="${VC}" stroke-width="3"/>
+    <line x1="90" y1="40" x2="94" y2="74" stroke="${VC}" stroke-width="3"/>`),
+  hauteur_plan: svgW(`
+    <circle cx="30" cy="13" r="7" stroke="${T}" stroke-width="2.5"/>
+    <line x1="30" y1="20" x2="30" y2="55" stroke="${T}" stroke-width="2.5"/>
+    <line x1="30" y1="55" x2="26" y2="78" stroke="${T}" stroke-width="2.5"/>
+    <line x1="30" y1="55" x2="36" y2="78" stroke="${T}" stroke-width="2.5"/>
+    <line x1="30" y1="30" x2="46" y2="44" stroke="${T}" stroke-width="2.5"/>
+    <line x1="46" y1="44" x2="58" y2="44" stroke="${T}" stroke-width="2.5"/>
+    <line x1="58" y1="46" x2="112" y2="46" stroke="${V}" stroke-width="3.5"/>
+    <line x1="104" y1="46" x2="104" y2="78" stroke="${V}" stroke-width="2.5"/>
+    <line x1="46" y1="44" x2="112" y2="42" stroke="${G}" stroke-width="1.5" stroke-dasharray="4,3"/>`),
+  aides: svgW(`
+    <path d="M38 76 L60 16 q2 -5 8 -3" stroke="${T}" stroke-width="3"/>
+    <circle cx="36" cy="72" r="8" fill="#ffffff" stroke="${T}" stroke-width="2.5"/>
+    <circle cx="36" cy="72" r="2.5" fill="${T}"/>
+    <line x1="34" y1="66" x2="58" y2="72" stroke="${T}" stroke-width="3.5"/>
+    <rect x="44" y="36" width="28" height="24" rx="3" fill="${VC}" stroke="${T}" stroke-width="2" transform="rotate(12 44 36)"/>
+    <line x1="51" y1="37" x2="46" y2="59" stroke="#ffffff" stroke-width="2" transform="rotate(12 44 36)"/>`),
+  hauteur_charge: svgW(`
+    <line x1="26" y1="12" x2="26" y2="78" stroke="${T}" stroke-width="2.5"/>
+    <line x1="94" y1="12" x2="94" y2="78" stroke="${T}" stroke-width="2.5"/>
+    <rect x="26" y="28" width="68" height="24" fill="#e8f3f0"/>
+    <line x1="26" y1="28" x2="94" y2="28" stroke="${T}" stroke-width="2"/>
+    <line x1="26" y1="52" x2="94" y2="52" stroke="${T}" stroke-width="2"/>
+    <line x1="26" y1="74" x2="94" y2="74" stroke="${T}" stroke-width="2"/>
+    <rect x="48" y="32" width="22" height="16" rx="2" fill="${V}"/>`),
+  pres_du_corps: svgW(`
+    <circle cx="48" cy="14" r="7" stroke="${T}" stroke-width="2.5"/>
+    <line x1="48" y1="21" x2="48" y2="56" stroke="${T}" stroke-width="2.5"/>
+    <line x1="48" y1="56" x2="42" y2="78" stroke="${T}" stroke-width="2.5"/>
+    <line x1="48" y1="56" x2="56" y2="78" stroke="${T}" stroke-width="2.5"/>
+    <rect x="52" y="30" width="19" height="17" rx="2" fill="${VC}" stroke="${T}" stroke-width="2"/>
+    <line x1="48" y1="27" x2="56" y2="34" stroke="${T}" stroke-width="2.5"/>
+    <line x1="48" y1="40" x2="56" y2="44" stroke="${T}" stroke-width="2.5"/>`),
+  gants: svgW(`
+    <path d="M50 64 V38 a13 13 0 0 1 26 0 v26 Z" fill="#ffffff" stroke="${T}" stroke-width="2.5"/>
+    <line x1="58" y1="27" x2="58" y2="40" stroke="${T}" stroke-width="1.5"/>
+    <line x1="66" y1="26" x2="66" y2="40" stroke="${T}" stroke-width="1.5"/>
+    <path d="M50 46 q-13 -3 -13 7 q0 9 13 7" fill="#ffffff" stroke="${T}" stroke-width="2.5"/>
+    <rect x="46" y="64" width="34" height="11" rx="4" fill="${V}"/>`),
+  reglage_siege: svgW(`
+    <rect x="45" y="6" width="15" height="9" rx="3" fill="${T}"/>
+    <path d="M52 18 q-8 20 -3 40" stroke="${T}" stroke-width="6"/>
+    <path d="M50 58 h34" stroke="${T}" stroke-width="6"/>
+    <circle cx="53" cy="42" r="8" fill="none" stroke="${VC}" stroke-width="2"/>
+    <circle cx="53" cy="42" r="4.5" fill="${V}"/>
+    <line x1="62" y1="64" x2="62" y2="72" stroke="${T}" stroke-width="3"/>
+    <line x1="48" y1="75" x2="86" y2="75" stroke="${T}" stroke-width="3"/>`),
+  pauses_2h: svgW(`
+    <path d="M10 60 v-8 q0 -5 7 -6 l6 -9 q2 -3 8 -3 h11 q6 0 8 3 l6 9 q7 1 7 6 v8 Z" fill="#ffffff" stroke="${T}" stroke-width="2.5"/>
+    <line x1="26" y1="43" x2="42" y2="43" stroke="${T}" stroke-width="1.5"/>
+    <circle cx="22" cy="61" r="6" fill="#ffffff" stroke="${T}" stroke-width="2.5"/><circle cx="22" cy="61" r="2" fill="${T}"/>
+    <circle cx="50" cy="61" r="6" fill="#ffffff" stroke="${T}" stroke-width="2.5"/><circle cx="50" cy="61" r="2" fill="${T}"/>
+    <circle cx="88" cy="26" r="6" fill="${V}"/>
+    <path d="M88 32 v20 M88 52 l-8 18 M88 52 l9 18 M88 38 l-10 8 M88 38 l10 6" stroke="${V}" stroke-width="2.5"/>
+    <circle cx="20" cy="22" r="8" fill="#ffffff" stroke="${G}" stroke-width="2"/>
+    <path d="M20 17 v5 l3.5 2" stroke="${G}" stroke-width="2"/>`),
+  chargement: svgW(`
+    <rect x="14" y="56" width="20" height="16" rx="2" fill="${VC}" stroke="${T}" stroke-width="2"/>
+    <circle cx="74" cy="22" r="6" stroke="${V}" stroke-width="2.5"/>
+    <line x1="74" y1="28" x2="74" y2="50" stroke="${V}" stroke-width="2.5"/>
+    <line x1="74" y1="50" x2="66" y2="70" stroke="${V}" stroke-width="2.5"/>
+    <line x1="74" y1="50" x2="83" y2="70" stroke="${V}" stroke-width="2.5"/>
+    <line x1="40" y1="48" x2="60" y2="40" stroke="${G}" stroke-width="1.5" stroke-dasharray="4,3"/>`),
+};
+/* Schémas v2 — grand format, pleine largeur, plus lisibles */
+const R="#c96a5a";
+function svg2(inner){ return `<svg viewBox="0 0 240 130" style="width:100%;display:block" xmlns="http://www.w3.org/2000/svg" fill="none" stroke-linecap="round" stroke-linejoin="round" font-family="sans-serif">
+  <rect x="2" y="2" width="236" height="126" rx="14" fill="#eef6f3" stroke="#dcebe5"/>
+  ${inner}
+  <circle cx="221" cy="19" r="10" fill="${V}"/>
+  <path d="M216 19 l3.6 3.6 6.4-7.6" stroke="#fff" stroke-width="2.4"/>
+</svg>`; }
+const SCHEMAS_V2 = {
+  ecran_hauteur: svg2(`
+    <rect x="118" y="84" width="104" height="7" rx="3" fill="#fff" stroke="${T}" stroke-width="2.5"/>
+    <line x1="128" y1="91" x2="128" y2="116" stroke="${T}" stroke-width="3"/>
+    <line x1="212" y1="91" x2="212" y2="116" stroke="${T}" stroke-width="3"/>
+    <rect x="152" y="74" width="48" height="10" rx="3" fill="${VC}"/>
+    <rect x="150" y="30" width="52" height="38" rx="4" fill="#fff" stroke="${T}" stroke-width="2.5"/>
+    <rect x="154" y="34" width="44" height="30" rx="2" fill="${V}" opacity=".88"/>
+    <line x1="176" y1="68" x2="176" y2="74" stroke="${T}" stroke-width="3"/>
+    <circle cx="58" cy="36" r="12" fill="${T}"/>
+    <path d="M58 48 v42" stroke="${T}" stroke-width="9"/>
+    <path d="M58 60 L100 84" stroke="${T}" stroke-width="6"/>
+    <rect x="34" y="44" width="9" height="48" rx="4" fill="${VC}"/>
+    <rect x="34" y="88" width="48" height="9" rx="4" fill="${VC}"/>
+    <line x1="58" y1="97" x2="58" y2="118" stroke="${VC}" stroke-width="5"/>
+    <line x1="72" y1="34" x2="148" y2="32" stroke="${G}" stroke-width="2.5" stroke-dasharray="6,5"/>
+    <text x="78" y="22" font-size="11" font-weight="600" fill="${V}">niveau des yeux</text>`),
+  pos_ecrans: svg2(`
+    <rect x="58" y="26" width="92" height="14" rx="4" fill="${V}"/>
+    <rect x="63" y="30" width="80" height="4" rx="2" fill="#fff" opacity=".3"/>
+    <rect x="156" y="27" width="62" height="13" rx="4" fill="${VC}" transform="rotate(24 156 33)"/>
+    <circle cx="102" cy="94" r="14" fill="${T}"/>
+    <rect x="76" y="105" width="52" height="16" rx="8" fill="${T}" opacity=".75"/>
+    <line x1="102" y1="44" x2="102" y2="78" stroke="${G}" stroke-width="2.5" stroke-dasharray="6,5"/>
+    <text x="16" y="60" font-size="11" font-weight="600" fill="${V}">principal</text>
+    <text x="16" y="73" font-size="11" font-weight="600" fill="${V}">en face</text>`),
+  portable_seul: svg2(`
+    <line x1="16" y1="102" x2="224" y2="102" stroke="${T}" stroke-width="3"/>
+    <polygon points="150,102 208,102 208,56" fill="${VC}" stroke="${T}" stroke-width="2"/>
+    <rect x="202" y="24" width="9" height="34" rx="3" fill="${V}" transform="rotate(14 202 24)"/>
+    <rect x="44" y="91" width="70" height="11" rx="4" fill="#fff" stroke="${T}" stroke-width="2.5"/>
+    <line x1="52" y1="96" x2="106" y2="96" stroke="${VC}" stroke-width="2"/>
+    <ellipse cx="132" cy="98" rx="9" ry="5" fill="#fff" stroke="${T}" stroke-width="2.5"/>
+    <text x="22" y="62" font-size="11" font-weight="600" fill="${V}">clavier + souris</text>
+    <text x="22" y="75" font-size="11" font-weight="600" fill="${V}">externes</text>
+    <text x="138" y="40" font-size="11" font-weight="600" fill="${V}">portable</text>
+    <text x="138" y="53" font-size="11" font-weight="600" fill="${V}">surélevé</text>`),
+  siege: svg2(`
+    <circle cx="112" cy="24" r="11" fill="${T}"/>
+    <path d="M112 35 v42" stroke="${T}" stroke-width="8"/>
+    <path d="M112 77 h34" stroke="${T}" stroke-width="8"/>
+    <path d="M146 77 v34" stroke="${T}" stroke-width="8"/>
+    <path d="M138 113 h20" stroke="${T}" stroke-width="6"/>
+    <rect x="90" y="32" width="9" height="52" rx="4" fill="${VC}"/>
+    <rect x="90" y="82" width="42" height="9" rx="4" fill="${VC}"/>
+    <line x1="110" y1="91" x2="110" y2="116" stroke="${VC}" stroke-width="5"/>
+    <line x1="96" y1="116" x2="126" y2="116" stroke="${VC}" stroke-width="4"/>
+    <path d="M126 77 A14 14 0 0 0 112 63" stroke="${G}" stroke-width="2.5"/>
+    <text x="132" y="62" font-size="12" font-weight="700" fill="${G}">90°</text>
+    <path d="M132 77 A14 14 0 0 1 146 91" stroke="${G}" stroke-width="2.5"/>
+    <text x="158" y="100" font-size="12" font-weight="700" fill="${G}">90°</text>
+    <line x1="84" y1="118" x2="176" y2="118" stroke="${T}" stroke-width="2"/>`),
+  avant_bras: svg2(`
+    <rect x="62" y="76" width="158" height="9" rx="4" fill="#fff" stroke="${T}" stroke-width="2.5"/>
+    <circle cx="46" cy="26" r="11" fill="${T}"/>
+    <path d="M46 37 v50" stroke="${T}" stroke-width="8"/>
+    <path d="M46 50 L80 70" stroke="${T}" stroke-width="7"/>
+    <path d="M80 70 L140 72" stroke="${V}" stroke-width="9"/>
+    <circle cx="146" cy="72" r="5.5" fill="${V}"/>
+    <path d="M62 38 q7 8 0 17" stroke="${G}" stroke-width="2.5"/>
+    <path d="M58 51 l4 4 5-3" stroke="${G}" stroke-width="2.5"/>
+    <text x="96" y="62" font-size="11" font-weight="600" fill="${V}">posés, détendus</text>`),
+  lumiere: svg2(`
+    <rect x="16" y="14" width="88" height="10" rx="3" fill="#cfe3ee" stroke="${T}" stroke-width="2"/>
+    <circle cx="34" cy="44" r="7" stroke="#e8a13c" stroke-width="2.5"/>
+    <path d="M34 33 v-4 M34 55 v4 M23 44 h-4 M45 44 h4" stroke="#e8a13c" stroke-width="2"/>
+    <path d="M64 30 v78 M84 30 v78" stroke="${G}" stroke-width="1.8" stroke-dasharray="5,5" opacity=".7"/>
+    <rect x="122" y="50" width="72" height="46" rx="4" fill="#fff" stroke="${T}" stroke-width="2.5"/>
+    <rect x="150" y="55" width="11" height="36" rx="3" fill="${V}"/>
+    <circle cx="204" cy="72" r="11" fill="${T}"/>
+    <text x="118" y="116" font-size="11" font-weight="600" fill="${V}">écran de profil / fenêtre</text>`),
+  tel_casque: svg2(`
+    <circle cx="128" cy="68" r="30" fill="#fff" stroke="${T}" stroke-width="3"/>
+    <path d="M96 64 A34 34 0 0 1 160 64" stroke="${V}" stroke-width="7"/>
+    <rect x="90" y="58" width="13" height="21" rx="6" fill="${V}"/>
+    <rect x="153" y="58" width="13" height="21" rx="6" fill="${V}"/>
+    <path d="M160 78 q1 17 -19 19" stroke="${V}" stroke-width="4"/>
+    <circle cx="140" cy="97" r="4" fill="${V}"/>
+    <circle cx="38" cy="94" r="17" fill="#fff" stroke="${R}" stroke-width="2.5"/>
+    <path d="M29 99 q9 -11 18 -3" stroke="${T}" stroke-width="3.5"/>
+    <line x1="25" y1="107" x2="51" y2="81" stroke="${R}" stroke-width="3.5"/>`),
+  porte_doc: svg2(`
+    <line x1="16" y1="104" x2="224" y2="104" stroke="${T}" stroke-width="3"/>
+    <rect x="52" y="40" width="46" height="34" rx="4" fill="#fff" stroke="${T}" stroke-width="2.5"/>
+    <rect x="56" y="44" width="38" height="26" fill="${V}" opacity=".88"/>
+    <line x1="75" y1="74" x2="75" y2="99" stroke="${T}" stroke-width="3"/>
+    <rect x="60" y="99" width="30" height="5" rx="2" fill="${T}"/>
+    <g transform="rotate(-8 150 70)">
+      <rect x="136" y="44" width="34" height="48" rx="3" fill="#fff" stroke="${T}" stroke-width="2.5"/>
+      <line x1="142" y1="56" x2="164" y2="56" stroke="${VC}" stroke-width="2.5"/>
+      <line x1="142" y1="65" x2="164" y2="65" stroke="${VC}" stroke-width="2.5"/>
+      <line x1="142" y1="74" x2="160" y2="74" stroke="${VC}" stroke-width="2.5"/>
+    </g>
+    <path d="M104 54 h22" stroke="${G}" stroke-width="2.5"/>
+    <path d="M108 50 l-5 4 5 4 M122 50 l5 4 -5 4" stroke="${G}" stroke-width="2"/>
+    <rect x="192" y="92" width="30" height="10" rx="2" fill="#fff" stroke="${T}" stroke-width="2"/>
+    <line x1="188" y1="108" x2="226" y2="86" stroke="${R}" stroke-width="3"/>`),
+  sol: svg2(`
+    <path d="M96 38 v46" stroke="${T}" stroke-width="10"/>
+    <path d="M144 38 v46" stroke="${T}" stroke-width="10"/>
+    <rect x="84" y="82" width="28" height="13" rx="6" fill="${T}"/>
+    <rect x="132" y="82" width="28" height="13" rx="6" fill="${T}"/>
+    <rect x="52" y="94" width="136" height="18" rx="9" fill="${VC}" stroke="${V}" stroke-width="2"/>
+    <line x1="66" y1="103" x2="174" y2="103" stroke="#fff" stroke-width="2" stroke-dasharray="7,6"/>
+    <path d="M72 120 q8 6 16 0 M112 120 q8 6 16 0 M152 120 q8 6 16 0" stroke="${G}" stroke-width="2.5"/>`),
+  chaussures: svg2(`
+    <path d="M46 86 q2 -34 30 -36 h22 q7 0 10 7 q7 15 30 21 q26 6 30 8 v6 H46 Z" fill="#fff" stroke="${T}" stroke-width="3"/>
+    <path d="M42 96 h132" stroke="${V}" stroke-width="9"/>
+    <line x1="86" y1="62" x2="101" y2="53" stroke="${T}" stroke-width="2.5"/>
+    <line x1="90" y1="72" x2="106" y2="62" stroke="${T}" stroke-width="2.5"/>
+    <path d="M64 108 q7 7 15 0 M104 108 q7 7 15 0 M144 108 q7 7 15 0" stroke="${G}" stroke-width="2.5"/>
+    <text x="52" y="34" font-size="11" font-weight="600" fill="${V}">amorti + maintien</text>`),
+  assis_ponctuel: svg2(`
+    <circle cx="56" cy="26" r="11" fill="${T}"/>
+    <path d="M56 37 v40" stroke="${T}" stroke-width="8"/>
+    <path d="M56 77 l-10 36 M56 77 l10 36" stroke="${T}" stroke-width="7"/>
+    <rect x="150" y="58" width="40" height="10" rx="5" fill="${V}"/>
+    <path d="M156 68 l-6 46 M184 68 l6 46" stroke="${VC}" stroke-width="5"/>
+    <path d="M92 48 q28 -20 54 0" stroke="${G}" stroke-width="3"/>
+    <path d="M140 42 l7 6 -9 4" stroke="${G}" stroke-width="2.5"/>
+    <path d="M146 96 q-28 20 -54 0" stroke="${G}" stroke-width="3"/>
+    <path d="M98 102 l-7 -6 9 -4" stroke="${G}" stroke-width="2.5"/>`),
+  hauteur_plan: svg2(`
+    <circle cx="70" cy="22" r="11" fill="${T}"/>
+    <path d="M70 33 v52" stroke="${T}" stroke-width="8"/>
+    <path d="M70 85 l-8 32 M70 85 l8 32" stroke="${T}" stroke-width="7"/>
+    <path d="M70 46 l22 18" stroke="${T}" stroke-width="6"/>
+    <path d="M92 64 h26" stroke="${V}" stroke-width="6"/>
+    <rect x="118" y="66" width="100" height="8" rx="3" fill="#fff" stroke="${T}" stroke-width="2.5"/>
+    <line x1="204" y1="74" x2="204" y2="117" stroke="${T}" stroke-width="3"/>
+    <line x1="92" y1="62" x2="216" y2="62" stroke="${G}" stroke-width="2" stroke-dasharray="6,5"/>
+    <text x="118" y="52" font-size="11" font-weight="600" fill="${G}">hauteur des coudes</text>`),
+  aides: svg2(`
+    <path d="M84 116 L118 26 q3 -8 12 -6" stroke="${T}" stroke-width="4"/>
+    <path d="M76 106 h34" stroke="${T}" stroke-width="5"/>
+    <circle cx="80" cy="112" r="11" fill="#fff" stroke="${T}" stroke-width="3"/>
+    <circle cx="80" cy="112" r="3.5" fill="${T}"/>
+    <g transform="rotate(14 96 50)">
+      <rect x="92" y="46" width="44" height="38" rx="4" fill="${VC}" stroke="${T}" stroke-width="2.5"/>
+      <line x1="114" y1="47" x2="106" y2="83" stroke="#fff" stroke-width="3"/>
+    </g>
+    <circle cx="176" cy="38" r="10" fill="${T}"/>
+    <path d="M176 48 l-8 38" stroke="${T}" stroke-width="7"/>
+    <path d="M174 56 L132 24" stroke="${T}" stroke-width="5"/>
+    <path d="M168 86 l-6 30 M168 86 l16 26" stroke="${T}" stroke-width="6"/>
+    <path d="M56 44 h-26" stroke="${G}" stroke-width="3"/>
+    <path d="M36 38 l-8 6 8 6" stroke="${G}" stroke-width="2.5"/>`),
+  hauteur_charge: svg2(`
+    <rect x="60" y="36" width="120" height="36" fill="#dff0e8"/>
+    <line x1="60" y1="16" x2="60" y2="114" stroke="${T}" stroke-width="3.5"/>
+    <line x1="180" y1="16" x2="180" y2="114" stroke="${T}" stroke-width="3.5"/>
+    <line x1="60" y1="36" x2="180" y2="36" stroke="${T}" stroke-width="2.5"/>
+    <line x1="60" y1="72" x2="180" y2="72" stroke="${T}" stroke-width="2.5"/>
+    <line x1="60" y1="108" x2="180" y2="108" stroke="${T}" stroke-width="2.5"/>
+    <rect x="96" y="44" width="44" height="24" rx="3" fill="${V}"/>
+    <path d="M110 56 l5 5 9-10" stroke="#fff" stroke-width="2.8"/>
+    <text x="112" y="31" font-size="15" font-weight="700" fill="${R}">✕</text>
+    <text x="112" y="102" font-size="15" font-weight="700" fill="${R}">✕</text>
+    <text x="66" y="126" font-size="11" font-weight="600" fill="${V}">entre genoux et épaules</text>`),
+  pres_du_corps: svg2(`
+    <circle cx="104" cy="22" r="11" fill="${T}"/>
+    <path d="M104 33 v50" stroke="${T}" stroke-width="8"/>
+    <path d="M104 83 l-10 32 M104 83 l12 32" stroke="${T}" stroke-width="7"/>
+    <rect x="110" y="44" width="36" height="32" rx="4" fill="${VC}" stroke="${T}" stroke-width="2.5"/>
+    <path d="M104 42 L148 50" stroke="${T}" stroke-width="5"/>
+    <path d="M104 60 L146 70" stroke="${T}" stroke-width="5"/>
+    <path d="M86 120 q14 8 30 1" stroke="${G}" stroke-width="2.5"/>
+    <path d="M110 124 l8 -2 -3 -7" stroke="${G}" stroke-width="2.2"/>
+    <text x="152" y="100" font-size="11" font-weight="600" fill="${G}">pivotez</text>
+    <text x="152" y="112" font-size="11" font-weight="600" fill="${G}">des pieds</text>`),
+  gants: svg2(`
+    <path d="M84 92 V56 a16 16 0 0 1 32 0 v36 Z" fill="#fff" stroke="${T}" stroke-width="3"/>
+    <line x1="94" y1="42" x2="94" y2="58" stroke="${T}" stroke-width="1.8"/>
+    <line x1="104" y1="41" x2="104" y2="58" stroke="${T}" stroke-width="1.8"/>
+    <path d="M84 64 q-17 -4 -17 11 q0 13 17 9" fill="#fff" stroke="${T}" stroke-width="3"/>
+    <rect x="79" y="92" width="42" height="14" rx="5" fill="${V}"/>
+    <path d="M150 98 V70 a12 12 0 0 1 24 0 v28 Z" fill="${VC}" stroke="${T}" stroke-width="2.5"/>
+    <rect x="146" y="98" width="32" height="11" rx="4" fill="${V}"/>
+    <path d="M88 74 h24" stroke="${G}" stroke-width="2.5"/>
+    <path d="M88 70 v8 M112 70 v8" stroke="${G}" stroke-width="2"/>
+    <text x="132" y="34" font-size="11" font-weight="600" fill="${V}">à votre taille</text>`),
+  reglage_siege: svg2(`
+    <rect x="96" y="10" width="26" height="14" rx="5" fill="${T}"/>
+    <path d="M108 28 q-12 30 -4 56" stroke="${T}" stroke-width="10"/>
+    <path d="M104 84 h52" stroke="${T}" stroke-width="10"/>
+    <circle cx="110" cy="60" r="13" stroke="${VC}" stroke-width="3"/>
+    <circle cx="110" cy="60" r="6" fill="${V}"/>
+    <path d="M128 89 v14" stroke="${T}" stroke-width="4"/>
+    <path d="M106 106 h48" stroke="${T}" stroke-width="4"/>
+    <path d="M76 40 v32" stroke="${G}" stroke-width="2.5"/>
+    <path d="M72 46 l4 -6 4 6 M72 66 l4 6 4-6" stroke="${G}" stroke-width="2.2"/>
+    <text x="140" y="52" font-size="11" font-weight="600" fill="${V}">soutien</text>
+    <text x="140" y="64" font-size="11" font-weight="600" fill="${V}">lombaire</text>`),
+  pauses_2h: svg2(`
+    <path d="M18 86 v-13 q0 -6 10 -8 l8 -13 q3 -5 12 -5 h22 q9 0 12 5 l8 13 q10 2 10 8 v13 Z" fill="#fff" stroke="${T}" stroke-width="3"/>
+    <line x1="42" y1="64" x2="70" y2="64" stroke="${T}" stroke-width="2"/>
+    <circle cx="38" cy="88" r="9" fill="#fff" stroke="${T}" stroke-width="3"/><circle cx="38" cy="88" r="3" fill="${T}"/>
+    <circle cx="84" cy="88" r="9" fill="#fff" stroke="${T}" stroke-width="3"/><circle cx="84" cy="88" r="3" fill="${T}"/>
+    <circle cx="162" cy="34" r="10" fill="${V}"/>
+    <path d="M162 44 v28 M162 72 l-12 30 M162 72 l14 28 M162 52 l-14 12 M162 52 l16 9" stroke="${V}" stroke-width="5"/>
+    <circle cx="210" cy="94" r="16" fill="#fff" stroke="${G}" stroke-width="3"/>
+    <path d="M210 84 v10 l7 5" stroke="${G}" stroke-width="2.8"/>
+    <text x="198" y="122" font-size="12" font-weight="700" fill="${G}">2 h</text>`),
+  chargement: svg2(`
+    <rect x="26" y="88" width="36" height="28" rx="3" fill="${VC}" stroke="${T}" stroke-width="2.5"/>
+    <circle cx="130" cy="30" r="10" fill="${V}"/>
+    <path d="M130 40 v28 M130 68 l-12 30 M130 68 l14 28 M130 48 l-14 12 M130 48 l16 9" stroke="${V}" stroke-width="5"/>
+    <path d="M158 56 q44 -8 46 24 q1 22 -26 26" stroke="${G}" stroke-width="2.5" stroke-dasharray="7,6"/>
+    <path d="M186 108 l-9 1 4 -8" stroke="${G}" stroke-width="2.2"/>
+    <text x="60" y="30" font-size="11" font-weight="600" fill="${G}">1 min de marche d'abord</text>`),
+};
+
+/* Illustrations des encarts */
+function illusBallon(){
+  return `<svg viewBox="0 0 130 130" style="width:100%" xmlns="http://www.w3.org/2000/svg" fill="none" stroke-linecap="round">
+    <ellipse cx="62" cy="119" rx="34" ry="5" fill="#00000014"/>
+    <circle cx="58" cy="88" r="32" fill="${V}" opacity=".92"/>
+    <path d="M40 76 a26 26 0 0 1 14 -12" stroke="#ffffff" stroke-width="3" opacity=".5"/>
+    <circle cx="76" cy="20" r="9" fill="${T}"/>
+    <path d="M74 29 q-6 14 -12 26" stroke="${T}" stroke-width="6"/>
+    <path d="M62 55 l26 4" stroke="${T}" stroke-width="6"/>
+    <path d="M88 59 v34" stroke="${T}" stroke-width="6"/>
+    <path d="M83 95 h14" stroke="${T}" stroke-width="5"/>
+    <path d="M72 36 l-16 12" stroke="${T}" stroke-width="4.5"/>
+    <rect x="8" y="6" width="70" height="20" rx="10" fill="#ffffff" stroke="${G}" stroke-width="1.5"/>
+    <text x="43" y="20" font-size="10.5" font-weight="700" fill="${V}" text-anchor="middle" font-family="sans-serif">⏱ 30-45 min</text>
+  </svg>`;
+}
+function illusTeletravail(){
+  return `<svg viewBox="0 0 130 130" style="width:100%" xmlns="http://www.w3.org/2000/svg" fill="none" stroke-linecap="round">
+    <path d="M18 40 L45 20 L72 40" stroke="${VC}" stroke-width="4" fill="none"/>
+    <path d="M14 98 h104" stroke="${T}" stroke-width="3"/>
+    <rect x="66" y="86" width="30" height="6" rx="2" fill="${VC}"/>
+    <rect x="70" y="80" width="22" height="6" rx="2" fill="#e8a13c" opacity=".8"/>
+    <rect x="86" y="52" width="7" height="28" rx="2.5" fill="${V}" transform="rotate(12 86 52)"/>
+    <rect x="26" y="88" width="30" height="7" rx="3" fill="#ffffff" stroke="${T}" stroke-width="2"/>
+    <circle cx="110" cy="76" r="7" fill="${V}" opacity=".85"/>
+    <path d="M110 76 q-3 -12 4 -18 M110 76 q-9 -7 -6 -17" stroke="${V}" stroke-width="2.5"/>
+    <rect x="104" y="83" width="12" height="12" rx="2" fill="#c98d5a"/>
+    <path d="M28 66 a14 14 0 0 1 22 0 M33 72 a8 8 0 0 1 12 0" stroke="${G}" stroke-width="2.5"/>
+    <circle cx="39" cy="78" r="2" fill="${G}"/>
+  </svg>`;
+}
+
+/* « C'est fait ! » : l'utilisateur signale qu'un aménagement a été réalisé.
+   La réponse du bilan est mise à jour (le conseil disparaît, l'œil de l'ostéo aussi)
+   et la correction est datée — la preuve d'action pour le bilan entreprise. */
+let fixes = lire("fixes") || [];
+function marquerCorrige(id){
+  const q = (AMENAGEMENT[profil.poste]||[]).find(x=>x.id===id);
+  if(!q) return;
+  profil.equipement = profil.equipement||{};
+  if(q.type==="choix"){
+    const bonne = q.options.find(o=>!o.conseil);
+    if(bonne) profil.equipement[id] = bonne.v;
+  } else {
+    profil.equipement[id] = q.inverse ? false : true;
+  }
+  sauver("profil", profil);
+  fixes.push({id:id, t:new Date().toISOString()});
+  sauver("fixes", fixes);
+  sonEtape();
+  rendrePoste();
+}
+
+function rendrePoste(){
+  const qs = questionsVisibles(profil.poste, profil.equipement);
+  const eq = profil.equipement||{};
+  // Un conseil est déclenché si la réponse révèle un problème
+  const aCorriger = [], ok = [];
+  qs.forEach(q=>{
+    if(q.neutre) return;
+    if(q.type==="choix"){
+      const opt = q.options.find(o=>o.v===eq[q.id]);
+      if(opt && opt.conseil) aCorriger.push({id:q.id, conseil:opt.conseil});
+      else if(opt) ok.push(q);
+    } else {
+      const probleme = q.inverse ? eq[q.id]===true : eq[q.id]===false;
+      if(probleme) aCorriger.push({id:q.id, conseil:q.conseil});
+      else if(typeof eq[q.id]==="boolean") ok.push(q);
+    }
+  });
+  let html = "";
+
+  if(aCorriger.length){
+    html += `<p class="moment">🛠️ On règle ça en priorité (${aCorriger.length})</p>` +
+      aCorriger.map((c,i)=>{
+        const schema = SCHEMAS_V2[c.id]||SCHEMAS[c.id];
+        const zonesLiees = (LIEN_ZONES[c.id]||[]).filter(z=>(profil.zones||[]).includes(z));
+        return `
+        <div class="carte" style="border-left:4px solid var(--ambre)">
+          <b style="font-size:15px">${i+1}. ${TITRES[c.id]||"Aménagement à revoir"}</b>
+          ${zonesLiees.length?`<p style="margin-top:6px;font-size:12.5px;font-weight:700;color:#c0632b">💪 Ce réglage, c'est du soulagement direct pour : ${zonesLiees.join(", ")}</p>`:""}
+          <p class="sub" style="margin:6px 0 0;font-size:13.5px">${c.conseil}</p>
+          ${schema?`<div style="margin-top:10px">${schema}</div>`:""}
+          <div onclick="marquerCorrige('${c.id}')" style="margin-top:12px;border:1.5px solid var(--vert-mid);background:#f2faf7;border-radius:12px;padding:10px 14px;text-align:center;font-size:13px;font-weight:700;color:var(--vert);cursor:pointer;user-select:none">✅ C'est fait — j'ai réalisé cet aménagement</div>
+        </div>`;
+      }).join("");
+  } else if(qs.length){
+    html += `<div class="carte" style="border-left:4px solid var(--vert)"><b>🎉 Votre poste est déjà aux petits soins</b>
+      <p class="sub" style="margin:6px 0 0;font-size:14px">D'après vos réponses, l'essentiel est en place — bravo, c'est rare ! Les micro-pauses restent vos meilleures alliées : même le meilleur poste du monde ne remplace pas le mouvement.</p></div>`;
+  }
+
+  if((profil.lieu==="teletravail"||profil.lieu==="mixte")){
+    html += `<p class="moment">🏠 Spécial télétravail</p>
+      <div class="carte" style="padding:0;overflow:hidden;border:1.5px solid #cfe0da">
+        <div style="display:flex;align-items:center;background:linear-gradient(120deg,#e8f3f0,#f3f7ee)">
+          <div style="flex:1;padding:18px 4px 18px 20px">
+            <b style="font-size:16px">Votre vrai bureau, à la maison</b>
+            <p style="font-size:13.5px;line-height:1.55;margin-top:8px">✔️ Portable surélevé + clavier externe<br>✔️ Une vraie chaise, pas le canapé<br>✔️ Bougez <b>plus</b> qu'au bureau : personne ne vous voit vous étirer 😉</p>
+          </div>
+          <div style="flex:0 0 118px">${illusTeletravail()}</div>
+        </div>
+      </div>`;
+  }
+
+  if(fixes.length){
+    html += `<p class="moment">🏁 Aménagements réalisés (${fixes.length})</p><div class="carte">` +
+      fixes.slice().reverse().map(f=>`<p class="sub" style="margin:0 0 8px;font-size:13.5px">✔️ <b>${TITRES[f.id]||f.id}</b> — fait le ${new Date(f.t).toLocaleDateString("fr-FR",{day:"numeric",month:"short"})}</p>`).join("") + `</div>`;
+  }
+
+  if(ok.length){
+    html += `<p class="moment">✅ Déjà au top chez vous</p><div class="carte">` +
+      ok.map(q=>`<p class="sub" style="margin:0 0 8px;font-size:14px">✅ ${q.q.replace(/\s*\?$/,"")}</p>`).join("") + `</div>`;
+  }
+
+  // Le bon réflexe en plus (conseil clinique, profil bureau) — encart illustré
+  if(profil.poste==="bureau"){
+    html += `<p class="moment">🌟 Le petit plus qui change tout</p>
+      <div class="carte" style="padding:0;overflow:hidden;border:1.5px solid #d8e4c9">
+        <div style="display:flex;align-items:center;background:linear-gradient(120deg,#eef6e8,#e8f3f0)">
+          <div style="flex:0 0 118px">${illusBallon()}</div>
+          <div style="flex:1;padding:18px 20px 18px 4px">
+            <b style="font-size:16px">L'astuce ballon</b>
+            <p style="font-size:13.5px;line-height:1.55;margin-top:8px">Un ballon d'assise en alternance avec votre siège :<br><b style="color:var(--vert);font-size:15px">30-45 min le matin<br>30-45 min l'après-midi</b></p>
+            <p style="font-size:12px;color:var(--gris);margin-top:6px">Assez pour réveiller posture et gainage, pas trop pour ne pas fatiguer le dos.</p>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // Votre poste en photo (auto-diagnostic guidé — l'analyse IA viendra avec la version connectée)
+  html += `<p class="moment">📸 Votre poste passe au scanner</p>
+    <div class="carte">
+      <p class="sub" style="margin-bottom:12px;font-size:13.5px">Prenez votre poste en photo, puis vérifiez-le point par point. La photo reste sur votre appareil — rien n'est envoyé.</p>
+      <input type="file" accept="image/*" id="photo-poste" style="display:none" onchange="afficherPhoto(this)">
+      <button class="btn secondaire" onclick="document.getElementById('photo-poste').click()">📷 Prendre / choisir une photo</button>
+      <div id="photo-zone"></div>
+    </div>`;
+
+  // Les schémas de référence n'apparaissent que si tout est déjà bien aménagé
+  // (sinon, chaque correction porte son propre schéma)
+  if(profil.poste==="bureau" && !aCorriger.length) html += schemasBureau();
+
+  html += `<button class="btn secondaire" style="margin-top:10px" onclick="refaireBilan()">Mettre à jour mes réponses</button>`;
+  document.getElementById("conseils-poste").innerHTML = html;
+}
+
+/* ---------- Schémas types d'aménagement (SVG — photos/vidéos à venir) ---------- */
+function schemasBureau(){
+  const multi = profil.equipement && profil.equipement.nb_ecrans && profil.equipement.nb_ecrans!=="1";
+  return `<p class="moment">Schémas types</p>
+  <div class="carte">
+    <b style="font-size:15px">Le poste assis de référence</b>
+    <svg viewBox="0 0 340 190" style="width:100%;margin-top:8px" xmlns="http://www.w3.org/2000/svg">
+      <line x1="10" y1="170" x2="330" y2="170" stroke="#c8d4d0" stroke-width="2"/>
+      <!-- bureau -->
+      <line x1="150" y1="95" x2="320" y2="95" stroke="#22302c" stroke-width="3"/>
+      <line x1="165" y1="95" x2="165" y2="170" stroke="#22302c" stroke-width="3"/>
+      <line x1="305" y1="95" x2="305" y2="170" stroke="#22302c" stroke-width="3"/>
+      <!-- écran -->
+      <rect x="230" y="38" width="10" height="44" rx="2" fill="#1a6b5a"/>
+      <line x1="235" y1="82" x2="235" y2="95" stroke="#22302c" stroke-width="3"/>
+      <line x1="222" y1="95" x2="248" y2="95" stroke="#22302c" stroke-width="3"/>
+      <!-- personnage -->
+      <circle cx="112" cy="44" r="12" fill="none" stroke="#22302c" stroke-width="3"/>
+      <line x1="112" y1="56" x2="112" y2="110" stroke="#22302c" stroke-width="3"/>
+      <line x1="112" y1="75" x2="140" y2="88" stroke="#22302c" stroke-width="3"/>
+      <line x1="140" y1="88" x2="172" y2="88" stroke="#22302c" stroke-width="3"/>
+      <line x1="112" y1="110" x2="142" y2="110" stroke="#22302c" stroke-width="3"/>
+      <line x1="142" y1="110" x2="142" y2="162" stroke="#22302c" stroke-width="3"/>
+      <line x1="134" y1="168" x2="156" y2="168" stroke="#22302c" stroke-width="4"/>
+      <!-- chaise -->
+      <line x1="92" y1="60" x2="92" y2="118" stroke="#6b7a76" stroke-width="3"/>
+      <line x1="88" y1="114" x2="120" y2="114" stroke="#6b7a76" stroke-width="4"/>
+      <line x1="104" y1="114" x2="104" y2="170" stroke="#6b7a76" stroke-width="3"/>
+      <!-- ligne du regard -->
+      <line x1="124" y1="42" x2="228" y2="40" stroke="#4a9d8a" stroke-width="1.5" stroke-dasharray="5,4"/>
+      <text x="128" y="30" font-size="10.5" fill="#1a6b5a" font-family="sans-serif">haut de l'écran à hauteur des yeux</text>
+      <text x="150" y="112" font-size="10" fill="#6b7a76" font-family="sans-serif">avant-bras posés</text>
+      <text x="150" y="150" font-size="10" fill="#6b7a76" font-family="sans-serif">genoux à 90°</text>
+      <text x="120" y="183" font-size="10" fill="#6b7a76" font-family="sans-serif">pieds à plat</text>
+    </svg>
+  </div>
+  <div class="carte">
+    <b style="font-size:15px">${multi?"Vos écrans, vus de dessus":"L'écran, vu de dessus"}</b>
+    <svg viewBox="0 0 340 145" style="width:100%;margin-top:8px" xmlns="http://www.w3.org/2000/svg">
+      <!-- 1 écran -->
+      <rect x="45" y="18" width="70" height="9" rx="2" fill="#1a6b5a"/>
+      <circle cx="80" cy="92" r="11" fill="none" stroke="#22302c" stroke-width="3"/>
+      <line x1="80" y1="34" x2="80" y2="76" stroke="#4a9d8a" stroke-width="1.5" stroke-dasharray="5,4"/>
+      <text x="34" y="122" font-size="10.5" fill="#22302c" font-family="sans-serif">1 écran : centré, face à vous</text>
+      <!-- 2 écrans -->
+      <rect x="200" y="18" width="66" height="9" rx="2" fill="#1a6b5a"/>
+      <rect x="272" y="20" width="52" height="9" rx="2" fill="#8fbcb0" transform="rotate(18 272 22)"/>
+      <circle cx="233" cy="92" r="11" fill="none" stroke="#22302c" stroke-width="3"/>
+      <line x1="233" y1="34" x2="233" y2="76" stroke="#4a9d8a" stroke-width="1.5" stroke-dasharray="5,4"/>
+      <text x="184" y="122" font-size="10.5" fill="#22302c" font-family="sans-serif">2 écrans : principal en face,</text>
+      <text x="184" y="135" font-size="10.5" fill="#22302c" font-family="sans-serif">secondaire incliné vers vous</text>
+    </svg>
+    <p class="sub" style="font-size:12px;margin:8px 0 0">Schémas de principe — des photos et vidéos types viendront les compléter.</p>
+  </div>`;
+}
+
+/* ---------- Auto-diagnostic photo du poste ---------- */
+function afficherPhoto(input){
+  const f = input.files && input.files[0];
+  if(!f) return;
+  const url = URL.createObjectURL(f);
+  const qs = questionsVisibles(profil.poste, profil.equipement);
+  const eq = profil.equipement||{};
+  const points = qs.filter(q=>!q.neutre).map(q=>{
+    if(q.type==="choix"){ const o=q.options.find(x=>x.v===eq[q.id]); return o&&o.conseil ? TITRES[q.id] : null; }
+    const pb = q.inverse ? eq[q.id]===true : eq[q.id]===false;
+    return pb ? TITRES[q.id] : null;
+  }).filter(Boolean);
+  const generiques = ["Le haut de l'écran à hauteur des yeux","Les avant-bras posés","Les pieds à plat, genoux à 90°","Rien qui oblige à tourner la tête en continu"];
+  const liste = (points.length?points:generiques).map(p=>`<label style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;font-size:14px"><input type="checkbox" style="margin-top:3px;accent-color:var(--vert)"> ${p}</label>`).join("");
+  document.getElementById("photo-zone").innerHTML = `
+    <img src="${url}" style="width:100%;border-radius:12px;margin:14px 0 12px" alt="Votre poste de travail">
+    <b style="font-size:14.5px">${points.length?"Vérifiez sur votre photo les points relevés dans votre bilan :":"Vérifiez ces points essentiels sur votre photo :"}</b>
+    <div style="margin-top:10px">${liste}</div>
+    <p class="sub" style="font-size:12px;margin:6px 0 0">🔎 L'analyse automatique de la photo par intelligence artificielle arrivera avec la version connectée de l'application.</p>`;
+}
+
+/* =========================================================
+   POINT DE LA SEMAINE — suivi de l'évolution des douleurs
+   (la donnée d'efficacité : pour soi, et en agrégé anonyme pour l'entreprise)
+   ========================================================= */
+function cleSemaine(dt){
+  const d = dt ? new Date(dt) : new Date();
+  const lundi = new Date(d - ((d.getDay()+6)%7)*864e5);
+  return lundi.toISOString().slice(0,10);
+}
+function checkinDu(){ return !checkins.some(c=>cleSemaine(c.date)===cleSemaine()); }
+let checkinTmp={};
+
+function ouvrirCheckin(){
+  const zones = (profil.zones||[]).slice(0,3);
+  checkinTmp={tensions:5, energie:5, utilite:5, zones:{}};
+  zones.forEach(z=>checkinTmp.zones[z]=5);
+  document.getElementById("checkin-sub").textContent = profil.code
+    ? "1 minute pour mesurer l'évolution de vos tensions. Ces réponses alimentent aussi le bilan collectif ANONYME de votre entreprise — rien d'individuel n'est jamais transmis."
+    : "1 minute pour mesurer l'évolution de vos tensions — c'est ce qui permet de voir si le rituel et les aménagements fonctionnent vraiment.";
+  document.getElementById("checkin-form").innerHTML = `
+    <div class="zone-slider">
+      <div class="ligne"><span>Douleurs / tensions cette semaine</span><span class="val" id="ck-t">5</span></div>
+      <input type="range" min="0" max="10" value="5" oninput="checkinTmp.tensions=+this.value;document.getElementById('ck-t').textContent=this.value">
+      <div class="legende"><span>aucune</span><span>très fortes</span></div>
+    </div>
+    ${zones.map((z,i)=>`
+    <div class="zone-slider">
+      <div class="ligne"><span>${ZONE_ICO[z]||""} ${z}</span><span class="val" id="ck-z${i}">5</span></div>
+      <input type="range" min="0" max="10" value="5" oninput="checkinTmp.zones['${z}']=+this.value;document.getElementById('ck-z${i}').textContent=this.value">
+    </div>`).join("")}
+    <div class="zone-slider">
+      <div class="ligne"><span>Énergie en fin de journée</span><span class="val" id="ck-e">5</span></div>
+      <input type="range" min="0" max="10" value="5" oninput="checkinTmp.energie=+this.value;document.getElementById('ck-e').textContent=this.value">
+      <div class="legende"><span>épuisé·e</span><span>en forme</span></div>
+    </div>
+    <div class="zone-slider">
+      <div class="ligne"><span>Le rituel de mobilité-étirements et les aménagements vous aident&nbsp;?</span><span class="val" id="ck-u">5</span></div>
+      <input type="range" min="0" max="10" value="5" oninput="checkinTmp.utilite=+this.value;document.getElementById('ck-u').textContent=this.value">
+      <div class="legende"><span>pas vraiment</span><span>beaucoup</span></div>
+    </div>
+    <button class="btn" onclick="sauverCheckin()">Enregistrer mon point</button>`;
+  rendreHistoCheckin();
+  montrer("s-checkin"); navVisible(false);
+}
+function sauverCheckin(){
+  const prev = checkins.length ? checkins[checkins.length-1] : null;
+  checkins.push({date:new Date().toISOString(), ...checkinTmp});
+  sauver("checkins",checkins);
+  document.getElementById("checkin-form").innerHTML = planApresCheckin(checkinTmp, prev);
+  rendreHistoCheckin();
+  window.scrollTo(0,0);
+}
+
+/* Assiduité de la semaine : combien de jours (sur 7) avec au moins 3 micro-pauses ? */
+function joursActifsSemaine(){
+  let n=0; const d=new Date();
+  for(let i=0;i<7;i++){
+    const k=new Date(d-864e5*i).toISOString().slice(0,10);
+    if(idsDu(k).length>=3) n++;
+  }
+  return n;
+}
+
+/* Réaction au point de la semaine : le verdict est croisé avec l'assiduité.
+   Rituel peu suivi + douleurs en hausse → on booste la régularité avant d'incriminer le poste.
+   Rituel bien suivi + douleurs en hausse → plan ciblé zones + aménagements. */
+function planApresCheckin(tmp, prev){
+  const delta = prev ? tmp.tensions - prev.tensions : 0;
+  // zones qui se dégradent (vs semaine passée), sinon zones les plus fortes (≥ 6)
+  let zonesCibles = [];
+  const zt = tmp.zones||{};
+  if(prev && prev.zones){
+    zonesCibles = Object.keys(zt).filter(z=>prev.zones[z]!==undefined && zt[z]>prev.zones[z]);
+  }
+  if(!zonesCibles.length) zonesCibles = Object.keys(zt).filter(z=>zt[z]>=6);
+  zonesCibles = zonesCibles.slice(0,2);
+  const degrade = delta>=1 || zonesCibles.length>0;
+  const ja = joursActifsSemaine();
+
+  if(!degrade){
+    return `<div class="fin-check" style="margin:6px 0">${delta<=-1?"🎉":"🙏"}</div>
+      <p style="text-align:center;font-size:15px;font-weight:700">${delta<=-1?"Tensions en baisse — le travail paie !":"Merci, point enregistré."}</p>
+      <p class="sub" style="text-align:center;font-size:13px">${delta<=-1 && ja>=4
+        ? "Et ce n'est pas un hasard : rituel suivi "+ja+" jours sur 7 cette semaine. Le lien est là — continuez !"
+        : "Continuez le rituel : c'est la régularité qui protège."}</p>
+      <button class="btn" onclick="retourAccueil()">Retour à ma journée</button>`;
+  }
+
+  // Dégradation MAIS rituel peu suivi → le problème n'est probablement pas le poste : on remotive
+  if(ja<=3){
+    return `<p style="font-size:15px;font-weight:700">💪 Avant de chercher plus loin…</p>
+      <p class="sub" style="font-size:13px;margin:6px 0 12px">Vos tensions montent, mais soyons honnêtes ensemble : le rituel n'a été vraiment suivi que <b>${ja} jour${ja>1?"s":""} sur 7</b> cette semaine. On ne peut pas encore conclure sur le poste — la première chose à tester, c'est la régularité.</p>
+      <div class="carte" style="background:var(--vert-clair);box-shadow:none;padding:14px 16px;margin-bottom:12px">
+        <b style="font-size:13.5px;color:var(--vert)">🎯 Votre objectif de la semaine</b>
+        <p style="font-size:13px;margin-top:5px;line-height:1.5">Au moins <b>3 micro-pauses par jour, chaque jour</b> — c'est 6 minutes quotidiennes. Le réveil du corps + une pause active + la détente du midi suffisent. On refait le point vendredi prochain : si ça ne bouge pas malgré la régularité, on s'attaquera au poste.</p>
+      </div>
+      <div class="mini-neutre" onclick="lancerSeance('neutre_30')">📐 <span class="tg">Commencez maintenant : réalignement 30 s</span> ›</div>
+      ${tmp.tensions>=7?`<p class="sub" style="font-size:12px;margin-top:10px">⚠️ Une douleur forte qui persiste ou s'intensifie, ce n'est plus de la prévention : parlez-en à un professionnel de santé.</p>`:""}
+      <button class="btn" style="margin-top:12px" onclick="retourAccueil()">C'est parti pour aujourd'hui ›</button>`;
+  }
+
+  // Plan de réaction : séquences prioritaires + aménagements liés
+  const seqHtml = zonesCibles.map(z=>{
+    const id = SEQ_PAR_ZONE[z]; const s = id && SEQUENCES[id];
+    return s ? `<div class="carte seance" onclick="lancerSeance('${id}')" style="margin-bottom:10px">
+        <div class="pastille">${s.ico}</div>
+        <div class="infos"><b>${s.titre}</b><span>${s.duree} · à refaire chaque jour cette semaine</span></div>
+        <div class="etat">Lancer ›</div>
+      </div>` : "";
+  }).join("");
+  const defs = defautsActifs().filter(id=>(LIEN_ZONES[id]||[]).some(z=>zonesCibles.includes(z) || !zonesCibles.length));
+  const amgHtml = defs.length ? `<p style="font-size:13px;font-weight:700;margin:12px 0 6px">🪑 Et côté poste, ces réglages comptent pour vous :</p>
+      ${defs.slice(0,3).map(id=>`<p class="sub" style="font-size:12.5px;margin:0 0 4px">• ${TITRES[id]||id}</p>`).join("")}
+      <button class="btn secondaire" style="margin-top:6px" onclick="navVisible(true);montrerOnglet('poste')">Ouvrir « Mon poste » ›</button>` : "";
+
+  return `<p style="font-size:15px;font-weight:700">😕 Semaine plus tendue — on réagit ensemble.</p>
+    <p class="sub" style="font-size:13px;margin:6px 0 12px">Vous avez pourtant bien suivi le rituel (<b>${ja} jours sur 7</b>) — bravo pour la régularité. C'est donc ailleurs qu'il faut chercher${zonesCibles.length?" : on cible <b>"+zonesCibles.join(", ")+"</b> et on vérifie le poste":" : on vérifie le poste"}. Voici votre plan pour la semaine :</p>
+    ${seqHtml}
+    <div class="mini-neutre" onclick="lancerSeance('neutre_30')">📐 <span class="tg">Réalignement éclair · 30 s</span> ›<br><span class="ss">plusieurs fois par jour, c'est lui qui entretient la position neutre</span></div>
+    ${amgHtml}
+    ${tmp.tensions>=7?`<p class="sub" style="font-size:12px;margin-top:12px">⚠️ Une douleur forte qui persiste ou s'intensifie malgré tout, ce n'est plus de la prévention : parlez-en à un professionnel de santé.</p>`:""}
+    <button class="btn" style="margin-top:12px" onclick="retourAccueil()">Retour à ma journée</button>`;
+}
+function rendreHistoCheckin(){
+  const h=document.getElementById("checkin-histo");
+  if(!checkins.length){ h.innerHTML='<p class="sub" style="margin:0">Premier point cette semaine — il servira de référence.</p>'; return; }
+  // Tendance globale : première vs dernière mesure
+  let bilanGlobal="";
+  if(checkins.length>=2){
+    const delta = checkins[checkins.length-1].tensions - checkins[0].tensions;
+    bilanGlobal = `<p style="font-size:13.5px;font-weight:700;margin-bottom:10px;color:${delta<0?'var(--vert)':delta>0?'#c96a5a':'var(--gris)'}">
+      ${delta<0?"📉 Tensions en baisse de "+Math.abs(delta)+" pt"+(Math.abs(delta)>1?"s":"")+" depuis votre premier point — ça travaille pour vous !"
+        :delta>0?"📈 Tensions en hausse de "+delta+" pt"+(delta>1?"s":"")+" — parlez-en autour de vous, et pensez à l'onglet Mon poste."
+        :"→ Tensions stables depuis le début du suivi."}</p>`;
+  }
+  h.innerHTML = bilanGlobal + checkins.slice().reverse().slice(0,8).map((c,i,arr)=>{
+    const prec=arr[i+1]; let tag="";
+    if(prec){
+      const d=c.tensions-prec.tensions;
+      if(d<=-1) tag='<span class="tendance mieux">▼ en baisse</span>';
+      else if(d>=1) tag='<span class="tendance moins">▲ en hausse</span>';
+      else tag='<span class="tendance" style="color:var(--gris)">→ stable</span>';
+    }
+    return `<div class="histo-item"><span>sem. du ${new Date(cleSemaine(c.date)).toLocaleDateString("fr-FR",{day:"numeric",month:"short"})} · tensions ${c.tensions}/10 · énergie ${c.energie}/10</span>${tag}</div>`;
+  }).join("");
+}
+
+/* =========================================================
+   PROFIL
+   ========================================================= */
+function rendreProfil(){
+  const p=PROFILS[profil.poste];
+  const LIEUX={site:"Sur site",teletravail:"Télétravail",mixte:"Mixte (site + télétravail)"};
+  const m = profil.metier && profil.metier!=="autre" ? metierDe(profil.metier) : null;
+  document.getElementById("profil-detail").innerHTML = `
+    <div class="profil-ligne"><span>Prénom</span><span>${profil.prenom}</span></div>
+    ${m?`<div class="profil-ligne"><span>Métier</span><span>${m.ico} ${m.l}</span></div>`:""}
+    <div class="profil-ligne"><span>Activité</span><span>${p.ico} ${p.label}</span></div>
+    ${profil.lieu?`<div class="profil-ligne"><span>Lieu de travail</span><span>${LIEUX[profil.lieu]}</span></div>`:""}
+    <div class="profil-ligne"><span>Exposition</span><span>${profil.heures} / jour</span></div>
+    <div class="profil-ligne"><span>Zones surveillées</span><span>${(profil.zones&&profil.zones.length)?profil.zones.join(", "):"aucune déclarée"}</span></div>
+    <div class="profil-ligne"><span>Stress / fatigue</span><span>${profil.stress}/5 · ${profil.fatigue}/5</span></div>
+    <div class="profil-ligne"><span>Entreprise</span><span>${profil.code?profil.code:"usage individuel"}</span></div>
+    <div class="profil-ligne"><span>Points hebdo</span><span>${checkins.length} enregistré${checkins.length>1?"s":""}</span></div>`;
+}
+
+/* ---------- Démarrage ---------- */
+/* Mon poste & moi — v0.34 : corrections de Claire sur les gestes (respiration continue, paumes, omoplates) — bibliothèque validée */
+document.getElementById("logo-accueil").innerHTML = logoSVG(84);
+document.getElementById("logo-mini").innerHTML = logoSVG(26);
+if(profil){ navVisible(true); montrerOnglet("accueil"); }
+
+/* PWA : actif uniquement une fois l'app hébergée en ligne (HTTPS) — sans effet en local */
+if("serviceWorker" in navigator && location.protocol==="https:"){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
