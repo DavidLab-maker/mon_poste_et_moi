@@ -289,6 +289,14 @@
     <h1>Mon profil</h1>
     <p class="sub">Votre programme est construit à partir de ces informations.</p>
     <div class="carte" id="profil-detail"></div>
+    <div class="carte" id="carte-notifs">
+      <b style="font-size:15px">🔔 Rappels de pauses</b>
+      <p class="sub" style="margin:6px 0 10px;font-size:13px" id="notif-etat">Disponibles uniquement sur la version en ligne de l'app.</p>
+      <div class="chips">
+        <span class="chip" onclick="activerNotifs()">Activer les rappels</span>
+        <span class="chip" onclick="testerNotif()">🔔 Tester maintenant</span>
+      </div>
+    </div>
     <div class="carte">
       <b style="font-size:15px">🔄 Signaler un changement</b>
       <p class="sub" style="margin:6px 0 10px;font-size:13px">Une nouvelle tension, un poste qui a changé, un état différent ? Mettez à jour la section concernée, sans tout refaire.</p>
@@ -2595,7 +2603,7 @@ function rendreProfil(){
 }
 
 /* ---------- Démarrage ---------- */
-/* Mon poste & moi — v0.34 : corrections de Claire sur les gestes (respiration continue, paumes, omoplates) — bibliothèque validée */
+/* Mon poste & moi — v0.35 : rappels de pauses (10 h, 14 h 30, 16 h 30) + bouton de test des notifications */
 document.getElementById("logo-accueil").innerHTML = logoSVG(84);
 document.getElementById("logo-mini").innerHTML = logoSVG(26);
 if(profil){ navVisible(true); montrerOnglet("accueil"); }
@@ -2604,6 +2612,55 @@ if(profil){ navVisible(true); montrerOnglet("accueil"); }
 if("serviceWorker" in navigator && location.protocol==="https:"){
   navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
+
+/* =========================================================
+   RAPPELS DE PAUSES (niveau 1 : app ouverte ou en arrière-plan récent)
+   Le bouton « Tester maintenant » est LA preuve que ça marche sur un appareil.
+   ========================================================= */
+function etatNotifs(){
+  const el=document.getElementById("notif-etat"); if(!el) return;
+  if(location.protocol!=="https:"){ el.textContent="Disponibles uniquement sur la version en ligne de l'app (HTTPS)."; return; }
+  if(!("Notification" in window)){ el.textContent="Ce navigateur ne gère pas les notifications."; return; }
+  if(Notification.permission==="granted") el.textContent="✅ Rappels activés : matinée (10 h), après-midi (14 h 30 et 16 h 30), tant que l'app est ouverte ou en arrière-plan récent.";
+  else if(Notification.permission==="denied") el.textContent="🚫 Refusées dans les réglages du navigateur — à réactiver dans les paramètres du site.";
+  else el.textContent="Touchez « Activer les rappels » puis autorisez les notifications.";
+}
+function activerNotifs(){
+  if(location.protocol!=="https:" || !("Notification" in window)){ etatNotifs(); return; }
+  Notification.requestPermission().then(()=>{ etatNotifs(); });
+}
+function montrerNotif(titre, corps){
+  if(!("Notification" in window) || Notification.permission!=="granted") return false;
+  if(navigator.serviceWorker && navigator.serviceWorker.controller){
+    navigator.serviceWorker.ready.then(r=>r.showNotification(titre,{body:corps,icon:"icon-192.png",badge:"icon-192.png"}));
+  } else {
+    try{ new Notification(titre,{body:corps,icon:"icon-192.png"}); }catch(e){ return false; }
+  }
+  return true;
+}
+function testerNotif(){
+  if(location.protocol!=="https:"){ alert("Le test des notifications ne fonctionne que sur la version en ligne (adresse en https)."); return; }
+  if(Notification.permission!=="granted"){ activerNotifs(); return; }
+  const ok = montrerNotif("Mon poste & moi", "🔔 Test réussi ! Les rappels fonctionnent sur cet appareil.");
+  if(!ok) alert("Notification impossible sur cet appareil/navigateur.");
+}
+/* Rappels aux heures clés, tant que l'app tourne (vérification chaque minute) */
+const RAPPELS = [
+  {h:10, m:0,  msg:"🎯 C'est l'heure de votre pause active de la matinée — 2 minutes suffisent."},
+  {h:14, m:30, msg:"🚶 Petit rappel de l'après-midi : on bouge ! Votre rituel vous attend."},
+  {h:16, m:30, msg:"📐 Fin de journée en vue : un réalignement de 30 secondes ?"},
+];
+setInterval(()=>{
+  if(!profil || location.protocol!=="https:" || !("Notification" in window) || Notification.permission!=="granted") return;
+  const d=new Date();
+  RAPPELS.forEach((r,i)=>{
+    if(d.getHours()===r.h && d.getMinutes()===r.m){
+      const cle="notifj_"+i+"_"+clesJour();
+      if(!lire(cle)){ sauver(cle,true); montrerNotif("Mon poste & moi", r.msg); }
+    }
+  });
+}, 60000);
+etatNotifs();
 </script>
 </body>
 </html>
