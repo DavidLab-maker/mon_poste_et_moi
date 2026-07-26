@@ -245,7 +245,7 @@
   <section class="screen" id="s-fin">
     <div style="flex:1"></div>
     <div class="fin-check">✅</div>
-    <h1 class="centre">Bien joué&nbsp;!</h1>
+    <h1 class="centre" id="fin-titre">Bien joué&nbsp;!</h1>
     <p class="sub centre" id="fin-msg">Votre corps vous dit merci.</p>
     <div style="flex:1"></div>
     <button class="btn" onclick="retourAccueil()">Retour à mon programme</button>
@@ -296,6 +296,7 @@
         <span class="chip" onclick="activerNotifs()">Activer les rappels</span>
         <span class="chip" onclick="testerNotif()">🔔 Tester maintenant</span>
       </div>
+      <p class="sub" style="font-size:11.5px;margin:10px 0 0">Horaires réglés lors de votre bilan — modifiables via « Signaler un changement » ci-dessous.</p>
     </div>
     <div class="carte">
       <b style="font-size:15px">🔄 Signaler un changement</b>
@@ -304,6 +305,7 @@
         <span class="chip" onclick="editerSection('zones')">🎯 Mes tensions</span>
         <span class="chip" onclick="editerSection('amenagement')">🪑 Mon poste</span>
         <span class="chip" onclick="editerSection('etat')">⚡ Mon état</span>
+        <span class="chip" onclick="editerSection('jours')">🗓️ Jours & rappels</span>
       </div>
     </div>
     <button class="btn secondaire" onclick="refaireBilan()">Refaire tout mon bilan</button>
@@ -322,12 +324,12 @@
     <div class="feuille">
       <h2 style="text-align:center;margin-bottom:4px">Besoin d'une pause, là maintenant ?</h2>
       <p class="sub centre" style="margin-bottom:16px;font-size:13.5px">2 minutes suffisent. Choisissez ce qui vous arrive :</p>
-      <div class="carte seance" onclick="fermerSOS();lancerSeance('sos_stress')" style="border:1.5px solid var(--ambre);background:#fdf6ec">
+      <div class="carte seance" onclick="fermerSOS();lancerSeance('sos_calme')" style="border:1.5px solid var(--ambre);background:#fdf6ec">
         <div class="pastille" style="background:#fbe8cf">🧯</div>
-        <div class="infos"><b>Montée de stress</b><span>Contracté-relâché + respiration pour faire redescendre la pression</span></div>
+        <div class="infos"><b>Montée de stress</b><span id="sos-stress-desc"></span></div>
         <div class="etat" style="color:var(--ambre)">›</div>
       </div>
-      <div class="carte seance" id="sos-fatigue" onclick="fermerSOS();lancerFatigue()">
+      <div class="carte seance" id="sos-fatigue" onclick="fermerSOS();lancerSeance('sos_fatigue')">
         <div class="pastille">🥱</div>
         <div class="infos"><b>Coup de fatigue</b><span id="sos-fatigue-desc"></span></div>
         <div class="etat">›</div>
@@ -681,6 +683,70 @@ const SEQUENCES = {
     ]},
 };
 
+/* ---------- Les gestes de Claire (liste globale) + zones d'une séquence ---------- */
+const GESTES_CLAIRE = ["etirement_ciel","cercles_tete","cercles_epaules","poignets_croises","etirement_trapeze","rotation_buste","ouverture_hanche",
+  "ronds_genoux","cercles_chevilles","pompes_chevilles","montees_pointes","plongeon_colonne","respi_4temps","plexus_solaire","massage_trapezes",
+  "massage_avant_bras","mini_squats","dos_rond_creux","etirement_flancs","etirement_triceps","etirement_ischios","auto_etreinte",
+  "etirement_cervicales","mobilite_coudes","massage_cervicales","massage_lombaires","massage_visage"];
+const ZONES_NEUTRES = new Set(["global","posture","stress","énergie","récupération","multi-zones","flancs","yeux","détente"]);
+function zonesDe(id){
+  const s = SEQUENCES[id]; if(!s) return [];
+  return (s.zone||"").split("·").map(z=>z.trim()).filter(z=>z && !ZONES_NEUTRES.has(z));
+}
+/* Pictogramme anatomique : une mini-silhouette avec la zone travaillée allumée en orangé.
+   Compréhensible d'un coup d'œil — on voit OÙ ça travaille sur le corps. */
+function svgZone(zone, px=20){
+  zone = (zone||"").trim();
+  const B="#c9d9d3", A="#e8892c";
+  const base = `
+    <circle cx="20" cy="7.5" r="5" fill="${B}"/>
+    <rect x="17.5" y="11.5" width="5" height="3.5" rx="1.6" fill="${B}"/>
+    <rect x="12.5" y="14" width="15" height="19" rx="6" fill="${B}"/>
+    <path d="M11.5 16 L7 30" stroke="${B}" stroke-width="3.6" stroke-linecap="round" fill="none"/>
+    <path d="M28.5 16 L33 30" stroke="${B}" stroke-width="3.6" stroke-linecap="round" fill="none"/>
+    <path d="M16 33.5 L15 50.5" stroke="${B}" stroke-width="4.6" stroke-linecap="round" fill="none"/>
+    <path d="M24 33.5 L25 50.5" stroke="${B}" stroke-width="4.6" stroke-linecap="round" fill="none"/>`;
+  const H = {
+    "nuque / cervicales": `<rect x="16.8" y="11" width="6.4" height="4.6" rx="2.2" fill="${A}"/>`,
+    "épaules":            `<circle cx="12.5" cy="15.5" r="3.4" fill="${A}"/><circle cx="27.5" cy="15.5" r="3.4" fill="${A}"/>`,
+    "haut du dos":        `<rect x="14" y="15" width="12" height="8.5" rx="3" fill="${A}"/>`,
+    "bas du dos":         `<rect x="14" y="24.5" width="12" height="7" rx="3" fill="${A}"/>`,
+    "coudes":             `<circle cx="9.2" cy="23" r="3" fill="${A}"/><circle cx="30.8" cy="23" r="3" fill="${A}"/>`,
+    "poignets":           `<circle cx="7.2" cy="29.8" r="2.8" fill="${A}"/><circle cx="32.8" cy="29.8" r="2.8" fill="${A}"/>`,
+    "hanches":            `<rect x="13" y="30.5" width="14" height="5.5" rx="2.6" fill="${A}"/>`,
+    "genoux":             `<circle cx="15.4" cy="42" r="3" fill="${A}"/><circle cx="24.6" cy="42" r="3" fill="${A}"/>`,
+    "jambes":             `<path d="M16 34 L15 50.5" stroke="${A}" stroke-width="4.8" stroke-linecap="round" fill="none"/><path d="M24 34 L25 50.5" stroke="${A}" stroke-width="4.8" stroke-linecap="round" fill="none"/>`,
+    "yeux / tête":        `<circle cx="20" cy="7.5" r="5.4" fill="${A}"/>`,
+  };
+  // zones « bien-être » (stress, énergie…) : un point qui rayonne au centre du buste
+  const hl = H[zone] || `<circle cx="20" cy="20" r="3.6" fill="${A}"/><circle cx="20" cy="20" r="6.4" fill="none" stroke="${A}" stroke-width="1.4" opacity=".55"/>`;
+  return `<svg viewBox="0 0 40 54" width="${px}" height="${Math.round(px*1.35)}" xmlns="http://www.w3.org/2000/svg" style="vertical-align:-4px">${base}${hl}</svg>`;
+}
+function zoneBadges(zstr){
+  return (zstr||"").split("·").map(z=>z.trim()).filter(Boolean).slice(0,2).map(z=>svgZone(z,15)).join("");
+}
+
+/* Vivier PAR ZONE : tous les exercices qui travaillent cette zone (bibliothèque
+   d'origine et gestes du cabinet confondus). La séance proposée pour une zone
+   TOURNE chaque jour dans ce vivier — pas de collection à part.
+   (construction différée au premier appel : ZONES est déclarée plus bas dans le fichier) */
+let _ZONE_POOLS = null;
+function poolsZones(){
+  if(_ZONE_POOLS) return _ZONE_POOLS;
+  const map={}; ZONES.forEach(z=>map[z]=[]);
+  Object.keys(SEQUENCES).forEach(id=>{
+    if(id.indexOf("mix_")===0 || id==="reveil_dyn") return;
+    zonesDe(id).forEach(z=>{ if(map[z]) map[z].push(id); });
+  });
+  _ZONE_POOLS = map;
+  return map;
+}
+function seqPourZone(zone, jour){
+  const pool = poolsZones()[zone]||[];
+  if(!pool.length) return SEQ_PAR_ZONE[zone];
+  return pool[((jour%pool.length)+pool.length)%pool.length];
+}
+
 /* ---------- Position de travail par séquence (et par étape si elle change) ----------
    Les étapes sont regroupées : au plus UNE transition assis/debout par séance. */
 const POS_SEQ = {
@@ -798,6 +864,8 @@ const AMENAGEMENT = {
        {v:"principal_face", l:"Le principal en face de moi, le(s) autre(s) sur le côté"},
        {v:"symetrique", l:"Côte à côte, aucun vraiment en face",
         conseil:"Placez l'écran que vous utilisez le plus face à vous, l'autre légèrement incliné vers vous en arc de cercle. Travailler la tête tournée en continu est l'une des premières causes de tensions cervicales."},
+       {v:"superpose", l:"Un au-dessus de l'autre",
+        conseil:"Gardez l'écran le plus utilisé en face de vous, à hauteur des yeux, et réservez celui du haut aux consultations ponctuelles : lever la tête en continu met les cervicales en extension — l'inverse de la position neutre."},
        {v:"variable", l:"Ça dépend des jours / je ne sais pas",
         conseil:"Prenez ce réflexe simple : l'écran le plus utilisé toujours en face de vous, les autres orientés vers vous en arc de cercle."}]},
     {id:"ecran_hauteur", q:"Le haut de votre écran principal est-il à la hauteur de vos yeux ?",
@@ -897,9 +965,18 @@ function etapesBilan(){
   // Bilan allégé : la typologie d'activité suffit (la liste des métiers alourdissait le parcours)
   const e = ["identite","poste"];
   if(bilan.poste==="bureau") e.push("lieu");
-  e.push("heures","zones","etat","amenagement");
+  e.push("heures","jours","zones","etat","amenagement");
   return e;
 }
+/* Jour travaillé ? Planning du bilan + exception ponctuelle du jour (un clic). */
+function estJourTravail(dt){
+  dt = dt || new Date();
+  const ov = lire("travailj_" + dt.toISOString().slice(0,10));
+  if(ov === true || ov === false) return ov;   // exception posée ce jour-là
+  const js = (profil && profil.jours && profil.jours.length) ? profil.jours : [1,2,3,4,5];
+  return js.includes(dt.getDay());
+}
+function basculeTravailAuj(v){ sauver("travailj_"+clesJour(), v); navVisible(true); montrerOnglet("accueil"); }
 
 let editionSeule=false, etapeUnique=null;
 function allerBilan(){ bilan={}; etapeBilan=0; editionSeule=false; etapeUnique=null; rendreBilan(); montrer("s-bilan"); }
@@ -908,10 +985,12 @@ function refaireBilan(){ navVisible(false); allerBilan(); }
 /* Édition ciblée : modifier UNE section du bilan (tensions, poste, état) sans tout refaire */
 function editerSection(sec){
   bilan = JSON.parse(JSON.stringify(profil));
+  if(sec==="jours") bilan.rappels_h = horairesRappels().slice();
   editionSeule = true; etapeUnique = sec;
   navVisible(false); rendreBilan(); montrer("s-bilan");
 }
 function sauverEdition(){
+  if(bilan.rappels_h){ sauver("rappels_h", bilan.rappels_h); delete bilan.rappels_h; }
   profil = {...profil, ...bilan};
   sauver("profil", profil);
   sauver("derniere_maj", new Date().toISOString());
@@ -968,6 +1047,22 @@ function rendreBilan(){
     html = `<h1>Combien d'heures par jour dans cette position&nbsp;?</h1><p class="sub">En comptant les journées types.</p>
       <div class="chips">${["Moins de 4 h","4 à 6 h","6 à 8 h","Plus de 8 h"].map(h=>
         `<span class="chip ${bilan.heures===h?'sel':''}" onclick="bilan.heures='${h}';rendreBilan()">${h}</span>`).join("")}</div>`;
+  }
+  if(e==="jours"){
+    bilan.jours = bilan.jours || [1,2,3,4,5];
+    if(!bilan.rappels_h) bilan.rappels_h = horairesRappels().slice();
+    const J=[[1,"Lundi"],[2,"Mardi"],[3,"Mercredi"],[4,"Jeudi"],[5,"Vendredi"],[6,"Samedi"],[0,"Dimanche"]];
+    html = `<h1>Vos jours et horaires&nbsp;?</h1><p class="sub">Le rituel et les rappels ne s'activent que vos jours de travail — les autres, votre corps se repose.</p>
+      <div class="chips">${J.map(([n,l])=>
+        `<span class="chip ${bilan.jours.includes(n)?'sel':''}" onclick="basculeJourTravail(${n})">${l}</span>`).join("")}</div>
+      <label class="champ" style="margin-top:20px">Les horaires de vos 5 rappels</label>
+      <p class="sub" style="font-size:12.5px;margin-bottom:10px">Réglés une fois pour toutes — modifiables plus tard via « Signaler un changement ».</p>
+      ${RAPPELS_DEF.map((r,i)=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0">
+          <span style="font-size:14px;font-weight:600">${r.msg.slice(0,2)} ${r.lbl}</span>
+          <input type="time" value="${bilan.rappels_h[i]||r.t}" onchange="bilan.rappels_h[${i}]=this.value"
+                 style="border:1.5px solid #d5dedb;border-radius:10px;padding:7px 10px;font-size:15px;background:#fff">
+        </div>`).join("")}`;
   }
   if(e==="zones"){
     bilan.zones = bilan.zones||[];
@@ -1046,7 +1141,7 @@ function svgCorps(){
   </svg>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
     ${ZONES.map(z=>`<div class="zcase ${Z.includes(z)?'sel':''}" onclick="basculeZone('${z}')">
-      <span style="font-size:18px">${ZONE_ICO[z]||"•"}</span><span style="flex:1">${z}</span>
+      ${svgZone(z,20)}<span style="flex:1">${z}</span>
       <span style="font-size:15px">${Z.includes(z)?"🔴":"⚪"}</span>
     </div>`).join("")}
   </div>`;
@@ -1060,6 +1155,7 @@ function repondreEquip(id,val){
   rendreBilan();
 }
 function basculeZone(z){ bilan.zonesVide=false; const i=bilan.zones.indexOf(z); i>=0?bilan.zones.splice(i,1):bilan.zones.push(z); rendreBilan(); }
+function basculeJourTravail(n){ const i=bilan.jours.indexOf(n); i>=0?bilan.jours.splice(i,1):bilan.jours.push(n); rendreBilan(); }
 function majBoutonBilan(){
   const e = etapeUnique || etapesBilan()[etapeBilan]; let ok=true;
   if(e==="identite"){ const el=document.getElementById("in-prenom"); ok = el && el.value.trim().length>0; }
@@ -1067,6 +1163,7 @@ function majBoutonBilan(){
   if(e==="poste") ok = !!bilan.poste;
   if(e==="lieu") ok = !!bilan.lieu;
   if(e==="heures") ok = !!bilan.heures;
+  if(e==="jours") ok = bilan.jours && bilan.jours.length>0;
   if(e==="etat") ok = bilan.stress && bilan.fatigue;
   if(e==="amenagement"){ const qs=questionsVisibles(posteEffectif(bilan),bilan.equipement); ok = qs.every(q=> q.type==="choix" ? typeof (bilan.equipement||{})[q.id]==="string" : typeof (bilan.equipement||{})[q.id]==="boolean"); }
   const b=document.getElementById("btn-continuer"); if(b) b.disabled=!ok;
@@ -1080,10 +1177,19 @@ function bilanSuivant(){
   if(e==="metier" && bilan.metier!=="autre"){ bilan.poste = metierDe(bilan.metier).base; }
   if(etapeBilan<etapesBilan().length-1){ etapeBilan++; rendreBilan(); }
   else {
+    if(bilan.rappels_h){ sauver("rappels_h", bilan.rappels_h); delete bilan.rappels_h; }
     profil = {...bilan, cree: new Date().toISOString()};
     sauver("profil", profil);
     sauver("derniere_maj", new Date().toISOString());
-    navVisible(true); montrerOnglet("accueil");
+    // Nouveau bilan complet = nouveau point de départ : le journal des aménagements repart de zéro,
+    // les exceptions du jour sont effacées, et le rituel est RE-TIRÉ avec une nouvelle graine de mélange
+    fixes = []; sauver("fixes", fixes);
+    sauver("postej_"+clesJour(), null);
+    sauver("lieuj_"+clesJour(), null);
+    sauver("travailj_"+clesJour(), null);
+    sauver("graine", (lire("graine")||0)+1);
+    // Atterrissage sur « Mon poste » : on montre d'abord les aménagements à corriger
+    navVisible(true); montrerOnglet("poste");
   }
 }
 
@@ -1099,14 +1205,15 @@ const REVEIL_BASE = {
 };
 function construireReveil(jour){
   const m = profil.metier && profil.metier!=="autre" ? metierDe(profil.metier) : null;
-  let sources = m ? m.zones.map(z=>SEQ_PAR_ZONE[z]).filter(Boolean) : [];
+  let sources = m ? m.zones.map((z,i)=>seqPourZone(z, jour+i)).filter(Boolean) : [];
+  sources = [...new Set(sources)];
   if(sources.length<3) sources = REVEIL_BASE[posteDuJour()]||REVEIL_BASE.bureau;
   sources = sources.slice(0,3);
   const etapes = [{t:"En position debout ou assise : grandissez-vous, inspirez profondément par le nez… soufflez lentement par la bouche. On réveille le corps en douceur.", s:12}];
   sources.forEach(id=>{
     const s = SEQUENCES[id];
     const idx = jour % Math.min(2, s.etapes.length);
-    etapes.push({...s.etapes[idx], pos: posEtape(id, idx)});
+    etapes.push({...s.etapes[idx], pos: posEtape(id, idx), zoneE: s.zone});
   });
   etapes.push({t:"Terminez : trois grandes respirations, épaules relâchées. Votre corps est prêt — bonne journée !", s:14});
   const total = etapes.reduce((a,e)=>a+e.s,0);
@@ -1124,6 +1231,13 @@ function ouvrirChangement(){
   const pjour = posteDuJour();
   const enChangement = pjour !== profil.poste;
   let html = "";
+  // Exception du jour : je ne travaille pas (ou retour au planning normal)
+  html += `<div class="carte seance" onclick="basculeTravailAuj(false)" style="border:1.5px solid #d5dedb">
+      <div class="pastille">🌤️</div>
+      <div class="infos"><b>Je ne travaille pas aujourd'hui</b><span>Journée off exceptionnelle : pas de rituel ni de rappels, la série est préservée</span></div>
+      <div class="etat">›</div>
+    </div>`;
+  if(!enChangement) html += `<p class="moment">Ou une activité différente aujourd'hui</p>`;
   if(enChangement){
     html += `<div class="carte" style="border-left:4px solid var(--ambre);background:#fffaf2;padding:14px 16px">
         <p class="sub" style="margin:0;font-size:13px">Aujourd'hui : <b>${PROFILS[pjour].ico} ${PROFILS[pjour].label}</b> — au lieu de ${PROFILS[profil.poste].label}.</p>
@@ -1171,20 +1285,37 @@ function rngJour(seed){
 }
 function dureeSeq(id){ const s=SEQUENCES[id]; return s ? s.etapes.reduce((a,e)=>a+e.s,0) : 0; }
 
-function composerMix(jour, slot, pool, premier, exclure){
-  const r = rngJour(jour*101 + slot*17 + 5);
+function composerMix(jour, slot, pool, premier, exclure, zonesPrises){
+  zonesPrises = zonesPrises || new Set();
+  const r = rngJour(jour*101 + (slot==="am"?0:1)*17 + 5);
   let dispo = pool.filter(id=>!(exclure||[]).includes(id) && dureeSeq(id)<=135);
   const choisis = []; let total = 0;
   if(premier && SEQUENCES[premier]){
     choisis.push(premier); total += dureeSeq(premier);
+    zonesDe(premier).forEach(z=>zonesPrises.add(z));
     dispo = dispo.filter(id=>id!==premier);
   }
   let garde = 0;
-  while(total < 95 && choisis.length < 3 && dispo.length && garde < 30){
+  while(total < 95 && choisis.length < 3 && dispo.length && garde < 40){
     garde++;
-    const ix = Math.floor(r()*dispo.length);
-    const cand = dispo[ix]; dispo.splice(ix,1);
-    if(total + dureeSeq(cand) <= 135){ choisis.push(cand); total += dureeSeq(cand); }
+    let cands = dispo.filter(id=> total + dureeSeq(id) <= 135);
+    if(!cands.length) break;
+    // 1) jamais deux fois la même zone dans la journée (on relâche seulement si impossible)
+    const sansDoublon = cands.filter(id=>!zonesDe(id).some(z=>zonesPrises.has(z)));
+    if(sansDoublon.length) cands = sansDoublon;
+    // 2) brassage des familles : gestes de Claire ET séquences d'origine dans le même cocktail
+    if(choisis.length){
+      const fams = new Set(choisis.map(id=>GESTES_CLAIRE.includes(id)?"claire":"base"));
+      if(fams.size===1){
+        const manque = fams.has("claire") ? "base" : "claire";
+        const autreFam = cands.filter(id=>(GESTES_CLAIRE.includes(id)?"claire":"base")===manque);
+        if(autreFam.length) cands = autreFam;
+      }
+    }
+    const cand = cands[Math.floor(r()*cands.length)];
+    dispo.splice(dispo.indexOf(cand),1);
+    choisis.push(cand); total += dureeSeq(cand);
+    zonesDe(cand).forEach(z=>zonesPrises.add(z));
   }
   if(!choisis.length) choisis.push(pool[jour % pool.length]);
   // regrouper par position (assis → au choix → debout) : 1 transition max
@@ -1195,7 +1326,7 @@ function composerMix(jour, slot, pool, premier, exclure){
     const s = SEQUENCES[id];
     titres.push(s.titre);
     (s.zone||"").split("·").forEach(z=>{ z=z.trim(); if(z) zones.add(z); });
-    s.etapes.forEach((e,i)=>etapes.push({...e, pos: posEtape(id,i)}));
+    s.etapes.forEach((e,i)=>etapes.push({...e, pos: posEtape(id,i), zoneE: s.zone}));
   });
   const tot = etapes.reduce((a,e)=>a+e.s,0);
   const mid = "mix_"+slot;
@@ -1218,11 +1349,13 @@ function programmeDuJour(){
   const pj = posteDuJour(); // activité du jour (ponctuellement différente du profil enregistré)
   const p = PROFILS[pj];
   const d = new Date();
-  const jour = Math.floor((d - new Date(d.getFullYear(),0,0)) / 864e5); // jour de l'année : la rotation ne se répète pas chaque semaine
-  // zones prioritaires : celles déclarées par l'utilisateur, sinon les zones types de son métier
+  const jourCal = Math.floor((d - new Date(d.getFullYear(),0,0)) / 864e5);
+  // graine de mélange : incrémentée à chaque nouveau bilan complet → nouveau tirage le jour même
+  const jour = jourCal + (lire("graine")||0)*17;
+  // zones prioritaires : celles déclarées par l'utilisateur, sinon les zones types de son métier.
+  // La séance qui sert la zone TOURNE chaque jour dans tout le vivier de cette zone.
   const m = profil.metier && profil.metier!=="autre" ? metierDe(profil.metier) : null;
   const zonesSource = (profil.zones&&profil.zones.length) ? profil.zones : (m ? m.zones : []);
-  const zonesSeq = zonesSource.map(z=>SEQ_PAR_ZONE[z]).filter(Boolean);
   const DEPLACEMENT = ["marche_consciente","jambes_circulation","hanches"];
   const tt = (pj==="bureau") && lieuDuJour()==="teletravail";
 
@@ -1231,14 +1364,25 @@ function programmeDuJour(){
      La zone déclarée ouvre le cocktail du matin les jours pairs, celui de
      l'après-midi les jours impairs : elle est servie chaque jour, mais jamais
      dans le même mélange. Budget total : ~10-12 minutes. */
-  const vivier = [...new Set([...zonesSeq, ...p.midi, ...p.aprem, ...p.matin])].filter(id=>SEQUENCES[id]);
   const deplJour = DEPLACEMENT[(jour + (tt?1:0)) % DEPLACEMENT.length];
-  const zoneJour = zonesSeq.length ? zonesSeq[(jour>>1) % zonesSeq.length] : null;
+  // zone du jour → séance tournante dans le vivier complet de cette zone
+  const zoneJourLabel = zonesSource.length ? zonesSource[(jour>>1) % zonesSource.length] : null;
+  const zoneJour = zoneJourLabel ? seqPourZone(zoneJourLabel, jour) : null;
+  const vivier = [...new Set([...(zoneJour?[zoneJour]:[]), ...p.midi, ...p.aprem, ...p.matin])].filter(id=>SEQUENCES[id]);
   const poolMix = vivier.filter(id=>!DEPLACEMENT.includes(id));
 
-  const mixAm = composerMix(jour, "am", poolMix, (jour%2===0) ? zoneJour : null, [deplJour]);
-  const mixPm = composerMix(jour, "pm", poolMix, (jour%2===1) ? zoneJour : null,
-                            [deplJour, ...(SEQUENCES.mix_am ? SEQUENCES.mix_am._src : [])]);
+  /* Suivi des zones du jour : jamais deux séances sur la même zone.
+     Le cocktail qui contient la zone déclarée est composé EN PREMIER. */
+  const zonesPrises = new Set();
+  zonesDe(deplJour).forEach(z=>zonesPrises.add(z));
+  let mixAm, mixPm;
+  if(jour % 2 === 0){
+    mixAm = composerMix(jour, "am", poolMix, zoneJour, [deplJour], zonesPrises);
+    mixPm = composerMix(jour, "pm", poolMix, null, [deplJour, ...SEQUENCES.mix_am._src], zonesPrises);
+  } else {
+    mixPm = composerMix(jour, "pm", poolMix, zoneJour, [deplJour], zonesPrises);
+    mixAm = composerMix(jour, "am", poolMix, null, [deplJour, ...SEQUENCES.mix_pm._src], zonesPrises);
+  }
 
   /* En télétravail : plus de marche, de déplacement et de mobilité,
      moins de gestion du stress (moins de facteurs aggravants qu'au bureau). */
@@ -1270,8 +1414,11 @@ function dernierePause(){
 }
 function majSerie(){
   let n=0; const d=new Date();
-  for(let i=0;i<60;i++){ const k=new Date(d-864e5*i).toISOString().slice(0,10);
-    if(idsDu(k).length>0) n++; else if(i>0) break; }
+  for(let i=0;i<90;i++){
+    const dt=new Date(d-864e5*i); const k=dt.toISOString().slice(0,10);
+    if(!estJourTravail(dt)) continue;                     // les jours de repos ne cassent pas la série
+    if(idsDu(k).length>0) n++; else if(i>0) break;
+  }
   sauver("serie", n); return n;
 }
 
@@ -1279,7 +1426,7 @@ function majSerie(){
    60 pts : jusqu'à 3 micro-pauses (20 chacune)
    10 pts : variété (au moins 1 mobilité ET 1 anti-stress)
    30 pts : régularité (3 pts par jour consécutif, plafonné) */
-const IDS_STRESS = new Set(["respiration_46","sos_stress","detente_douce","respi_4temps","plexus_solaire"]);
+const IDS_STRESS = new Set(["respiration_46","sos_stress","detente_douce","respi_4temps","plexus_solaire","sos_calme"]);
 function scoreBase(dk){
   const u = [...new Set(idsDu(dk))];
   let p = Math.min(u.length,3)*20;
@@ -1289,8 +1436,11 @@ function scoreBase(dk){
 }
 function serieAu(dk){
   let n=0; const base=new Date(dk+"T12:00:00Z");
-  for(let i=0;i<60;i++){ const k=new Date(base-864e5*i).toISOString().slice(0,10);
-    if(idsDu(k).length>0) n++; else if(i>0) break; }
+  for(let i=0;i<90;i++){
+    const dt=new Date(base-864e5*i); const k=dt.toISOString().slice(0,10);
+    if(!estJourTravail(dt)) continue;
+    if(idsDu(k).length>0) n++; else if(i>0) break;
+  }
   return n;
 }
 function scoreTotal(dk){ return Math.min(100, scoreBase(dk)+Math.min(serieAu(dk)*3,30)); }
@@ -1567,10 +1717,20 @@ function rendreAccueil(){
       <div class="etat" style="font-size:12px">${enChangement?"Modifier ›":"›"}</div>
     </div>`;
 
-  const prog = programmeDuJour(); const faites = faitesAujourdhui();
+  const repos = !estJourTravail(d);
+  const prog = repos ? [] : programmeDuJour(); const faites = faitesAujourdhui();
   const nbFaites = prog.filter(x=>faites.includes(x.id)).length;
   const totalMin = Math.round(prog.reduce((a,x)=>a+dureeSeq(x.id),0)/60);
-  const htmlRituel = htmlLieu + htmlChangement + `<p class="moment" style="font-size:13px;color:var(--vert)">📿 Votre rituel du jour — ${nbFaites}/${prog.length} ${nbFaites>1?"faites":"faite"} · ≈ ${totalMin} min${enChangement?` · adapté ${PROFILS[pjour].ico}`:""}</p>
+  const htmlRituel = repos
+    ? `<div class="carte" style="background:var(--vert-clair);box-shadow:none;text-align:center;padding:22px">
+        <div style="font-size:34px">🌤️</div>
+        <b style="font-size:16px">Jour de repos</b>
+        <p class="sub" style="font-size:13px;margin:8px 0 0">Pas de rituel aujourd'hui — votre corps récupère. Envie de bouger quand même&nbsp;? Les gestes restent disponibles juste en dessous.</p>
+        <div class="chips" style="justify-content:center;margin-top:14px">
+          <span class="chip" onclick="basculeTravailAuj(true)">💼 Finalement, je travaille aujourd'hui</span>
+        </div>
+      </div>`
+    : htmlLieu + htmlChangement + `<p class="moment" style="font-size:13px;color:var(--vert)">📿 Votre rituel du jour — ${nbFaites}/${prog.length} ${nbFaites>1?"faites":"faite"} · ≈ ${totalMin} min${enChangement?` · adapté ${PROFILS[pjour].ico}`:""}</p>
     <p class="sub" style="font-size:13px;margin:-4px 0 4px">Le même fil rouge chaque jour, avec ou sans tension : c'est la régularité qui protège.</p>`;
   // Réalignement éclair : glissé dans le fil du rituel (matinée + après-midi), hors décompte
   const neutreFait = faites.includes("neutre_30");
@@ -1584,7 +1744,7 @@ function rendreAccueil(){
     return `<p class="moment">${x.moment}</p>
       <div class="carte seance ${faite?'faite':''}" onclick="lancerSeance('${x.id}')">
         <div class="pastille">${faite?'✔️':s.ico}</div>
-        <div class="infos"><b>${s.titre}</b><span>${s.duree} · ${s.zone}</span></div>
+        <div class="infos"><b>${s.titre}</b><span>${zoneBadges(s.zone)} ${s.duree} · ${s.zone}</span></div>
         <div class="etat">${faite?'Faite':'Lancer ›'}</div>
       </div>` + ((i===1||i===3) ? miniNeutre : "");
   }).join("") + htmlOutils + htmlScore;
@@ -1604,16 +1764,98 @@ function initOeil(){
 /* =========================================================
    SOS — stress ou coup de fatigue (adapté au profil)
    ========================================================= */
-function estSedentaire(){ const pj = posteDuJour(); return profil && (pj==="bureau" || pj==="mobile"); }
+/* Pools SOS — les séances d'urgence sont COMPOSÉES et tournent chaque jour.
+   Fatigue = mobilité DYNAMIQUE des différentes zones pour réveiller le système
+   nerveux (pas d'étirements ni de respiration — ça, c'est le pool anti-stress). */
+const POOL_STRESS  = ["sos_stress","respiration_46","respi_4temps","plexus_solaire","detente_douce","massage_trapezes","massage_visage"];
+const POOL_FATIGUE = ["boost_dynamique","mini_squats","montees_pointes","cercles_epaules","mobilite_coudes","ronds_genoux","pompes_chevilles","poignets_croises","ouverture_hanche","rotation_buste","dos_rond_creux","cercles_chevilles","cercles_tete","hanches"];
+
+function composerPool(pool, jour, titre, ico, zone, idMix){
+  const dispo = pool.filter(id=>SEQUENCES[id]);
+  const k = ((jour % dispo.length) + dispo.length) % dispo.length;
+  const rot = dispo.slice(k).concat(dispo.slice(0,k));
+  const srcs = []; let total = 0;
+  for(const id of rot){
+    if(total >= 90) break;
+    if(total + dureeSeq(id) <= 140){ srcs.push(id); total += dureeSeq(id); }
+  }
+  if(!srcs.length){ srcs.push(rot[0]); total = dureeSeq(rot[0]); }
+  const rang = {assis:0, libre:1, debout:2};
+  srcs.sort((a,b)=>(rang[POS_SEQ[a]||"libre"]) - (rang[POS_SEQ[b]||"libre"]));
+  const etapes = [], titres = [];
+  srcs.forEach(id=>{
+    const s = SEQUENCES[id]; titres.push(s.titre);
+    s.etapes.forEach((e,i)=>etapes.push({...e, pos: posEtape(id,i), zoneE: s.zone}));
+  });
+  SEQUENCES[idMix] = {titre: titre, ico: ico, zone: zone,
+    duree:(total/60).toFixed(1).replace(".",",")+" min", etapes, _src: srcs, _titres: titres};
+  return idMix;
+}
+
 function ouvrirSOS(){
-  const desc = document.getElementById("sos-fatigue-desc");
-  if(desc) desc.textContent = estSedentaire()
-    ? "Pause dynamique : mobilité énergique pour réveiller le système nerveux"
-    : "Pause détente : étirements doux + respiration pour apaiser le système nerveux";
+  const dso = new Date();
+  const jso = Math.floor((dso - new Date(dso.getFullYear(),0,0)) / 864e5);
+  // Anti-stress du jour : respiration + automassage en roulement
+  composerPool(POOL_STRESS, jso, "Anti-stress du jour", "🧯", "détente", "sos_calme");
+  // Coup de fatigue du jour : mobilité dynamique des zones, pour tout le monde
+  composerPool(POOL_FATIGUE, jso, "Coup de boost du jour", "⚡", "énergie", "sos_fatigue");
+  const dS = document.getElementById("sos-stress-desc");
+  if(dS) dS.textContent = "Aujourd'hui : " + SEQUENCES.sos_calme._titres.join(" + ");
+  const dF = document.getElementById("sos-fatigue-desc");
+  if(dF) dF.textContent = "Aujourd'hui : " + SEQUENCES.sos_fatigue._titres.join(" + ");
   document.getElementById("sos-menu").style.display = "block";
 }
 function fermerSOS(){ document.getElementById("sos-menu").style.display = "none"; }
-function lancerFatigue(){ lancerSeance(estSedentaire() ? "boost_dynamique" : "detente_douce"); }
+
+/* =========================================================
+   SÉANCE DE SOULAGEMENT D'UNE ZONE — 1 min 30 à 2 min
+   On enchaîne les exercices du vivier de la zone (rotation quotidienne)
+   jusqu'à un vrai temps de soulagement. Si le vivier est maigre,
+   on refait une passe : c'est la répétition qui soulage.
+   ========================================================= */
+function seanceZone(zone, jour){
+  const pool = (poolsZones()[zone]||[]).slice();
+  if(!pool.length) return null;
+  const k = ((jour % pool.length) + pool.length) % pool.length;
+  const rot = pool.slice(k).concat(pool.slice(0,k));
+  // choix des exercices : on vise au moins 90 s, plafond 140 s
+  const srcs = []; let total = 0;
+  for(const id of rot){
+    if(total >= 90) break;
+    if(total + dureeSeq(id) <= 140){ srcs.push(id); total += dureeSeq(id); }
+  }
+  if(!srcs.length){ srcs.push(rot[0]); total = dureeSeq(rot[0]); }
+  // regroupement par position (1 transition max)
+  const rang = {assis:0, libre:1, debout:2};
+  srcs.sort((a,b)=>(rang[POS_SEQ[a]||"libre"]) - (rang[POS_SEQ[b]||"libre"]));
+  const etapes = [], titres = [];
+  srcs.forEach(id=>{
+    const s = SEQUENCES[id]; titres.push(s.titre);
+    s.etapes.forEach((e,i)=>etapes.push({...e, pos: posEtape(id,i), zoneE: s.zone}));
+  });
+  // vivier maigre : seconde passe du premier exercice jusqu'à ~90 s minimum
+  if(total < 90){
+    etapes.push({t:"On y retourne — c'est la répétition qui soulage vraiment.", s:6, pos:"libre", zoneE: zone});
+    total += 6;
+    const s0 = SEQUENCES[srcs[0]];
+    for(let i=0; i<s0.etapes.length && total + s0.etapes[i].s <= 140; i++){
+      etapes.push({...s0.etapes[i], pos: posEtape(srcs[0], i), zoneE: s0.zone});
+      total += s0.etapes[i].s;
+    }
+  }
+  return {srcs, titres, etapes, total};
+}
+function lancerSoulagement(zone){
+  const dz = new Date();
+  const jz = Math.floor((dz - new Date(dz.getFullYear(),0,0)) / 864e5);
+  const sz = seanceZone(zone, jz);
+  if(!sz) return;
+  SEQUENCES.soulage_zone = {
+    titre:"Soulager : "+zone, ico:"🎯", zone: zone,
+    duree:(sz.total/60).toFixed(1).replace(".",",")+" min", etapes: sz.etapes
+  };
+  lancerSeance("soulage_zone");
+}
 
 /* =========================================================
    PAUSES À LA CARTE — par zone, ou multi-zones
@@ -1626,40 +1868,31 @@ function ouvrirZones(){
       <div class="etat">Lancer ›</div>
     </div>
     <p class="moment">Ou zone par zone</p>`;
+  const d0 = new Date();
+  const jourAnnee0 = Math.floor((d0 - new Date(d0.getFullYear(),0,0)) / 864e5);
   html += ZONES.map(z=>{
-    const s = SEQUENCES[SEQ_PAR_ZONE[z]];
+    const sz = seanceZone(z, jourAnnee0);
     const fav = declarees.includes(z);
-    return `<div class="carte seance" onclick="lancerSeance('${SEQ_PAR_ZONE[z]}')">
-      <div class="pastille">${s.ico}</div>
-      <div class="infos"><b>${z.charAt(0).toUpperCase()+z.slice(1)}${fav?" ⭐":""}</b><span>${s.titre} · ${s.duree}</span></div>
+    const apercu = sz ? sz.titres.join(" + ") : "";
+    return `<div class="carte seance" onclick="lancerSoulagement('${z}')">
+      <div class="pastille" style="background:#fff;border:1.5px solid #e0eae5">${svgZone(z,26)}</div>
+      <div class="infos"><b>${z.charAt(0).toUpperCase()+z.slice(1)}${fav?" ⭐":""}</b><span>Séance du jour (≈ ${sz?(sz.total/60).toFixed(1).replace(".",","):"?"} min) : ${apercu}</span></div>
       <div class="etat">›</div>
     </div>`;
   }).join("");
-  html += `<p class="sub" style="font-size:12.5px;margin-top:8px">⭐ = zones déclarées dans votre bilan</p>`;
-  // Les gestes de Claire : les exercices dictés au cabinet, en accès direct
-  const GESTES_CLAIRE = ["etirement_ciel","cercles_tete","cercles_epaules","poignets_croises","etirement_trapeze","rotation_buste","ouverture_hanche",
-    "ronds_genoux","cercles_chevilles","pompes_chevilles","montees_pointes","plongeon_colonne","respi_4temps","plexus_solaire","massage_trapezes",
-    "massage_avant_bras","mini_squats","dos_rond_creux","etirement_flancs","etirement_triceps","etirement_ischios","auto_etreinte",
-    "etirement_cervicales","mobilite_coudes","massage_cervicales","massage_lombaires","massage_visage"];
-  html += `<p class="moment">🧑‍⚕️ Les gestes de Claire</p>` +
-    GESTES_CLAIRE.map(id=>{
-      const s = SEQUENCES[id];
-      return `<div class="carte seance" onclick="lancerSeance('${id}')">
-        <div class="pastille">${s.ico}</div>
-        <div class="infos"><b>${s.titre}</b><span>${s.duree} · ${s.zone}</span></div>
-        <div class="etat">›</div>
-      </div>`;
-    }).join("");
+  html += `<p class="sub" style="font-size:12.5px;margin-top:8px">⭐ = zones déclarées dans votre bilan · la séance proposée pour chaque zone change tous les jours</p>`;
   document.getElementById("liste-zones").innerHTML = html;
   montrer("s-zones"); navVisible(false);
 }
 function lancerMix(){
   const zones = (profil.zones&&profil.zones.length ? profil.zones : ["nuque / cervicales","bas du dos","épaules"]).slice(0,3);
+  const dm = new Date();
+  const jm = Math.floor((dm - new Date(dm.getFullYear(),0,0)) / 864e5);
   const etapes = [];
-  zones.forEach(z=>{
-    const id = SEQ_PAR_ZONE[z];
+  zones.forEach((z,zi)=>{
+    const id = seqPourZone(z, jm + zi) || SEQ_PAR_ZONE[z];
     const s = SEQUENCES[id];
-    etapes.push(...s.etapes.slice(0,2).map((e,i)=>({...e, pos: posEtape(id, i)})));
+    etapes.push(...s.etapes.slice(0,2).map((e,i)=>({...e, pos: posEtape(id, i), zoneE: s.zone})));
   });
   etapes.push({t:"Pour finir : grandissez-vous, inspirez largement… et soufflez lentement en relâchant tout le corps.", s:12});
   const total = etapes.reduce((a,e)=>a+e.s,0);
@@ -1682,19 +1915,28 @@ function initAudio(){
     if(audioCtx.state==="suspended") audioCtx.resume();
   }catch(e){ audioCtx=null; }
 }
-function son(freq, duree=0.12, vol=0.18, type="sine", delai=0){
+function son(freq, duree=0.12, vol=0.18, type="sine", delai=0, attaque=0.012){
   if(!audioCtx) return;
   const t=audioCtx.currentTime+delai;
   const o=audioCtx.createOscillator(), g=audioCtx.createGain();
   o.type=type; o.frequency.value=freq;
-  g.gain.setValueAtTime(vol,t);
-  g.gain.exponentialRampToValueAtTime(0.001,t+duree);
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.linearRampToValueAtTime(vol, t+attaque);       // attaque douce : fini le "clic" robotique
+  g.gain.exponentialRampToValueAtTime(0.001, t+duree);
   o.connect(g); g.connect(audioCtx.destination);
-  o.start(t); o.stop(t+duree);
+  o.start(t); o.stop(t+duree+0.02);
 }
-function sonDecompte(){ son(660,0.1); }                 // bip des 3 dernières secondes
-function sonEtape(){ son(880,0.15); }                   // passage à l'étape suivante
-function sonFin(){ son(523,0.15,.2); son(659,0.15,.2,"sine",0.16); son(784,0.3,.2,"sine",0.32); } // jingle de fin
+function sonDecompte(){ son(660,0.1,.14); }             // bip des 3 dernières secondes
+function sonEtape(){ son(880,0.18,.12,"triangle"); }    // passage à l'étape suivante, adouci
+function sonFin(){
+  // Carillon moderne : nappe d'accord douce + motif à deux notes + scintillement
+  son(523.25, .95, .05, "sine",     0,   .07);   // do (nappe)
+  son(659.25, .95, .045,"sine",     0,   .07);   // mi
+  son(783.99, .95, .045,"sine",     0,   .07);   // sol
+  son(987.77, .28, .11, "triangle", 0,   .012);  // si  — première note du motif
+  son(1318.51,.55, .12, "triangle", .15, .012);  // mi aigu — résolution
+  son(2637.02,.45, .028,"sine",     .17, .015);  // scintillement discret à l'octave
+}
 
 /* ---------- Voix guide (synthèse vocale du téléphone) ---------- */
 let voixActive = lire("voix"); if(voixActive===null) voixActive = true;
@@ -1737,7 +1979,7 @@ function lancerSeance(id){
   seanceEnCours=id; etapeIdx=0; enPause=false;
   const s=SEQUENCES[id];
   document.getElementById("p-titre").textContent=s.titre;
-  document.getElementById("p-sous").textContent=s.duree+" · "+s.zone;
+  document.getElementById("p-sous").innerHTML=zoneBadges(s.zone)+" "+s.duree+" · "+s.zone;
   document.getElementById("p-visuel-ico").textContent=s.ico;
   document.getElementById("p-voix").textContent = voixActive ? "🔊" : "🔇";
   montrer("s-player"); navVisible(false);
@@ -1747,8 +1989,12 @@ function demarrerEtape(){
   const s=SEQUENCES[seanceEnCours]; const e=s.etapes[etapeIdx];
   document.getElementById("p-num").textContent="Étape "+(etapeIdx+1)+" / "+s.etapes.length;
   const pos = e.pos || posEtape(seanceEnCours, etapeIdx);
+  const zoneEtape = (e.zoneE || s.zone || "").split("·")[0].trim();
   document.getElementById("p-pos-bloc").innerHTML = svgPos(pos) +
-    `<span style="font-weight:800;color:var(--vert);font-size:15px">${POS_LABEL[pos]}</span>`;
+    `<span style="font-weight:800;color:var(--vert);font-size:14px">${POS_LABEL[pos]}</span>` +
+    (zoneEtape ? `<span style="width:1.5px;height:26px;background:#d5dedb;border-radius:2px"></span>` +
+      svgZone(zoneEtape, 24) +
+      `<span style="font-weight:800;color:#c0632b;font-size:14px">${zoneEtape.charAt(0).toUpperCase()+zoneEtape.slice(1)}</span>` : "");
   document.getElementById("p-texte").textContent=e.t;
   parler(e.t); // voix guide : la consigne est lue à voix haute
   secRestantes=e.s;
@@ -1782,10 +2028,23 @@ function etapeSuivante(){
   else {
     clearInterval(timer);
     sonFin();
-    parler("Bien joué, séance terminée.");
     marquerFaite(seanceEnCours);
-    const msgs=["Votre corps vous dit merci.","Chaque pause compte. Vraiment.","Deux minutes pour vous : c'est ça, la prévention.","Régularité > intensité. Vous êtes sur la bonne voie."];
-    document.getElementById("fin-msg").textContent=msgs[Math.floor(Math.random()*msgs.length)];
+    const FELICITATIONS = [
+      {t:"Bien joué !",            m:"Votre corps vous dit merci."},
+      {t:"Bravo !",                m:"Chaque pause compte. Vraiment."},
+      {t:"Et voilà !",             m:"Deux minutes pour vous : c'est ça, la prévention."},
+      {t:"Beau travail !",         m:"Régularité > intensité. Vous êtes sur la bonne voie."},
+      {t:"Superbe !",              m:"Votre dos vient de gagner sa journée."},
+      {t:"C'est fait !",           m:"Petit moment, grand effet."},
+      {t:"Encore une de faite !",  m:"C'est cette régularité-là qui fera la différence dans un mois."},
+      {t:"Votre corps approuve !", m:"La machine est relancée, tout en douceur."},
+      {t:"Quelle constance !",     m:"Un geste de plus vers un corps qui travaille pour vous."},
+      {t:"Impeccable !",           m:"Vous venez de prouver que deux minutes suffisent."},
+    ];
+    const f = FELICITATIONS[Math.floor(Math.random()*FELICITATIONS.length)];
+    document.getElementById("fin-titre").innerHTML = f.t.replace(" !","&nbsp;!");
+    document.getElementById("fin-msg").textContent = f.m;
+    parler(f.t+" "+f.m);
     montrer("s-fin");
     lancerConfettis();
   }
@@ -1835,6 +2094,29 @@ const TITRES = {
   reglage_siege: "Un siège de conduite bien réglé",
   pauses_2h:     "Sortir du véhicule toutes les 2 heures",
   chargement:    "Marcher une minute avant de décharger",
+};
+
+/* « Déjà au top » : phrase positive qui décrit la bonne installation en place */
+const BRAVOS = {
+  pos_ecrans:    "Vos écrans sont bien positionnés : le principal en face de vous, la nuque travaille dans l'axe.",
+  ecran_hauteur: "Votre écran est à la bonne hauteur — vos cervicales vous en remercient à chaque heure passée.",
+  portable_seul: "Clavier et souris externes en place : le meilleur réglage anti-nuque est déjà chez vous.",
+  siege:         "Votre siège est bien réglé : pieds à plat, genoux à 90°, bas du dos soutenu — la base est saine.",
+  avant_bras:    "Vos avant-bras sont posés quand vous tapez : épaules détendues, poignets dans l'axe.",
+  lumiere:       "Écran sans reflets ni contre-jour : vos yeux et votre posture l'apprécient toute la journée.",
+  tel_casque:    "Vous téléphonez au casque : vos cervicales échappent au pire piège du bureau.",
+  porte_doc:     "Porte-document vertical en place : fini les allers-retours de la nuque entre bureau et écran.",
+  sol:           "Un sol amortissant sous vos pieds : jambes, genoux et dos encaissent beaucoup moins.",
+  chaussures:    "Vos chaussures amortissent et maintiennent : votre premier équipement de travail est le bon.",
+  assis_ponctuel:"Vous alternez debout et assis dans la journée : la meilleure des positions, c'est ce changement-là.",
+  hauteur_plan:  "Plan de travail à hauteur des coudes : ni le dos ni les épaules ne compensent.",
+  aides:         "Vous utilisez les aides à la manutention : le levier n°1 de la prévention est actif chez vous.",
+  hauteur_charge:"Charges stockées entre genoux et épaules : votre dos est épargné à chaque manutention.",
+  pres_du_corps: "Vous portez près du corps et pivotez avec les pieds : le geste juste est déjà le vôtre.",
+  gants:         "Outils et gants à votre taille : poignets et coudes travaillent sans surcharge.",
+  reglage_siege: "Siège de conduite bien réglé : soutien lombaire et bons appuis en place pour la route.",
+  pauses_2h:     "Vous sortez du véhicule toutes les 2 heures : le réflexe qui sauve le dos des conducteurs.",
+  chargement:    "Vous ne déchargez jamais à froid : votre dos repart toujours après quelques pas.",
 };
 
 /* Mini-schéma du bon aménagement, par correction (SVG de principe) */
@@ -2269,6 +2551,13 @@ function marquerCorrige(id){
 function rendrePoste(){
   const qs = questionsVisibles(profil.poste, profil.equipement);
   const eq = profil.equipement||{};
+
+  // Cohérence du journal : si un réglage a été RE-déclaré défectueux (nouveau bilan
+  // ou « Signaler un changement »), sa ligne « réalisé le… » est annulée — elle
+  // reviendra quand l'utilisateur cochera à nouveau « C'est fait ».
+  const defActifs = new Set(defautsActifs());
+  const fixesValides = fixes.filter(f => !defActifs.has(f.id));
+  if(fixesValides.length !== fixes.length){ fixes = fixesValides; sauver("fixes", fixes); }
   // Un conseil est déclenché si la réponse révèle un problème
   const aCorriger = [], ok = [];
   qs.forEach(q=>{
@@ -2322,9 +2611,10 @@ function rendrePoste(){
       fixes.slice().reverse().map(f=>`<p class="sub" style="margin:0 0 8px;font-size:13.5px">✔️ <b>${TITRES[f.id]||f.id}</b> — fait le ${new Date(f.t).toLocaleDateString("fr-FR",{day:"numeric",month:"short"})}</p>`).join("") + `</div>`;
   }
 
-  if(ok.length){
+  const okAvecBravo = ok.filter(q=>BRAVOS[q.id]);
+  if(okAvecBravo.length){
     html += `<p class="moment">✅ Déjà au top chez vous</p><div class="carte">` +
-      ok.map(q=>`<p class="sub" style="margin:0 0 8px;font-size:14px">✅ ${q.q.replace(/\s*\?$/,"")}</p>`).join("") + `</div>`;
+      okAvecBravo.map(q=>`<p class="sub" style="margin:0 0 10px;font-size:14px;line-height:1.5">✅ ${BRAVOS[q.id]}</p>`).join("") + `</div>`;
   }
 
   // Le bon réflexe en plus (conseil clinique, profil bureau) — encart illustré
@@ -2463,7 +2753,7 @@ function ouvrirCheckin(){
     </div>
     ${zones.map((z,i)=>`
     <div class="zone-slider">
-      <div class="ligne"><span>${ZONE_ICO[z]||""} ${z}</span><span class="val" id="ck-z${i}">5</span></div>
+      <div class="ligne"><span>${svgZone(z,14)} ${z}</span><span class="val" id="ck-z${i}">5</span></div>
       <input type="range" min="0" max="10" value="5" oninput="checkinTmp.zones['${z}']=+this.value;document.getElementById('ck-z${i}').textContent=this.value">
     </div>`).join("")}
     <div class="zone-slider">
@@ -2538,11 +2828,13 @@ function planApresCheckin(tmp, prev){
   }
 
   // Plan de réaction : séquences prioritaires + aménagements liés
-  const seqHtml = zonesCibles.map(z=>{
-    const id = SEQ_PAR_ZONE[z]; const s = id && SEQUENCES[id];
-    return s ? `<div class="carte seance" onclick="lancerSeance('${id}')" style="margin-bottom:10px">
-        <div class="pastille">${s.ico}</div>
-        <div class="infos"><b>${s.titre}</b><span>${s.duree} · à refaire chaque jour cette semaine</span></div>
+  const dpc = new Date();
+  const jpc = Math.floor((dpc - new Date(dpc.getFullYear(),0,0)) / 864e5);
+  const seqHtml = zonesCibles.map((z,zi)=>{
+    const sz = seanceZone(z, jpc+zi);
+    return sz ? `<div class="carte seance" onclick="lancerSoulagement('${z}')" style="margin-bottom:10px">
+        <div class="pastille" style="background:#fff;border:1.5px solid #e0eae5">${svgZone(z,26)}</div>
+        <div class="infos"><b>Séance ciblée — ${z}</b><span>≈ ${(sz.total/60).toFixed(1).replace(".",",")} min · à refaire chaque jour cette semaine</span></div>
         <div class="etat">Lancer ›</div>
       </div>` : "";
   }).join("");
@@ -2599,11 +2891,25 @@ function rendreProfil(){
     <div class="profil-ligne"><span>Zones surveillées</span><span>${(profil.zones&&profil.zones.length)?profil.zones.join(", "):"aucune déclarée"}</span></div>
     <div class="profil-ligne"><span>Stress / fatigue</span><span>${profil.stress}/5 · ${profil.fatigue}/5</span></div>
     <div class="profil-ligne"><span>Entreprise</span><span>${profil.code?profil.code:"usage individuel"}</span></div>
-    <div class="profil-ligne"><span>Points hebdo</span><span>${checkins.length} enregistré${checkins.length>1?"s":""}</span></div>`;
+    <div class="profil-ligne"><span>Points hebdo</span><span>${checkins.length} enregistré${checkins.length>1?"s":""}</span></div>
+    ${profil.jours?`<div class="profil-ligne"><span>Jours de travail</span><span>${[["1","Lun"],["2","Mar"],["3","Mer"],["4","Jeu"],["5","Ven"],["6","Sam"],["0","Dim"]].filter(([n])=>profil.jours.includes(+n)).map(([,l])=>l).join(" · ")}</span></div>`:""}`;
+
+  // Horaires des rappels, modifiables
+  const zoneH = document.getElementById("notif-horaires");
+  if(zoneH){
+    const h = horairesRappels();
+    zoneH.innerHTML = `<p class="sub" style="font-size:12px;margin:0 0 8px">Horaires des rappels (modifiables selon vos journées) :</p>` +
+      RAPPELS_DEF.map((r,i)=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0">
+          <span style="font-size:13px;font-weight:600">${r.msg.slice(0,2)} ${r.lbl}</span>
+          <input type="time" value="${h[i]||r.t}" onchange="majHoraire(${i},this.value)"
+                 style="border:1.5px solid #d5dedb;border-radius:9px;padding:5px 8px;font-size:14px;background:#fff">
+        </div>`).join("");
+  }
 }
 
 /* ---------- Démarrage ---------- */
-/* Mon poste & moi — v0.35 : rappels de pauses (10 h, 14 h 30, 16 h 30) + bouton de test des notifications */
+/* Mon poste & moi — v0.51 : position d'écrans « un au-dessus de l'autre » ajoutée au bilan, avec son conseil cervicales */
 document.getElementById("logo-accueil").innerHTML = logoSVG(84);
 document.getElementById("logo-mini").innerHTML = logoSVG(26);
 if(profil){ navVisible(true); montrerOnglet("accueil"); }
@@ -2644,22 +2950,36 @@ function testerNotif(){
   const ok = montrerNotif("Mon poste & moi", "🔔 Test réussi ! Les rappels fonctionnent sur cet appareil.");
   if(!ok) alert("Notification impossible sur cet appareil/navigateur.");
 }
-/* Rappels aux heures clés, tant que l'app tourne (vérification chaque minute) */
-const RAPPELS = [
-  {h:10, m:0,  msg:"🎯 C'est l'heure de votre pause active de la matinée — 2 minutes suffisent."},
-  {h:14, m:30, msg:"🚶 Petit rappel de l'après-midi : on bouge ! Votre rituel vous attend."},
-  {h:16, m:30, msg:"📐 Fin de journée en vue : un réalignement de 30 secondes ?"},
+/* Rappels aux heures clés, avec RATTRAPAGE : si l'heure est passée (écran verrouillé,
+   app en arrière-plan…), le rappel part dès que l'app revient, dans une fenêtre de 90 min.
+   Horaires par défaut modifiables dans Profil → Rappels. Jamais les jours de repos. */
+const RAPPELS_DEF = [
+  {t:"10:00", lbl:"Matinée",        msg:"🎯 C'est l'heure de votre pause active du matin — 2 minutes suffisent."},
+  {t:"11:15", lbl:"Rééquilibrage",  msg:"📐 Rééquilibrage éclair : bassin, épaules, tête — 30 secondes."},
+  {t:"12:30", lbl:"Pause du midi",  msg:"🍽️ Pause du midi : on relâche la pression avant de repartir."},
+  {t:"14:00", lbl:"Après-midi",     msg:"🚶 Début d'après-midi : on bouge un peu !"},
+  {t:"16:00", lbl:"Fin de journée", msg:"🧘 Une dernière pause pour finir la journée léger."},
 ];
-setInterval(()=>{
+function horairesRappels(){ return lire("rappels_h") || RAPPELS_DEF.map(r=>r.t); }
+function majHoraire(i,val){ const h=horairesRappels(); h[i]=val; sauver("rappels_h",h); }
+function verifierRappels(){
   if(!profil || location.protocol!=="https:" || !("Notification" in window) || Notification.permission!=="granted") return;
+  if(!estJourTravail(new Date())) return;
   const d=new Date();
-  RAPPELS.forEach((r,i)=>{
-    if(d.getHours()===r.h && d.getMinutes()===r.m){
+  const minutesActuelles = d.getHours()*60 + d.getMinutes();
+  const horaires = horairesRappels();
+  RAPPELS_DEF.forEach((r,i)=>{
+    const [hh,mm]=(horaires[i]||r.t).split(":").map(Number);
+    const cible = hh*60 + mm;
+    if(minutesActuelles >= cible && minutesActuelles <= cible + 90){
       const cle="notifj_"+i+"_"+clesJour();
       if(!lire(cle)){ sauver(cle,true); montrerNotif("Mon poste & moi", r.msg); }
     }
   });
-}, 60000);
+}
+setInterval(verifierRappels, 60000);
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") verifierRappels(); });
+verifierRappels();
 etatNotifs();
 </script>
 </body>
