@@ -9,27 +9,36 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Mon poste & moi — le coach du corps au travail</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap');
   :root{
     --vert:#1a6b5a; --vert-clair:#e8f3f0; --vert-mid:#4a9d8a;
-    --encre:#22302c; --gris:#6b7a76; --fond:#f6f8f7; --blanc:#ffffff;
-    --ambre:#e8a13c; --rouge:#c96a5a; --radius:16px;
-    --ombre:0 2px 12px rgba(34,48,44,.08);
+    --encre:#2b2f2a; --gris:#75796f; --fond:#f7f4ec; --blanc:#fffdf8;
+    --creme:#f2ecdd; --ligne:#e7e0d0;
+    --ambre:#e8a13c; --rouge:#c96a5a; --radius:20px;
+    --ombre:0 3px 16px rgba(93,80,52,.09);
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#dde5e2;color:var(--encre);min-height:100vh;display:flex;justify-content:center}
-  #phone{width:100%;max-width:430px;min-height:100vh;background:var(--fond);display:flex;flex-direction:column;position:relative;box-shadow:0 0 40px rgba(0,0,0,.15)}
+  /* bandeau de marque, fil conducteur sur toutes les pages */
+  #entete-app{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:60;
+    display:none;align-items:center;justify-content:center;gap:9px;padding:9px 0 7px;
+    background:rgba(247,244,236,.93);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
+    border-bottom:1px solid var(--ligne)}
+  #entete-app img{height:30px;display:block}
+  body.avec-entete .screen{padding-top:74px}
+  body{font-family:'Nunito',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#e9e4d8;color:var(--encre);min-height:100vh;display:flex;justify-content:center}
+  #phone{width:100%;max-width:430px;min-height:100vh;background:var(--fond);display:flex;flex-direction:column;position:relative;box-shadow:0 0 40px rgba(80,65,35,.14)}
   .screen{display:none;flex:1;flex-direction:column;padding:28px 20px 104px;overflow-y:auto}
   .screen.active{display:flex}
   h1{font-size:26px;line-height:1.25;margin-bottom:10px}
   h2{font-size:20px;margin-bottom:8px}
   .sub{color:var(--gris);font-size:15px;line-height:1.6;margin-bottom:22px}
-  .btn{display:block;width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(120deg,var(--vert),var(--vert-mid));color:#fff;font-size:17px;font-weight:600;cursor:pointer;transition:transform .1s}
+  .btn{display:block;width:100%;padding:16px;border:none;border-radius:16px;background:linear-gradient(120deg,var(--vert),var(--vert-mid));color:#fff;font-size:17px;font-weight:700;cursor:pointer;transition:transform .1s;box-shadow:0 4px 12px rgba(26,107,90,.22);font-family:inherit}
   .btn:active{transform:scale(.98)}
   .btn.secondaire{background:var(--vert-clair);color:var(--vert)}
   .btn.fantome{background:transparent;color:var(--gris);font-weight:500}
   .btn:disabled{opacity:.4}
   .carte{background:var(--blanc);border-radius:var(--radius);padding:20px;box-shadow:var(--ombre);margin-bottom:16px}
-  input[type=text]{width:100%;padding:15px;border:1.5px solid #d5dedb;border-radius:12px;font-size:16px;background:#fff}
+  input[type=text]{width:100%;padding:15px;border:1.5px solid #ded7c6;border-radius:13px;font-size:16px;background:var(--blanc);font-family:inherit}
   input[type=text]:focus{outline:none;border-color:var(--vert-mid)}
   label.champ{display:block;font-weight:600;font-size:14px;margin:16px 0 6px}
   /* choix cartes */
@@ -40,15 +49,20 @@
   .choix.sel{border-color:var(--vert);background:#f2faf7}
   /* chips */
   .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
-  .chip{padding:10px 16px;border-radius:999px;background:#fff;border:1.5px solid #d5dedb;font-size:14.5px;cursor:pointer;user-select:none}
+  .chip{padding:10px 16px;border-radius:999px;background:var(--blanc);border:1.5px solid #ded7c6;font-size:14.5px;cursor:pointer;user-select:none;transition:transform .12s,background .15s,border-color .15s}
+  .chip:active{transform:scale(.92);background:var(--vert-clair);border-color:var(--vert-mid)}
   .chip.sel{background:linear-gradient(120deg,var(--vert),var(--vert-mid));border-color:transparent;color:#fff}
+  .chip.ok{background:linear-gradient(120deg,var(--vert),var(--vert-mid));border-color:transparent;color:#fff}
+  #toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(16px);background:#233b35;color:#fff;padding:11px 20px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:99;box-shadow:0 6px 18px rgba(0,0,0,.25);max-width:86%;text-align:center}
+  #toast.vu{opacity:1;transform:translateX(-50%) translateY(0)}
   /* échelle */
   .echelle{display:flex;gap:8px;margin:10px 0 4px}
-  .echelle button{flex:1;padding:13px 0;border-radius:12px;border:1.5px solid #d5dedb;background:#fff;font-size:16px;font-weight:600;cursor:pointer;color:var(--gris)}
+  .echelle button{flex:1;padding:13px 0;border-radius:13px;border:1.5px solid #ded7c6;background:var(--blanc);font-size:16px;font-weight:600;cursor:pointer;color:var(--gris);transition:transform .12s,background .15s;font-family:inherit}
+  .echelle button:active{transform:scale(.94);background:var(--vert-clair)}
   .echelle button.sel{background:var(--vert);color:#fff;border-color:var(--vert)}
   .legende{display:flex;justify-content:space-between;font-size:12px;color:var(--gris);margin-bottom:6px}
   /* barre progression bilan */
-  .prog{height:5px;background:#e0e8e5;border-radius:99px;margin-bottom:22px;overflow:hidden}
+  .prog{height:5px;background:#e8e1d1;border-radius:99px;margin-bottom:22px;overflow:hidden}
   .prog i{display:block;height:100%;background:linear-gradient(90deg,var(--vert),var(--vert-mid) 70%,var(--ambre));border-radius:99px;transition:width .3s}
   /* accueil */
   .entete{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
@@ -70,11 +84,11 @@
   .corps-zone.zsel .forme{fill:#e05a4b;fill-opacity:.85;stroke:#c94a3b;stroke-dasharray:none}
   .corps-zone text{font-size:9.5px;fill:var(--gris);pointer-events:none}
   .corps-zone.zsel text{fill:#c0392b;font-weight:700}
-  .zcase{display:flex;align-items:center;gap:9px;padding:12px 13px;background:#fff;border:1.5px solid #d5dedb;border-radius:12px;font-size:13.5px;font-weight:600;cursor:pointer;user-select:none;transition:all .12s}
+  .zcase{display:flex;align-items:center;gap:9px;padding:12px 13px;background:var(--blanc);border:1.5px solid #ded7c6;border-radius:13px;font-size:13.5px;font-weight:600;cursor:pointer;user-select:none;transition:all .12s}
   .zcase.sel{background:#fdecea;border-color:#e05a4b;color:#c0392b}
   .zcase:active{transform:scale(.97)}
   /* réalignement éclair, glissé dans le fil du rituel */
-  .mini-neutre{border:1.5px dashed #9cc4b8;background:linear-gradient(100deg,#e8f3f0 20%,#faf0dd);border-radius:13px;
+  .mini-neutre{border:1.5px solid var(--ligne);background:linear-gradient(100deg,#e8f3f0 20%,#f7efdc);border-radius:14px;
     padding:10px 14px;text-align:center;font-size:13px;cursor:pointer;user-select:none;margin:0 0 14px;
     transition:transform .1s;box-shadow:0 1px 6px rgba(34,48,44,.06)}
   .mini-neutre:active{transform:scale(.98)}
@@ -102,7 +116,7 @@
     background:linear-gradient(115deg,#1a6b5a 20%,#4a9d8a 70%,#e8a13c);
     -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
   .devise{display:flex;gap:8px;justify-content:center;margin:2px 0 18px;flex-wrap:wrap}
-  .devise span{font-size:11px;font-weight:800;letter-spacing:.09em;color:var(--vert);background:var(--vert-clair);border-radius:999px;padding:6px 12px}
+  .devise span{font-size:11px;font-weight:800;letter-spacing:.09em;color:var(--vert);background:var(--creme);border-radius:999px;padding:6px 12px}
   /* un peu de vie */
   .carte{animation:apparait .35s ease-out both}
   @keyframes apparait{from{opacity:0;transform:translateY(8px)}}
@@ -112,7 +126,7 @@
   .bandeau p{font-size:13.5px;opacity:.94;margin-top:4px;line-height:1.5}
   /* player */
   .player-tete{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-  .fermer{width:38px;height:38px;border-radius:12px;border:none;background:#fff;box-shadow:var(--ombre);font-size:17px;cursor:pointer}
+  .fermer{width:38px;height:38px;border-radius:13px;border:none;background:var(--blanc);box-shadow:var(--ombre);font-size:17px;cursor:pointer}
   .cercle-wrap{display:flex;flex-direction:column;align-items:center;margin:14px 0}
   .cercle{position:relative;width:210px;height:210px}
   .cercle svg{transform:rotate(-90deg)}
@@ -128,13 +142,13 @@
   .zone-slider .ligne{display:flex;justify-content:space-between;font-size:15px;font-weight:600;margin-bottom:6px}
   .zone-slider .val{color:var(--vert);font-weight:700}
   input[type=range]{width:100%;accent-color:var(--vert)}
-  .histo-item{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid #eef2f0;font-size:14.5px}
+  .histo-item{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid #ece6d7;font-size:14.5px}
   .histo-item:last-child{border:none}
   .tendance{font-weight:700}
   .tendance.mieux{color:var(--vert)}
   .tendance.moins{color:var(--rouge)}
   /* nav bas */
-  #nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;border-top:1px solid #e6ebe9;display:none;justify-content:space-around;padding:10px 0 max(14px, env(safe-area-inset-bottom));z-index:50}
+  #nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--blanc);border-top:1px solid var(--ligne);display:none;justify-content:space-around;padding:10px 0 max(14px, env(safe-area-inset-bottom));z-index:50}
   #nav button{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--gris);cursor:pointer;font-weight:600}
   #nav button.actif{color:var(--vert)}
   #nav button .n-ico{font-size:21px}
@@ -161,7 +175,7 @@
   @keyframes pulseSOS{0%{box-shadow:0 5px 16px rgba(214,63,46,.45),0 0 0 0 rgba(224,90,75,.5)}70%{box-shadow:0 5px 16px rgba(214,63,46,.45),0 0 0 15px rgba(224,90,75,0)}100%{box-shadow:0 5px 16px rgba(214,63,46,.45),0 0 0 0 rgba(224,90,75,0)}}
   .centre{text-align:center}
   .logo-rond{width:74px;height:74px;border-radius:22px;background:linear-gradient(135deg,var(--vert),var(--vert-mid));display:flex;align-items:center;justify-content:center;font-size:36px;margin:40px auto 22px}
-  .profil-ligne{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid #eef2f0;font-size:15px}
+  .profil-ligne{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid #ece6d7;font-size:15px}
   .profil-ligne span:first-child{color:var(--gris)}
   .profil-ligne span:last-child{font-weight:600;text-align:right;max-width:60%}
 </style>
@@ -196,10 +210,6 @@
 
   <!-- ======= AUJOURD'HUI ======= -->
   <section class="screen" id="s-accueil">
-    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px">
-      <span id="logo-mini"></span>
-      <span class="titre-mini" style="font-size:21px">Mon poste &amp; moi</span>
-    </div>
     <div class="entete">
       <div><h1 id="salut" style="font-size:19px">Bonjour</h1><p class="sub" id="date-jour" style="margin:0;font-size:13.5px"></p></div>
       <div class="badge-serie" id="serie">🔥 0 j</div>
@@ -293,10 +303,12 @@
       <b style="font-size:15px">🔔 Rappels de pauses</b>
       <p class="sub" style="margin:6px 0 10px;font-size:13px" id="notif-etat">Disponibles uniquement sur la version en ligne de l'app.</p>
       <div class="chips">
-        <span class="chip" onclick="activerNotifs()">Activer les rappels</span>
-        <span class="chip" onclick="testerNotif()">🔔 Tester maintenant</span>
+        <span class="chip" id="chip-activer" onclick="activerNotifs()">Activer les rappels</span>
+        <span class="chip" id="chip-tester" onclick="testerNotif()">🔔 Tester maintenant</span>
+        <span class="chip" id="chip-agenda" onclick="telechargerAgenda()">📅 Rappels dans mon agenda</span>
       </div>
-      <p class="sub" style="font-size:11.5px;margin:10px 0 0">Horaires réglés lors de votre bilan — modifiables via « Signaler un changement » ci-dessous.</p>
+      <p class="sub" style="font-size:11.5px;margin:10px 0 0">Important : les notifications de l'app ne partent que si elle est ouverte ou en arrière-plan récent. Pour des rappels garantis même app fermée, touchez « 📅 Rappels dans mon agenda » : vos 5 pauses s'ajoutent à votre calendrier, à vos horaires, uniquement vos jours de travail.</p>
+      <p class="sub" style="font-size:11.5px;margin:6px 0 0">Horaires réglés lors de votre bilan — modifiables via « Signaler un changement » ci-dessous.</p>
     </div>
     <div class="carte">
       <b style="font-size:15px">🔄 Signaler un changement</b>
@@ -353,21 +365,11 @@
    ========================================================= */
 
 /* ---------- Logo (SVG) ---------- */
-function logoSVG(px){
-  /* La tête ambre + la colonne vertébrale blanche qui ondule : posture, alignement, mouvement. */
-  return `<svg viewBox="0 0 64 64" width="${px}" height="${px}" xmlns="http://www.w3.org/2000/svg">
-    <defs><linearGradient id="lgM" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1a6b5a"/><stop offset="1" stop-color="#4a9d8a"/>
-    </linearGradient></defs>
-    <rect x="2" y="2" width="60" height="60" rx="17" fill="url(#lgM)"/>
-    <circle cx="33" cy="15" r="7" fill="#e8a13c"/>
-    <path d="M33 25 C 23 32, 43 39, 32 51" stroke="#ffffff" stroke-width="6.5" fill="none" stroke-linecap="round"/>
-    <circle cx="33" cy="25" r="2.6" fill="#ffffff"/>
-    <circle cx="27.5" cy="32" r="2.6" fill="#dff0ea"/>
-    <circle cx="36" cy="39.5" r="2.6" fill="#dff0ea"/>
-    <circle cx="32" cy="51" r="2.6" fill="#ffffff"/>
-  </svg>`;
+function logoImg(h){
+  /* Le logo officiel : cygne-danseur en trait fluide, dégradé vert → ambre (fichier logo-cygne.png à côté de index.html). */
+  return `<img src="logo-cygne.png" style="height:${h}px;display:block" alt="Mon poste &amp; moi">`;
 }
+const logoSVG = logoImg; /* compatibilité avec les anciens appels */
 
 /* ---------- Bibliothèque de séquences (exemples) ---------- */
 const SEQUENCES = {
@@ -945,6 +947,14 @@ function montrer(id){
   const sansSOS = ["s-bienvenue","s-bilan","s-player","s-fin"];
   const fab = document.getElementById("sos-fab");
   if(fab) fab.style.display = sansSOS.includes(id) ? "none" : "flex";
+  // le bandeau de marque, fil conducteur — partout sauf accueil onboarding (grand logo) et pendant un exercice
+  const sansEntete = ["s-bienvenue","s-player"];
+  const ent = document.getElementById("entete-app");
+  if(ent){
+    const visible = !sansEntete.includes(id);
+    ent.style.display = visible ? "flex" : "none";
+    document.body.classList.toggle("avec-entete", visible);
+  }
   window.scrollTo(0,0);
 }
 function montrerOnglet(nom){
@@ -1061,7 +1071,7 @@ function rendreBilan(){
         <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0">
           <span style="font-size:14px;font-weight:600">${r.msg.slice(0,2)} ${r.lbl}</span>
           <input type="time" value="${bilan.rappels_h[i]||r.t}" onchange="bilan.rappels_h[${i}]=this.value"
-                 style="border:1.5px solid #d5dedb;border-radius:10px;padding:7px 10px;font-size:15px;background:#fff">
+                 style="border:1.5px solid #ded7c6;border-radius:10px;padding:7px 10px;font-size:15px;background:#fff">
         </div>`).join("")}`;
   }
   if(e==="zones"){
@@ -1232,7 +1242,7 @@ function ouvrirChangement(){
   const enChangement = pjour !== profil.poste;
   let html = "";
   // Exception du jour : je ne travaille pas (ou retour au planning normal)
-  html += `<div class="carte seance" onclick="basculeTravailAuj(false)" style="border:1.5px solid #d5dedb">
+  html += `<div class="carte seance" onclick="basculeTravailAuj(false)" style="border:1.5px solid #ded7c6">
       <div class="pastille">🌤️</div>
       <div class="infos"><b>Je ne travaille pas aujourd'hui</b><span>Journée off exceptionnelle : pas de rituel ni de rappels, la série est préservée</span></div>
       <div class="etat">›</div>
@@ -2903,15 +2913,19 @@ function rendreProfil(){
         <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0">
           <span style="font-size:13px;font-weight:600">${r.msg.slice(0,2)} ${r.lbl}</span>
           <input type="time" value="${h[i]||r.t}" onchange="majHoraire(${i},this.value)"
-                 style="border:1.5px solid #d5dedb;border-radius:9px;padding:5px 8px;font-size:14px;background:#fff">
+                 style="border:1.5px solid #ded7c6;border-radius:9px;padding:5px 8px;font-size:14px;background:#fff">
         </div>`).join("");
   }
 }
 
 /* ---------- Démarrage ---------- */
-/* Mon poste & moi — v0.51 : position d'écrans « un au-dessus de l'autre » ajoutée au bilan, avec son conseil cervicales */
-document.getElementById("logo-accueil").innerHTML = logoSVG(84);
-document.getElementById("logo-mini").innerHTML = logoSVG(26);
+/* Mon poste & moi — v0.55 : logo officiel cygne-danseur (logo-cygne.png) + bandeau de marque fil conducteur sur toutes les pages */
+document.getElementById("logo-accueil").innerHTML = logoImg(120);
+/* bandeau de marque global, injecté une fois */
+const _entete = document.createElement("div");
+_entete.id = "entete-app";
+_entete.innerHTML = logoImg(30) + `<span class="titre-mini" style="font-size:15px">Mon poste &amp; moi</span>`;
+document.body.appendChild(_entete);
 if(profil){ navVisible(true); montrerOnglet("accueil"); }
 
 /* PWA : actif uniquement une fois l'app hébergée en ligne (HTTPS) — sans effet en local */
@@ -2923,17 +2937,37 @@ if("serviceWorker" in navigator && location.protocol==="https:"){
    RAPPELS DE PAUSES (niveau 1 : app ouverte ou en arrière-plan récent)
    Le bouton « Tester maintenant » est LA preuve que ça marche sur un appareil.
    ========================================================= */
+/* Toast : confirmation visuelle de chaque appui sur un bouton */
+const _toastEl=document.createElement("div"); _toastEl.id="toast"; document.body.appendChild(_toastEl);
+let _toastT=null;
+function toast(msg){
+  _toastEl.textContent=msg; _toastEl.classList.add("vu");
+  clearTimeout(_toastT); _toastT=setTimeout(()=>_toastEl.classList.remove("vu"), 2400);
+}
+function marquerChip(id, txt){
+  const c=document.getElementById(id);
+  if(c){ c.classList.add("ok"); if(txt) c.textContent=txt; }
+}
 function etatNotifs(){
   const el=document.getElementById("notif-etat"); if(!el) return;
   if(location.protocol!=="https:"){ el.textContent="Disponibles uniquement sur la version en ligne de l'app (HTTPS)."; return; }
   if(!("Notification" in window)){ el.textContent="Ce navigateur ne gère pas les notifications."; return; }
-  if(Notification.permission==="granted") el.textContent="✅ Rappels activés : matinée (10 h), après-midi (14 h 30 et 16 h 30), tant que l'app est ouverte ou en arrière-plan récent.";
+  if(Notification.permission==="granted"){
+    el.textContent="✅ Rappels activés à vos 5 horaires — tant que l'app est ouverte ou en arrière-plan récent. App fermée : utilisez « 📅 Rappels dans mon agenda ».";
+    marquerChip("chip-activer","✅ Rappels activés");
+  }
   else if(Notification.permission==="denied") el.textContent="🚫 Refusées dans les réglages du navigateur — à réactiver dans les paramètres du site.";
   else el.textContent="Touchez « Activer les rappels » puis autorisez les notifications.";
 }
 function activerNotifs(){
-  if(location.protocol!=="https:" || !("Notification" in window)){ etatNotifs(); return; }
-  Notification.requestPermission().then(()=>{ etatNotifs(); });
+  if(location.protocol!=="https:" || !("Notification" in window)){ etatNotifs(); toast("Disponible uniquement sur la version en ligne de l'app"); return; }
+  if(Notification.permission==="granted"){ etatNotifs(); toast("Les rappels sont déjà activés ✅"); return; }
+  toast("Autorisez les notifications dans la fenêtre qui s'ouvre…");
+  Notification.requestPermission().then(p=>{
+    etatNotifs();
+    if(p==="granted") toast("Rappels activés ✅");
+    else if(p==="denied") toast("Notifications refusées — modifiable dans les réglages du site");
+  });
 }
 function montrerNotif(titre, corps){
   if(!("Notification" in window) || Notification.permission!=="granted") return false;
@@ -2945,10 +2979,47 @@ function montrerNotif(titre, corps){
   return true;
 }
 function testerNotif(){
-  if(location.protocol!=="https:"){ alert("Le test des notifications ne fonctionne que sur la version en ligne (adresse en https)."); return; }
+  const c=document.getElementById("chip-tester");
+  if(c){ c.classList.add("ok"); setTimeout(()=>c.classList.remove("ok"), 1400); }
+  if(location.protocol!=="https:"){ toast("Test possible uniquement sur la version en ligne (https)"); return; }
   if(Notification.permission!=="granted"){ activerNotifs(); return; }
   const ok = montrerNotif("Mon poste & moi", "🔔 Test réussi ! Les rappels fonctionnent sur cet appareil.");
-  if(!ok) alert("Notification impossible sur cet appareil/navigateur.");
+  toast(ok ? "Notification de test envoyée 🔔" : "Notification impossible sur cet appareil");
+}
+/* Rappels garantis même app fermée : fichier agenda (.ics) aux 5 horaires, jours de travail uniquement */
+function telechargerAgenda(){
+  marquerChip("chip-agenda");
+  setTimeout(()=>{ const c=document.getElementById("chip-agenda"); if(c) c.classList.remove("ok"); }, 1400);
+  const h = horairesRappels();
+  const jours = (profil && profil.jours && profil.jours.length) ? profil.jours : [1,2,3,4,5];
+  const BY = {0:"SU",1:"MO",2:"TU",3:"WE",4:"TH",5:"FR",6:"SA"};
+  const byday = jours.map(j=>BY[j]).join(",");
+  const d = new Date();
+  const ymd = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`;
+  const esc = s => s.replace(/\\/g,"\\\\").replace(/,/g,"\\,").replace(/;/g,"\\;");
+  let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Mon poste et moi//FR\r\nCALSCALE:GREGORIAN\r\n";
+  RAPPELS_DEF.forEach((r,i)=>{
+    const [hh,mm] = (h[i]||r.t).split(":").map(Number);
+    const deb = hh*60+mm, fin = deb+5;
+    const p2 = n => String(n).padStart(2,"0");
+    ics += "BEGIN:VEVENT\r\n"
+      + `UID:mpm-rappel-${i}@monposteetmoi\r\n`
+      + `DTSTAMP:${ymd}T000000\r\n`
+      + `DTSTART:${ymd}T${p2(hh)}${p2(mm)}00\r\n`
+      + `DTEND:${ymd}T${p2(Math.floor(fin/60))}${p2(fin%60)}00\r\n`
+      + `RRULE:FREQ=WEEKLY;BYDAY=${byday}\r\n`
+      + `SUMMARY:${esc(r.lbl + " — Mon poste & moi")}\r\n`
+      + `DESCRIPTION:${esc(r.msg)}\r\n`
+      + "BEGIN:VALARM\r\nACTION:DISPLAY\r\n"
+      + `DESCRIPTION:${esc(r.msg)}\r\n`
+      + "TRIGGER:PT0M\r\nEND:VALARM\r\nEND:VEVENT\r\n";
+  });
+  ics += "END:VCALENDAR\r\n";
+  const a = document.createElement("a");
+  a.href = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
+  a.download = "rappels-mon-poste-et-moi.ics";
+  document.body.appendChild(a); a.click(); a.remove();
+  toast("Fichier créé 📅 — ouvrez-le pour ajouter les 5 rappels à votre agenda");
 }
 /* Rappels aux heures clés, avec RATTRAPAGE : si l'heure est passée (écran verrouillé,
    app en arrière-plan…), le rappel part dès que l'app revient, dans une fenêtre de 90 min.
@@ -2961,7 +3032,7 @@ const RAPPELS_DEF = [
   {t:"16:00", lbl:"Fin de journée", msg:"🧘 Une dernière pause pour finir la journée léger."},
 ];
 function horairesRappels(){ return lire("rappels_h") || RAPPELS_DEF.map(r=>r.t); }
-function majHoraire(i,val){ const h=horairesRappels(); h[i]=val; sauver("rappels_h",h); }
+function majHoraire(i,val){ const h=horairesRappels(); h[i]=val; sauver("rappels_h",h); toast("Horaire mis à jour : "+val+" ✅"); }
 function verifierRappels(){
   if(!profil || location.protocol!=="https:" || !("Notification" in window) || Notification.permission!=="granted") return;
   if(!estJourTravail(new Date())) return;
