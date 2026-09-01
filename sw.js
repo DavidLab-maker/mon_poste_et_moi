@@ -1,6 +1,6 @@
 /* Mon poste & moi — service worker : installation PWA + fonctionnement hors ligne */
-const CACHE = "monposteetmoi-v034";
-const FICHIERS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
+const CACHE = "monposteetmoi-v055";
+const FICHIERS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./logo-cygne.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FICHIERS)).then(() => self.skipWaiting()));
