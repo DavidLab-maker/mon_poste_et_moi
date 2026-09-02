@@ -227,9 +227,8 @@
       <button class="fermer" id="p-voix" onclick="basculerVoix()" title="Voix guide">🔊</button>
     </div>
     <p class="etape-num" id="p-num"></p>
-    <div id="p-visuel" style="text-align:center;background:#fff;border-radius:14px;padding:10px;box-shadow:var(--ombre);margin-bottom:6px">
+    <div id="p-visuel" style="text-align:center;background:#fff;border-radius:14px;padding:6px;box-shadow:var(--ombre);margin-bottom:6px">
       <span id="p-visuel-ico" style="font-size:34px">🎬</span>
-      <div style="font-size:11.5px;color:var(--gris)">Démonstration en GIF/vidéo — à venir</div>
     </div>
     <div class="cercle-wrap">
       <div class="cercle">
@@ -780,6 +779,279 @@ function zoneBadges(zstr){
   return (zstr||"").split("·").map(z=>z.trim()).filter(Boolean).slice(0,2).map(z=>svgZone(z,15)).join("");
 }
 
+/* =========================================================
+   PICTOGRAMMES ANIMÉS — le geste-clé de chaque séquence, en boucle.
+   Style du logo cygne : trait fin, courbes, dégradé vert→ambre,
+   tête en point ambré, proportions humaines (tête ≈ 1/7,5).
+   Une animation par séquence de base ; les séances composées
+   retrouvent l'animation de chaque étape via son champ src.
+   ========================================================= */
+const AN = {
+  defs: `<defs><linearGradient id="gAnim" x1="0" y1="1" x2="0.25" y2="0">
+    <stop offset="0" stop-color="#1a6b5a"/><stop offset=".55" stop-color="#4a9d8a"/><stop offset="1" stop-color="#e8a13c"/>
+  </linearGradient></defs>`,
+  svg(inner){ return `<svg viewBox="0 0 200 200" style="width:120px;height:120px;display:block;margin:0 auto">${AN.defs}${inner}</svg>`; },
+  spl(n){ return Array(n).fill(".45 0 .55 1").join(";"); },
+  av(attr, vals, dur, kt){ const n=vals.split(";").length-1;
+    return `<animate attributeName="${attr}" dur="${dur}s" repeatCount="indefinite" values="${vals}"${kt?` keyTimes="${kt}"`:""} calcMode="spline" keySplines="${AN.spl(n)}"/>`; },
+  rot(vals, dur){ const n=vals.split(";").length-1;
+    return `<animateTransform attributeName="transform" type="rotate" dur="${dur}s" repeatCount="indefinite" values="${vals}" calcMode="spline" keySplines="${AN.spl(n)}"/>`; },
+  rotLin(vals, dur){ return `<animateTransform attributeName="transform" type="rotate" dur="${dur}s" repeatCount="indefinite" values="${vals}"/>`; },
+  trans(vals, dur){ const n=vals.split(";").length-1;
+    return `<animateTransform attributeName="transform" type="translate" dur="${dur}s" repeatCount="indefinite" values="${vals}" calcMode="spline" keySplines="${AN.spl(n)}"/>`; },
+  orbite(r, dur){ return `<animateMotion dur="${dur}s" repeatCount="indefinite" path="M${-r} 0 a${r} ${r} 0 1 0 ${2*r} 0 a${r} ${r} 0 1 0 ${-2*r} 0"/>`; },
+  t(cx,cy,r){ return `<circle cx="${cx}" cy="${cy}" r="${r||8.5}" fill="#e8a13c"/>`; },
+  dot(cx,cy,r){ return `<circle cx="${cx}" cy="${cy}" r="${r||3.2}" fill="#e8a13c"/>`; },
+  p(d,w){ return `<path d="${d}" fill="none" stroke="url(#gAnim)" stroke-width="${w||3}" stroke-linecap="round"/>`; },
+  pAnim(vals,dur,w,kt){ return `<path fill="none" stroke="url(#gAnim)" stroke-width="${w||3}" stroke-linecap="round">${AN.av("d",vals,dur,kt)}</path>`; },
+  s(d,w,o){ return `<path d="${d}" fill="none" stroke="#1a6b5a" stroke-width="${w||2.2}" stroke-linecap="round" opacity="${o||.7}"/>`; },
+  d(d,w){ return `<path d="${d}" fill="none" stroke="#ddd5c3" stroke-width="${w||2.2}" stroke-linecap="round"/>`; },
+  guide(cx,cy,r){ return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#e8a13c" stroke-width=".9" stroke-dasharray="2 5" opacity=".4"/>`; },
+  /* corps de face sans tête (pour les têtes animées) */
+  corpsFace(){ return AN.p("M100 50 C 101 62, 99 82, 100 101",3.4)
+    + AN.p("M100 101 C 95 124, 91 145, 88 164 M100 101 C 105 124, 109 145, 112 164",3)
+    + AN.s("M88 164 q -5 3 -10 3 M112 164 q 5 3 10 3"); },
+  deboutFace(bras){ return AN.t(100,40) + AN.corpsFace() + (bras||""); },
+  brasBas(){ return AN.p("M89 58 C 84 74, 82 88, 83 98 M111 58 C 116 74, 118 88, 117 98",2.6); },
+  /* buste de face (tête + torse + amorces de bras), pour automassages */
+  buste(extra){ return AN.t(100,44,9) + AN.p("M100 54 C 101 68, 99 88, 100 110",3.4)
+    + AN.p("M100 62 C 88 66, 80 76, 78 90 M100 62 C 112 66, 120 76, 122 90",2.8) + (extra||""); },
+  /* visage (gros plan) pour yeux et massages de tête */
+  visage(extra){ return `<circle cx="100" cy="92" r="40" fill="none" stroke="url(#gAnim)" stroke-width="3"/>`
+    + `<circle cx="86" cy="86" r="3" fill="#1a6b5a"/><circle cx="114" cy="86" r="3" fill="#1a6b5a"/>`
+    + AN.s("M90 108 q 10 7 20 0",2.4,.8) + (extra||""); },
+  /* chaise + cuisse/jambe de profil (le buste et la tête sont fournis par l'exercice) */
+  chaise(jambe){ return AN.d("M60 140 h56",2.4) + AN.d("M70 140 v28 M108 140 v28",2)
+    + (jambe!==false ? AN.p("M92 138 C 104 135, 116 136, 124 141 C 127 149, 127 158, 126 168",3) + AN.s("M126 168 q 6 2 11 2") : ""); },
+  /* figure assise en tailleur (respirations) */
+  tailleur(){ return AN.t(100,70,8) + AN.p("M100 80 C 102 92, 99 102, 100 112",3.2)
+    + AN.p("M100 112 C 89 113, 80 117, 76 122 M100 112 C 111 113, 120 117, 124 122",2.8)
+    + AN.s("M76 122 q 11 7 24 7 M124 122 q -11 7 -24 7",2.2,.6)
+    + AN.p("M96 88 C 90 96, 85 104, 83 112 M104 88 C 110 96, 115 104, 117 112",2.4)
+    + AN.dot(83,113,2.4) + AN.dot(117,113,2.4); },
+  /* halo qui respire + figure en tailleur ; rythme réglable */
+  respire(rVals, dur, kt){
+    const n=rVals.split(";").length-1;
+    const a = `<animate attributeName="r" dur="${dur}s" repeatCount="indefinite" values="${rVals}"${kt?` keyTimes="${kt}"`:""} calcMode="spline" keySplines="${AN.spl(n)}"/>`;
+    return `<circle cx="100" cy="94" r="42" fill="#e8f1ee" opacity=".8">${a}</circle>
+      <circle cx="100" cy="94" r="42" fill="none" stroke="#4a9d8a" stroke-width="1.6" opacity=".8">${a}</circle>` + AN.tailleur(); },
+};
+
+const ANIMS = {
+  /* ---------- Épaules & bras ---------- */
+  cercles_epaules: () => AN.svg(AN.deboutFace(
+    AN.guide(85,60,16) + AN.guide(115,60,16)
+    + `<g transform="translate(88,58)"><g>${AN.rotLin("0;-360",3.2)}${AN.p("M0 0 C -6 2, -11 7, -13 13",2.8)}${AN.dot(-13,13,3.4)}</g></g>`
+    + `<g transform="translate(112,58)"><g>${AN.rotLin("0;360",3.2)}${AN.p("M0 0 C 6 2, 11 7, 13 13",2.8)}${AN.dot(13,13,3.4)}</g></g>`)),
+  epaules_libres: () => AN.svg(AN.deboutFace(
+    AN.pAnim("M89 58 C 80 66, 76 80, 78 94;M89 58 C 72 54, 60 56, 52 64;M89 58 C 80 66, 76 80, 78 94",4,2.8)
+    + AN.pAnim("M111 58 C 120 66, 124 80, 122 94;M111 58 C 128 54, 140 56, 148 64;M111 58 C 120 66, 124 80, 122 94",4,2.8))),
+  etirement_ciel: () => AN.svg(AN.deboutFace(
+    `<g>${AN.trans("0 0;0 -5;0 0",3)}
+     ${AN.p("M89 58 C 90 44, 94 30, 99 19 M111 58 C 110 44, 106 30, 101 19",2.8)}${AN.dot(100,16,4)}</g>`)),
+  etirement_triceps: () => AN.svg(AN.deboutFace(
+    AN.p("M111 58 C 122 44, 118 28, 102 26",2.8) + AN.dot(104,27,3.2)
+    + AN.p("M89 58 C 86 44, 90 34, 97 30",2.4)
+    + `<g>${AN.rot("-2 100 101;3 100 101;-2 100 101",4)}</g>`)),
+  mobilite_coudes: () => AN.svg(AN.deboutFace(
+    AN.p("M89 58 C 86 68, 85 76, 86 82 M111 58 C 114 68, 115 76, 114 82",2.6)
+    + `<g transform="translate(86,82)"><g>${AN.rot("0;-145;0",2.6)}${AN.p("M0 0 C 1 8, 1 14, 0 19",2.6)}${AN.dot(0,19,3.2)}</g></g>`
+    + `<g transform="translate(114,82)"><g>${AN.rot("0;145;0",2.6)}${AN.p("M0 0 C -1 8, -1 14, 0 19",2.6)}${AN.dot(0,19,3.2)}</g></g>`)),
+  rotations_avant_bras: () => AN.svg(AN.deboutFace(
+    AN.p("M89 58 C 84 68, 82 76, 82 84 M111 58 C 116 68, 118 76, 118 84",2.6)
+    + AN.p("M82 84 C 72 86, 62 86, 54 84 M118 84 C 128 86, 138 86, 146 84",2.6)
+    + `<g transform="translate(54,84)"><g>${AN.rot("0;180;0",2.4)}${AN.s("M-6 0 L 6 0",2.6,.95)}</g></g>`
+    + `<g transform="translate(146,84)"><g>${AN.rot("0;-180;0",2.4)}${AN.s("M-6 0 L 6 0",2.6,.95)}</g></g>`)),
+  etirement_avant_bras: () => AN.svg(
+    AN.t(56,52,8.5) + AN.p("M58 62 C 62 76, 66 88, 70 98",3.2)
+    + AN.p("M66 74 C 84 78, 108 80, 128 80",2.8)
+    + `<g transform="translate(128,80)"><g>${AN.rot("10;55;10",3.5)}${AN.s("M0 0 L 16 4",2.6,.95)}</g></g>`
+    + AN.p("M70 98 C 90 106, 116 104, 132 94",2.4) + AN.dot(138,90,3.4)
+    + AN.guide(140,86,10)),
+  balancier_bras: () => AN.svg(AN.deboutFace(
+    AN.pAnim("M89 58 C 70 70, 62 86, 66 100;M89 58 C 96 74, 104 88, 116 96;M89 58 C 70 70, 62 86, 66 100",2.2,2.4)
+    + AN.pAnim("M111 58 C 130 70, 138 86, 134 100;M111 58 C 104 74, 96 88, 84 96;M111 58 C 130 70, 138 86, 134 100",2.2,2.4))),
+
+  /* ---------- Nuque, tête & yeux ---------- */
+  nuque_reveil: () => AN.svg(AN.corpsFace() + AN.brasBas()
+    + `<circle r="8.5" fill="#e8a13c">${AN.av("cx","100;89;100;111;100",6)}${AN.av("cy","40;44;40;44;40",6)}</circle>`),
+  cercles_tete: () => AN.svg(AN.corpsFace() + AN.brasBas() + AN.guide(100,40,10)
+    + `<g transform="translate(100,40)"><circle r="8.5" fill="#e8a13c">${AN.orbite(7,4)}</circle></g>`),
+  etirement_cervicales: () => AN.svg(AN.corpsFace()
+    + AN.p("M89 58 C 86 42, 90 30, 97 25 M111 58 C 114 42, 110 30, 103 25",2.6)
+    + `<circle r="8.5" fill="#e8a13c">${AN.av("cx","100;100;100",5)}${AN.av("cy","40;48;40",5)}</circle>`),
+  etirement_trapeze: () => AN.svg(AN.corpsFace()
+    + AN.p("M111 58 C 122 42, 116 28, 98 30",2.6)
+    + AN.p("M89 58 C 85 72, 84 86, 85 96",2.4)
+    + `<circle r="8.5" fill="#e8a13c">${AN.av("cx","100;108;100",5)}${AN.av("cy","40;44;40",5)}</circle>`),
+  massage_cervicales: () => AN.svg(AN.buste(
+    `<circle r="3" fill="#e8a13c">${AN.av("cx","96;90;96",1.6)}${AN.av("cy","58;60;58",1.6)}</circle>
+     <circle r="3" fill="#e8a13c">${AN.av("cx","104;110;104",1.6)}${AN.av("cy","58;60;58",1.6)}</circle>`)),
+  massage_trapezes: () => AN.svg(AN.buste(
+    `<circle r="3.2" fill="#e8a13c">${AN.av("cx","94;82;94",1.8)}${AN.av("cy","60;64;60",1.8)}</circle>
+     <circle r="3.2" fill="#e8a13c">${AN.av("cx","106;118;106",1.8)}${AN.av("cy","60;64;60",1.8)}</circle>`)),
+  massage_visage: () => AN.svg(AN.visage(
+    `<g transform="translate(72,80)"><circle r="3" fill="#e8a13c">${AN.orbite(5,1.8)}</circle></g>
+     <g transform="translate(128,80)"><circle r="3" fill="#e8a13c">${AN.orbite(5,1.8)}</circle></g>`)),
+  massage_crane: () => AN.svg(AN.visage(
+    `<circle r="3" fill="#e8a13c">${AN.av("cx","84;92;84",2)}${AN.av("cy","58;48;58",2)}</circle>
+     <circle r="3" fill="#e8a13c">${AN.av("cx","116;108;116",2)}${AN.av("cy","58;48;58",2)}</circle>`)),
+  yeux_focus: () => AN.svg(
+    AN.t(52,88,9) + AN.p("M54 98 C 56 112, 58 124, 60 134",3.2)
+    + `<path d="M60 86 L 168 78" stroke="#e8a13c" stroke-width="1.2" stroke-dasharray="3 6" opacity=".55" fill="none"/>`
+    + `<circle cy="80" fill="#1a6b5a">${AN.av("cx","84;164;84",6)}${AN.av("r","4.5;2.5;4.5",6)}</circle>`
+    + AN.guide(164,78,8)),
+  huit_du_regard: () => AN.svg(AN.visage()
+    + `<path d="M64 152 C 64 138, 88 138, 100 152 C 112 166, 136 166, 136 152 C 136 138, 112 138, 100 152 C 88 166, 64 166, 64 152" fill="none" stroke="#e8a13c" stroke-width="1.1" stroke-dasharray="3 5" opacity=".5"/>`
+    + `<circle r="4" fill="#e8a13c"><animateMotion dur="5s" repeatCount="indefinite" path="M64 152 C 64 138, 88 138, 100 152 C 112 166, 136 166, 136 152 C 136 138, 112 138, 100 152 C 88 166, 64 166, 64 152"/></circle>`),
+
+  /* ---------- Dos & buste ---------- */
+  dos_rond_creux: () => AN.svg(AN.chaise()
+    + AN.pAnim("M92 138 C 80 124, 82 102, 100 90;M92 138 C 96 118, 94 102, 86 88;M92 138 C 80 124, 82 102, 100 90",5,3.4)
+    + AN.pAnim("M96 104 C 104 116, 112 127, 120 135;M92 100 C 102 114, 112 127, 120 135;M96 104 C 104 116, 112 127, 120 135",5,2.6)
+    + `<circle r="8" fill="#e8a13c">${AN.av("cx","105;83;105",5)}${AN.av("cy","82;78;82",5)}</circle>`),
+  dos_derouler: () => ANIMS.dos_rond_creux(),
+  plongeon_colonne: () => AN.svg(AN.chaise()
+    + AN.pAnim("M92 138 C 82 122, 84 104, 100 92;M92 138 C 92 126, 102 118, 114 118;M92 138 C 82 122, 84 104, 100 92",6,3.4)
+    + `<circle r="8" fill="#e8a13c">${AN.av("cx","104;122;104",6)}${AN.av("cy","84;122;84",6)}</circle>`),
+  rotation_buste: () => AN.svg(
+    AN.p("M100 104 C 99 118, 100 132, 100 142",3.2) + AN.d("M84 142 h32",2.4)
+    + `<g>${AN.rot("-16 100 104;16 100 104;-16 100 104",5)}
+       ${AN.t(100,44,9)}${AN.p("M100 54 C 101 70, 99 88, 100 104",3.4)}
+       ${AN.p("M84 62 C 94 68, 106 68, 116 62",2.8)}${AN.dot(84,62,3.2)}${AN.dot(116,62,3.2)}</g>`),
+  auto_etreinte: () => AN.svg(
+    AN.p("M100 104 C 99 118, 100 132, 100 142",3.2) + AN.d("M84 142 h32",2.4)
+    + `<g>${AN.rot("-13 100 104;13 100 104;-13 100 104",4.5)}
+       ${AN.t(100,44,9)}${AN.p("M100 54 C 101 70, 99 88, 100 104",3.4)}
+       ${AN.p("M88 62 C 98 70, 108 74, 114 82 M112 62 C 102 70, 92 74, 86 82",2.6)}
+       ${AN.dot(114,82,3)}${AN.dot(86,82,3)}</g>`),
+  etirement_flancs: () => AN.svg(
+    `<g>${AN.rot("-9 100 164;9 100 164;-9 100 164",6)}
+      ${AN.t(100,40)}${AN.corpsFace()}
+      ${AN.p("M111 58 C 112 42, 106 28, 96 20",2.8)}
+      ${AN.p("M89 58 C 87 74, 88 88, 91 98",2.4)}</g>`),
+  recup_charges: () => AN.svg(
+    AN.p("M100 101 C 96 124, 93 145, 91 164 M100 101 C 104 124, 107 145, 109 164",3)
+    + AN.s("M91 164 q -5 3 -10 3 M109 164 q 5 3 10 3")
+    + AN.pAnim("M100 101 C 100 82, 100 64, 100 50;M100 101 C 88 88, 74 80, 60 78;M100 101 C 100 82, 100 64, 100 50",6,3.4)
+    + `<circle r="8.5" fill="#e8a13c">${AN.av("cx","100;54;100",6)}${AN.av("cy","40;80;40",6)}</circle>`
+    + AN.pAnim("M97 62 C 94 76, 93 88, 94 98;M78 82 C 76 96, 76 106, 78 114;M97 62 C 94 76, 93 88, 94 98",6,2.4)),
+  massage_lombaires: () => AN.svg(AN.t(100,40) + AN.p("M100 50 C 101 62, 99 82, 100 101",3.4)
+    + AN.p("M100 101 C 95 124, 91 145, 88 164 M100 101 C 105 124, 109 145, 112 164",3)
+    + AN.s("M88 164 q -5 3 -10 3 M112 164 q 5 3 10 3")
+    + `<circle r="3.2" fill="#e8a13c">${AN.av("cy","96;84;96",1.8)}${AN.av("cx","92;92;92",1.8)}</circle>
+       <circle r="3.2" fill="#e8a13c">${AN.av("cy","96;84;96",1.8)}${AN.av("cx","108;108;108",1.8)}</circle>`),
+  plexus_solaire: () => AN.svg(AN.buste(
+    `<g transform="translate(100,84)"><circle r="3.4" fill="#e8a13c">${AN.orbite(4,2)}</circle></g>`
+    + AN.guide(100,84,9))),
+
+  /* ---------- Bassin, hanches & jambes ---------- */
+  bas_dos: () => AN.svg(AN.corpsFace() + AN.brasBas() + AN.t(100,40) + AN.guide(100,101,10)
+    + `<g transform="translate(100,101)"><circle r="4.5" fill="#e8a13c">${AN.orbite(7,3)}</circle></g>`),
+  hanches: () => AN.svg(AN.corpsFace() + AN.brasBas() + AN.t(100,40) + AN.guide(100,101,12)
+    + `<g transform="translate(100,101)"><circle r="4.5" fill="#e8a13c">${AN.orbite(9,3.5)}</circle></g>`),
+  ouverture_hanche: () => AN.svg(
+    AN.t(100,40) + AN.p("M100 50 C 101 62, 99 82, 100 101",3.4)
+    + AN.p("M100 101 C 97 124, 95 145, 94 164",3) + AN.s("M94 164 q -5 3 -10 3")
+    + AN.brasBas() + AN.guide(124,110,11)
+    + `<g transform="translate(100,101)"><g><animateMotion dur="3s" repeatCount="indefinite" path="M17 2 a 8 8 0 1 0 14 8 a 8 8 0 1 0 -14 -8"/>${AN.dot(0,0,4.2)}</g></g>`
+    + AN.p("M100 101 C 108 104, 116 107, 122 110",2.8)),
+  ronds_genoux: () => AN.svg(
+    AN.t(96,52,8.5) + AN.p("M97 62 C 98 74, 98 84, 97 94",3.4)
+    + AN.p("M97 72 C 104 82, 108 92, 108 102",2.4)
+    + AN.p("M97 94 C 100 106, 103 116, 105 126",3) + AN.guide(105,128,9)
+    + `<g transform="translate(105,128)"><circle r="4.2" fill="#e8a13c">${AN.orbite(6,2.5)}</circle></g>`
+    + AN.p("M105 128 C 103 140, 100 152, 97 164",3) + AN.s("M97 164 q 6 3 12 3")),
+  genoux: () => AN.svg(AN.d("M60 140 h56",2.4) + AN.d("M70 140 v28 M108 140 v28",2)
+    + AN.t(102,74,8) + AN.p("M100 84 C 96 102, 94 120, 92 138",3.2)
+    + AN.p("M92 138 C 104 135, 116 136, 124 141",3)
+    + `<g transform="translate(124,141)"><g>${AN.rot("8;-72;8",3.5)}${AN.p("M0 0 C 2 9, 2 18, 1 26",3)}${AN.dot(1,26,3.2)}</g></g>`),
+  etirement_ischios: () => AN.svg(AN.d("M60 140 h56",2.4) + AN.d("M70 140 v28 M108 140 v28",2)
+    + AN.p("M92 138 C 108 140, 128 146, 144 156",3) + AN.s("M144 156 l 8 -6",2.4,.8)
+    + AN.pAnim("M92 138 C 82 122, 84 104, 100 92;M92 138 C 86 120, 92 104, 106 98;M92 138 C 82 122, 84 104, 100 92",5,3.4)
+    + `<circle r="8" fill="#e8a13c">${AN.av("cx","104;114;104",5)}${AN.av("cy","84;92;84",5)}</circle>`),
+  cercles_chevilles: () => AN.svg(AN.d("M60 140 h56",2.4) + AN.d("M70 140 v28 M108 140 v28",2)
+    + AN.t(100,74,8) + AN.p("M98 84 C 95 102, 93 120, 92 138",3.2)
+    + AN.p("M92 138 C 102 132, 112 126, 120 122",3) + AN.guide(122,122,8)
+    + `<g transform="translate(120,122)"><g>${AN.rotLin("0;360",2.5)}${AN.s("M0 0 L 14 5",2.8,.95)}</g></g>`),
+  pompes_chevilles: () => AN.svg(AN.d("M60 140 h56",2.4) + AN.d("M70 140 v28 M108 140 v28",2)
+    + AN.t(98,72,8) + AN.p("M96 82 C 94 100, 93 118, 92 136",3.2)
+    + AN.p("M92 136 C 108 134, 126 132, 142 132",3)
+    + `<g transform="translate(142,132)"><g>${AN.rot("38;-26;38",2)}${AN.s("M0 0 L 15 -3",2.8,.95)}</g></g>`),
+  montees_pointes: () => AN.svg(AN.d("M70 172 h60",2)
+    + `<g>${AN.trans("0 0;0 -7;0 0",2.4)}
+      ${AN.t(100,40)}${AN.corpsFace()}${AN.brasBas()}</g>`),
+  mini_squats: () => AN.svg(AN.d("M64 168 h72",2)
+    + AN.pAnim("M100 101 C 95 124, 91 145, 88 164;M100 113 C 88 120, 84 142, 86 162;M100 101 C 95 124, 91 145, 88 164",2.6,3)
+    + AN.pAnim("M100 101 C 105 124, 109 145, 112 164;M100 113 C 112 120, 116 142, 114 162;M100 101 C 105 124, 109 145, 112 164",2.6,3)
+    + `<g>${AN.trans("0 0;0 12;0 0",2.6)}
+      ${AN.t(100,40)}${AN.p("M100 50 C 101 62, 99 82, 100 101",3.4)}
+      ${AN.p("M89 58 C 78 62, 68 64, 58 64 M111 58 C 122 62, 132 64, 142 64",2.4)}</g>`),
+  boost_dynamique: () => AN.svg(
+    AN.t(100,38) + AN.p("M100 48 C 101 60, 99 80, 100 99",3.4)
+    + AN.p("M89 56 C 82 66, 80 76, 84 84 M111 56 C 118 66, 120 76, 116 84",2.6)
+    + AN.pAnim("M100 99 C 95 122, 91 144, 88 163;M100 99 C 88 104, 82 116, 84 124;M100 99 C 95 122, 91 144, 88 163;M100 99 C 95 122, 91 144, 88 163;M100 99 C 95 122, 91 144, 88 163",1.6,3)
+    + AN.pAnim("M100 99 C 105 122, 109 144, 112 163;M100 99 C 105 122, 109 144, 112 163;M100 99 C 105 122, 109 144, 112 163;M100 99 C 112 104, 118 116, 116 124;M100 99 C 105 122, 109 144, 112 163",1.6,3)
+    + AN.d("M64 168 h72",2)),
+  jambes_circulation: () => AN.svg(AN.d("M64 170 h72",2)
+    + `<g>${AN.rot("-5 100 166;5 100 166;-5 100 166",3.6)}
+      ${AN.t(100,40)}${AN.p("M100 50 C 101 62, 99 82, 100 101",3.4)}${AN.brasBas()}
+      ${AN.p("M100 101 C 93 124, 88 145, 85 164 M100 101 C 107 124, 112 145, 115 164",3)}</g>`),
+  marche_consciente: () => AN.svg(AN.d("M52 170 h96",2)
+    + AN.t(104,40) + AN.p("M103 50 C 104 62, 102 82, 102 101",3.4)
+    + AN.pAnim("M102 101 C 92 122, 84 142, 80 162;M102 101 C 106 124, 110 144, 114 162;M102 101 C 92 122, 84 142, 80 162",1.5,3)
+    + AN.pAnim("M102 101 C 106 124, 110 144, 114 162;M102 101 C 92 122, 84 142, 80 162;M102 101 C 106 124, 110 144, 114 162",1.5,3)
+    + AN.pAnim("M96 58 C 90 72, 88 84, 90 94;M96 58 C 102 72, 106 84, 104 94;M96 58 C 90 72, 88 84, 90 94",1.5,2.4)),
+
+  /* ---------- Poignets & mains ---------- */
+  poignets: () => AN.svg(
+    AN.t(54,58,8.5) + AN.p("M56 68 C 60 84, 64 96, 68 106",3.2)
+    + AN.p("M64 82 C 84 86, 106 88, 124 88",2.8)
+    + `<g transform="translate(124,88)"><g>${AN.rot("42;-46;42",2.6)}${AN.s("M0 0 L 20 0",2.8,.95)}${AN.dot(20,0,3)}</g></g>`
+    + AN.guide(126,88,12)),
+  poignets_croises: () => AN.svg(
+    AN.t(100,46,8.5) + AN.p("M100 56 C 101 68, 100 78, 100 88",3.2)
+    + AN.p("M100 66 C 88 74, 80 84, 78 96 M100 66 C 112 74, 120 84, 122 96",2.6)
+    + AN.p("M78 96 C 84 102, 92 106, 100 107 M122 96 C 116 102, 108 106, 100 107",2.4)
+    + `<g transform="translate(100,108)"><circle r="4.5" fill="#e8a13c">${AN.orbite(6,2.2)}</circle></g>`
+    + AN.guide(100,108,10)),
+  massage_avant_bras: () => AN.svg(
+    AN.t(56,56,8.5) + AN.p("M58 66 C 62 80, 66 92, 70 102",3.2)
+    + AN.p("M66 80 C 86 86, 110 90, 132 92",3)
+    + `<circle cx="132" cy="92" r="7" fill="none" stroke="url(#gAnim)" stroke-width="2.4"/>`
+    + `<circle r="3.4" fill="#e8a13c"><animateMotion dur="2s" repeatCount="indefinite" path="M70 78 C 90 84, 110 88, 128 90"/></circle>`),
+
+  /* ---------- Posture & énergie ---------- */
+  reset_1min: () => AN.svg(
+    `<path d="M100 6 v22" stroke="#e8a13c" stroke-width="1.4" stroke-dasharray="3 5" opacity=".6" fill="none">${AN.av("opacity",".25;.75;.25",3)}</path>`
+    + `<g>${AN.trans("0 0;0 -2.5;0 0",4)}
+      ${AN.t(100,40)}${AN.corpsFace()}${AN.brasBas()}</g>`),
+  neutre_30: () => AN.svg(AN.corpsFace() + AN.brasBas()
+    + `<g transform="translate(100,40)"><circle r="8.5" fill="#e8a13c">${AN.orbite(3,2.6)}</circle></g>`
+    + `<g transform="translate(89,58)"><circle r="3" fill="#e8a13c">${AN.orbite(2.5,2.6)}</circle></g>`
+    + `<g transform="translate(111,58)"><circle r="3" fill="#e8a13c">${AN.orbite(2.5,2.6)}</circle></g>`
+    + `<g transform="translate(100,101)"><circle r="4" fill="#e8a13c">${AN.orbite(3,2.6)}</circle></g>`),
+  ancrage_express: () => AN.svg(AN.deboutFace(AN.brasBas())
+    + AN.d("M62 172 h76",2)
+    + `<circle cx="84" cy="176" r="3" fill="#e8a13c">${AN.av("opacity",".2;1;.2",2.4)}</circle>
+       <circle cx="100" cy="178" r="3" fill="#e8a13c">${AN.av("opacity","1;.2;1",2.4)}</circle>
+       <circle cx="116" cy="176" r="3" fill="#e8a13c">${AN.av("opacity",".2;1;.2",2.4)}</circle>`),
+  sos_stress: () => AN.svg(AN.corpsFace() + AN.t(100,40) + AN.brasBas()
+    + `<path fill="none" stroke="url(#gAnim)" stroke-width="3" stroke-linecap="round">
+        ${AN.av("d","M85 57 Q 100 51 115 57;M85 47 Q 100 41 115 47;M85 57 Q 100 51 115 57;M85 57 Q 100 51 115 57",3,"0;.55;.7;1")}
+      </path>`),
+
+  /* ---------- Respirations & détente ---------- */
+  respiration_46: () => AN.svg(AN.respire("38;60;38",10,"0;.4;1")),
+  coherence_55: () => AN.svg(AN.respire("38;60;38",10,"0;.5;1")),
+  respi_4temps: () => AN.svg(AN.respire("36;48;60;46;36",8,"0;.25;.5;.75;1")),
+  soupir_apaisant: () => AN.svg(AN.respire("36;50;62;40;36",7,"0;.18;.34;.8;1")),
+  detente_douce: () => AN.svg(AN.respire("40;54;40",12,"0;.5;1")),
+
+  /* ---------- Générique (étapes d'intro, transitions) ---------- */
+  _defaut: () => AN.svg(AN.respire("40;52;40",8,"0;.5;1")),
+};
+
 /* Vivier PAR ZONE : tous les exercices qui travaillent cette zone (bibliothèque
    d'origine et gestes du cabinet confondus). La séance proposée pour une zone
    TOURNE chaque jour dans ce vivier — pas de collection à part.
@@ -1304,7 +1576,7 @@ function construireReveil(jour){
   sources.forEach(id=>{
     const s = SEQUENCES[id];
     const idx = jour % Math.min(2, s.etapes.length);
-    etapes.push({...s.etapes[idx], pos: posEtape(id, idx), zoneE: s.zone});
+    etapes.push({...s.etapes[idx], pos: posEtape(id, idx), zoneE: s.zone, src: id});
   });
   etapes.push({t:"Terminez : trois grandes respirations, épaules relâchées. Votre corps est prêt — bonne journée !", s:14});
   const total = etapes.reduce((a,e)=>a+e.s,0);
@@ -1417,7 +1689,7 @@ function composerMix(jour, slot, pool, premier, exclure, zonesPrises){
     const s = SEQUENCES[id];
     titres.push(s.titre);
     (s.zone||"").split("·").forEach(z=>{ z=z.trim(); if(z) zones.add(z); });
-    s.etapes.forEach((e,i)=>etapes.push({...e, pos: posEtape(id,i), zoneE: s.zone}));
+    s.etapes.forEach((e,i)=>etapes.push({...e, pos: posEtape(id,i), zoneE: s.zone, src: id}));
   });
   const tot = etapes.reduce((a,e)=>a+e.s,0);
   const mid = "mix_"+slot;
@@ -1930,7 +2202,7 @@ function composerPool(pool, jour, titre, ico, zone, idMix){
   const etapes = [], titres = [];
   srcs.forEach(id=>{
     const s = SEQUENCES[id]; titres.push(s.titre);
-    s.etapes.forEach((e,i)=>etapes.push({...e, pos: posEtape(id,i), zoneE: s.zone}));
+    s.etapes.forEach((e,i)=>etapes.push({...e, pos: posEtape(id,i), zoneE: s.zone, src: id}));
   });
   SEQUENCES[idMix] = {titre: titre, ico: ico, zone: zone,
     duree:(total/60).toFixed(1).replace(".",",")+" min", etapes, _src: srcs, _titres: titres};
@@ -1976,7 +2248,7 @@ function seanceZone(zone, jour){
   const etapes = [], titres = [];
   srcs.forEach(id=>{
     const s = SEQUENCES[id]; titres.push(s.titre);
-    s.etapes.forEach((e,i)=>etapes.push({...e, pos: posEtape(id,i), zoneE: s.zone}));
+    s.etapes.forEach((e,i)=>etapes.push({...e, pos: posEtape(id,i), zoneE: s.zone, src: id}));
   });
   // vivier maigre : seconde passe du premier exercice jusqu'à ~90 s minimum
   if(total < 90){
@@ -1984,7 +2256,7 @@ function seanceZone(zone, jour){
     total += 6;
     const s0 = SEQUENCES[srcs[0]];
     for(let i=0; i<s0.etapes.length && total + s0.etapes[i].s <= 140; i++){
-      etapes.push({...s0.etapes[i], pos: posEtape(srcs[0], i), zoneE: s0.zone});
+      etapes.push({...s0.etapes[i], pos: posEtape(srcs[0], i), zoneE: s0.zone, src: srcs[0]});
       total += s0.etapes[i].s;
     }
   }
@@ -2037,7 +2309,7 @@ function lancerMix(){
   zones.forEach((z,zi)=>{
     const id = seqPourZone(z, jm + zi) || SEQ_PAR_ZONE[z];
     const s = SEQUENCES[id];
-    etapes.push(...s.etapes.slice(0,2).map((e,i)=>({...e, pos: posEtape(id, i), zoneE: s.zone})));
+    etapes.push(...s.etapes.slice(0,2).map((e,i)=>({...e, pos: posEtape(id, i), zoneE: s.zone, src: id})));
   });
   etapes.push({t:"Pour finir : grandissez-vous, inspirez largement… et soufflez lentement en relâchant tout le corps.", s:12});
   const total = etapes.reduce((a,e)=>a+e.s,0);
@@ -2125,7 +2397,7 @@ function lancerSeance(id){
   const s=SEQUENCES[id];
   document.getElementById("p-titre").textContent=s.titre;
   document.getElementById("p-sous").innerHTML=zoneBadges(s.zone)+" "+s.duree+" · "+s.zone;
-  document.getElementById("p-visuel-ico").textContent=s.ico;
+  const vico=document.getElementById("p-visuel-ico"); if(vico) vico.textContent=s.ico;
   document.getElementById("p-voix").textContent = voixActive ? "🔊" : "🔇";
   montrer("s-player"); navVisible(false);
   demarrerEtape();
@@ -2133,6 +2405,11 @@ function lancerSeance(id){
 function demarrerEtape(){
   const s=SEQUENCES[seanceEnCours]; const e=s.etapes[etapeIdx];
   document.getElementById("p-num").textContent="Étape "+(etapeIdx+1)+" / "+s.etapes.length;
+  // Pictogramme animé du geste : celui de la séquence d'origine de l'étape
+  // (les séances composées portent un champ src), sinon l'animation générique.
+  const srcAnim = e.src || seanceEnCours;
+  const fabAnim = ANIMS[srcAnim] || ANIMS._defaut;
+  document.getElementById("p-visuel").innerHTML = fabAnim();
   const pos = e.pos || posEtape(seanceEnCours, etapeIdx);
   const zoneEtape = (e.zoneE || s.zone || "").split("·")[0].trim();
   document.getElementById("p-pos-bloc").innerHTML = svgPos(pos) +
@@ -3103,9 +3380,9 @@ function rendreProfil(){
 }
 
 /* ---------- Démarrage ---------- */
-/* Mon poste & moi — v0.57 : enrichissement des contenus — 8 nouvelles séquences (coudes, yeux/tête, respiration-détente,
-   mobilité dos), rotation du midi élargie, +12 encouragements de fin, +13 astuces, +13 tips ergo/erreurs,
-   mot de Claire avec variantes quotidiennes. Nouvelles séquences à valider par l'ostéopathe. */
+/* Mon poste & moi — v0.58 : pictogrammes animés SVG pour les 52 séquences (style cygne : trait fin,
+   dégradé vert→ambre, proportions humaines) affichés dans le player à chaque étape, y compris dans les
+   séances composées (cocktails, SOS, réveil, zones) via le champ src des étapes. */
 document.getElementById("logo-accueil").innerHTML = logoImg(120);
 /* bandeau de marque global, injecté une fois */
 const _entete = document.createElement("div");
