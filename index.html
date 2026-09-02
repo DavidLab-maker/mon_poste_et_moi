@@ -1028,10 +1028,16 @@ const ANIMS = {
     + `<path fill="none" stroke="url(#gAnim)" stroke-width="2.4" stroke-linecap="round">${AN.av("d","M99 100 C 103 106, 106 110, 108 114;M105 104 C 111 112, 117 120, 122 128;M99 100 C 103 106, 106 110, 108 114",5)}</path>`
     + `<circle r="3.6" fill="#e8a13c">${AN.av("cx","108;123;108",5)}${AN.av("cy","115;129;115",5)}</circle>`
     + `<circle r="8" fill="#e8a13c">${AN.av("cx","104;112;104",5)}${AN.av("cy","84;92;84",5)}</circle>`),
-  cercles_chevilles: () => AN.svg(AN.d("M60 140 h56",2.4) + AN.d("M70 140 v28 M108 140 v28",2)
-    + AN.t(100,74,8) + AN.p("M98 84 C 95 102, 93 120, 92 138",3.2)
-    + AN.p("M92 138 C 102 132, 112 126, 120 122",3) + AN.guide(122,122,8)
-    + `<g transform="translate(120,122)"><g>${AN.rotLin("0;360",2.5)}${AN.s("M0 0 L 14 5",2.8,.95)}</g></g>`),
+  cercles_chevilles: () => AN.svg(
+    /* cheville posée SUR le genou opposé (figure-4), une main tient le pied, la cheville dessine des cercles */
+    AN.d("M60 140 h56",2.4) + AN.d("M70 140 v28 M108 140 v28",2)
+    + AN.p("M92 138 C 104 135, 116 136, 124 141 C 127 149, 127 158, 126 168",3) + AN.joint(124,141,2.8)
+    + AN.p("M92 138 C 100 130, 106 125, 112 123 M112 123 C 118 127, 122 132, 124 136",2.8)
+    + AN.joint(112,123)
+    + AN.p("M92 138 C 82 122, 84 104, 100 92",3.4) + AN.t(104,84,8)
+    + AN.p("M100 96 C 106 106, 113 116, 120 126",2.4) + AN.dot(122,130,3.6)
+    + AN.guide(126,136,7)
+    + `<g transform="translate(124,136)">${AN.joint(0,0,2.6)}<g>${AN.rotLin("0;360",2.5)}${AN.s("M2 0 L 13 3",2.8,.95)}</g></g>`),
   pompes_chevilles: () => AN.svg(AN.d("M60 140 h56",2.4) + AN.d("M70 140 v28 M108 140 v28",2)
     + AN.t(98,72,8) + AN.p("M96 82 C 94 100, 93 118, 92 136",3.2)
     + AN.p("M92 136 C 108 134, 126 132, 142 132",3)
@@ -1161,9 +1167,166 @@ const ANIM_OUI_NON = () => AN.svg(
     <path d="M-11 60 q 11 -7 22 0" fill="none" stroke="#e8a13c" stroke-width="1.2" opacity=".55"/>
     <text x="0" y="148" font-size="14" font-weight="700" fill="#1a6b5a" text-anchor="middle" font-family="inherit">petit non</text>
   </g>`);
+const ANIM_FIGURE4 = () => AN.svg(
+  /* assis : cheville droite posée sur le genou gauche, le buste se penche doucement en avant */
+  AN.d("M60 140 h56",2.4) + AN.d("M70 140 v28 M108 140 v28",2)
+  + AN.p("M92 138 C 104 135, 116 136, 124 141 C 127 149, 127 158, 126 168",3) + AN.joint(124,141,2.8)
+  + AN.p("M92 138 C 100 130, 106 125, 112 123 M112 123 C 118 127, 122 132, 124 137",2.8)
+  + AN.joint(112,123) + AN.dot(124,137,3.8)
+  + AN.pAnim("M92 138 C 82 122, 84 104, 100 92;M92 138 C 87 119, 93 103, 105 95;M92 138 C 82 122, 84 104, 100 92",5,3.4)
+  + `<circle r="8" fill="#e8a13c">${AN.av("cx","104;110;104",5)}${AN.av("cy","84;89;84",5)}</circle>`);
+const ANIM_GENOU_POITRINE = () => AN.svg(
+  /* profil : un genou ramené vers la poitrine, les mains le tiennent */
+  AN.t(96,42,8) + AN.p("M97 52 C 98 66, 97 84, 97 104",3.4)
+  + AN.p("M97 104 C 95 126, 94 146, 93 164",3) + AN.joint(94,134) + AN.s("M93 164 q -6 3 -11 3")
+  + `<path fill="none" stroke="url(#gAnim)" stroke-width="3" stroke-linecap="round">${AN.av("d",
+      "M97 104 C 104 100, 111 97, 116 99 M116 99 C 114 108, 110 114, 106 119;M97 104 C 105 96, 113 92, 118 93 M118 93 C 116 102, 112 108, 108 113;M97 104 C 104 100, 111 97, 116 99 M116 99 C 114 108, 110 114, 106 119",3)}</path>`
+  + AN.jointAnim("116;118;116","99;93;99",3)
+  + AN.p("M97 62 C 103 74, 108 86, 111 96",2.4)
+  + `<circle r="3.8" fill="#e8a13c">${AN.av("cx","112;114;112",3)}${AN.av("cy","103;98;103",3)}</circle>`);
+const ANIM_CERCLES_POIGNETS = () => AN.svg(
+  /* avant-bras levés, les mains dessinent des cercles autour des poignets */
+  AN.t(100,44,9) + AN.p("M100 54 C 101 68, 99 88, 100 110",3.4)
+  + AN.p("M100 62 C 92 68, 86 74, 84 82 M100 62 C 108 68, 114 74, 116 82",2.8)
+  + AN.joint(84,82,2.8) + AN.joint(116,82,2.8)
+  + AN.p("M84 82 C 83 76, 82 72, 82 68 M116 82 C 117 76, 118 72, 118 68",2.6)
+  + AN.joint(82,68) + AN.joint(118,68) + AN.guide(82,62,7) + AN.guide(118,62,7)
+  + `<g transform="translate(82,62)"><circle r="3.8" fill="#e8a13c">${AN.orbite(5,1.8)}</circle></g>`
+  + `<g transform="translate(118,62)"><circle r="3.8" fill="#e8a13c">${AN.orbite(5,1.8)}</circle></g>`);
+const ANIM_ETOILE_POING = () => AN.svg(
+  /* gros plan : la main s'ouvre en étoile puis se serre en poing */
+  AN.p("M100 170 C 100 156, 100 144, 100 132",3.4) + AN.joint(100,132,3)
+  + `<circle cx="100" cy="112" r="11" fill="#e8a13c"/>`
+  + `<g transform="translate(100,104)"><g><animateTransform attributeName="transform" type="scale" dur="1.8s" repeatCount="indefinite" values="1;0.25;1" calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1"/>
+      ${AN.p("M0 -4 L 0 -26 M-9 -2 L -22 -18 M9 -2 L 22 -18 M-15 2 L -30 -4 M15 2 L 30 -4",2.6)}
+      ${AN.dot(0,-27,2.6)}${AN.dot(-23,-19,2.6)}${AN.dot(23,-19,2.6)}${AN.dot(-31,-5,2.6)}${AN.dot(31,-5,2.6)}</g></g>`);
+const ANIM_CLIGNER = () => AN.svg(AN.visage()
+  + `<g><animate attributeName="opacity" dur="1.4s" repeatCount="indefinite" values="0;0;1;0" keyTimes="0;.72;.8;1"/>
+      <path d="M80 86 q 6 3 12 0 M108 86 q 6 3 12 0" fill="none" stroke="#1a6b5a" stroke-width="2.6" stroke-linecap="round"/>
+      <rect x="78" y="80" width="16" height="8" fill="#fffdf8"/><rect x="106" y="80" width="16" height="8" fill="#fffdf8"/>
+      <path d="M80 87 q 6 3 12 0 M108 87 q 6 3 12 0" fill="none" stroke="#1a6b5a" stroke-width="2.4" stroke-linecap="round"/></g>`),
+  ANIM_PALMING = () => AN.svg(
+  /* paumes en coque posées sur les yeux fermés : chaleur et obscurité */
+  AN.visage()
+  + AN.p("M64 150 C 70 130, 76 110, 82 92 M136 150 C 130 130, 124 110, 118 92",2.6)
+  + `<ellipse cx="84" cy="86" rx="13" ry="16" fill="#e8a13c" opacity=".92"/>
+     <ellipse cx="116" cy="86" rx="13" ry="16" fill="#e8a13c" opacity=".92"/>`
+  + `<circle cx="100" cy="92" r="46" fill="none" stroke="#e8a13c" stroke-width="1.2" opacity=".4">${AN.av("r","44;50;44",4)}</circle>`);
+const ANIM_MASSAGE_MOLLET = () => AN.svg(
+  /* assis, jambe croisée : la main masse le mollet en remontant de la cheville vers le genou */
+  AN.d("M60 140 h56",2.4) + AN.d("M70 140 v28 M108 140 v28",2)
+  + AN.p("M92 138 C 104 135, 116 136, 124 141 C 127 149, 127 158, 126 168",3) + AN.joint(124,141,2.8)
+  + AN.p("M92 138 C 100 130, 106 125, 112 123 M112 123 C 118 127, 122 132, 124 136",2.8)
+  + AN.joint(112,123) + AN.s("M124 136 l 8 -3",2.4,.8)
+  + AN.p("M92 138 C 82 122, 84 104, 100 92",3.4) + AN.t(104,84,8)
+  + AN.p("M100 96 C 105 104, 110 112, 114 118",2.4)
+  + `<circle r="4" fill="#e8a13c">${AN.av("cx","122;114;122",1.6)}${AN.av("cy","133;125;133",1.6)}</circle>`),
+  ANIM_EXTENSION_ARRIERE = () => AN.svg(
+  /* mains dans le bas du dos, la poitrine s'ouvre doucement vers le ciel */
+  AN.p("M96 104 C 94 126, 93 146, 92 164 M96 104 C 99 126, 101 146, 102 164",3)
+  + AN.joint(93,134) + AN.joint(100,134) + AN.s("M92 164 q -6 3 -11 3 M102 164 q 6 3 11 3")
+  + `<path fill="none" stroke="url(#gAnim)" stroke-width="3.4" stroke-linecap="round">${AN.av("d",
+      "M96 104 C 98 88, 99 70, 97 56;M96 104 C 101 88, 105 74, 104 60;M96 104 C 98 88, 99 70, 97 56",5)}</path>`
+  + `<circle r="8" fill="#e8a13c">${AN.av("cx","96;105;96",5)}${AN.av("cy","46;51;46",5)}</circle>`
+  + AN.dot(91,100,3.4) + AN.dot(99,102,3.4)
+  + `<path d="M84 62 q -7 6 -7 14" fill="none" stroke="#e8a13c" stroke-width="1.3" stroke-linecap="round" opacity=".5">${AN.av("opacity",".2;.7;.2",5)}</path>`),
+  ANIM_MENTON = () => AN.svg(
+  /* profil : rentrer le menton (glissement horizontal de la tête vers l'arrière) */
+  AN.p("M100 92 C 101 106, 101 120, 100 134",3.4)
+  + `<g>${AN.trans("0 0;8 2;0 0",2.6)}<circle cx="94" cy="72" r="9" fill="#e8a13c"/><path d="M85 74 l -4 2" stroke="#e8a13c" stroke-width="2.4" stroke-linecap="round"/></g>`
+  + `<path d="M112 64 l 10 0 M118 60 l 4 4 l -4 4" fill="none" stroke="#4a9d8a" stroke-width="1.6" stroke-linecap="round" opacity=".6"/>`
+  + AN.guide(102,74,13)),
+  ANIM_ROTATION_TETE = () => AN.svg(
+  /* rotation lente de la tête : le visage balaie d'une épaule à l'autre */
+  `<circle cx="100" cy="62" r="13" fill="#e8a13c"/>`
+  + `<circle r="3.4" fill="#fffdf8">${AN.av("cx","100;89;100;111;100",5)}${AN.av("cy","62;64;62;64;62",5)}</circle>`
+  + AN.p("M100 76 C 101 88, 100 98, 100 108",3.4)
+  + AN.p("M84 84 Q 100 78 116 84",3) + AN.joint(84,84,2.8) + AN.joint(116,84,2.8)
+  + `<path d="M78 58 q 22 -14 44 0" fill="none" stroke="#e8a13c" stroke-width="1.2" stroke-dasharray="3 4" opacity=".5"/>`),
+  ANIM_MOULINETS = () => AN.svg(
+  /* profil : grands cercles du bras tendu, vers l'arrière */
+  AN.t(94,40,8) + AN.p("M95 50 C 97 66, 97 84, 97 104",3.4)
+  + AN.p("M97 104 C 95 126, 94 146, 93 164 M97 104 C 99 126, 101 146, 102 164",3)
+  + AN.joint(94,134) + AN.joint(101,134) + AN.s("M93 164 q -6 3 -11 3 M102 164 q 6 3 11 3")
+  + AN.guide(97,58,30)
+  + `<g transform="translate(97,58)">${AN.joint(0,0,2.8)}<g>${AN.rotLin("0;-360",1.9)}${AN.p("M0 0 C 1 10, 1 20, 0 29",2.6)}${AN.joint(0,15)}${AN.dot(0,29,3.6)}</g></g>`),
+  ANIM_BOXE = () => AN.svg(
+  /* boxer doucement dans le vide : un poing part, l'autre revient */
+  AN.deboutFace(
+    `<path fill="none" stroke="url(#gAnim)" stroke-width="2.7" stroke-linecap="round">${AN.av("d","M89 58 C 80 60, 70 62, 60 62;M89 58 C 86 64, 85 70, 86 76;M89 58 C 80 60, 70 62, 60 62",0.9)}</path>`
+    + `<circle r="4" fill="#e8a13c">${AN.av("cx","58;87;58",0.9)}${AN.av("cy","62;77;62",0.9)}</circle>`
+    + `<path fill="none" stroke="url(#gAnim)" stroke-width="2.7" stroke-linecap="round">${AN.av("d","M111 58 C 114 64, 115 70, 114 76;M111 58 C 120 60, 130 62, 140 62;M111 58 C 114 64, 115 70, 114 76",0.9)}</path>`
+    + `<circle r="4" fill="#e8a13c">${AN.av("cx","113;142;113",0.9)}${AN.av("cy","77;62;77",0.9)}</circle>`)),
+  ANIM_QUADRI = () => AN.svg(
+  /* profil : le talon vient vers la fesse, la main tient la cheville — étirement du devant de la cuisse */
+  AN.t(92,42,8) + AN.p("M93 52 C 95 66, 95 84, 95 104",3.4)
+  + AN.p("M95 104 C 93 126, 92 146, 91 164",3) + AN.joint(92,134) + AN.s("M91 164 q -6 3 -11 3")
+  + `<path fill="none" stroke="url(#gAnim)" stroke-width="3" stroke-linecap="round">${AN.av("d",
+      "M95 104 C 98 116, 99 126, 98 136 M98 136 C 104 132, 108 124, 109 115;M95 104 C 98 116, 99 126, 98 136 M98 136 C 103 130, 106 122, 106 112;M95 104 C 98 116, 99 126, 98 136 M98 136 C 104 132, 108 124, 109 115",4)}</path>`
+  + AN.joint(98,136)
+  + AN.p("M94 62 C 102 78, 107 94, 108 106",2.4)
+  + `<circle r="3.8" fill="#e8a13c">${AN.av("cx","109;107;109",4)}${AN.av("cy","113;110;113",4)}</circle>`);
 const ANIMS_ETAPE = {
   bas_dos: {
     0: () => ANIM_BASSIN_BASCULE(),            // assis : bascule du bassin avant/arrière (profil)
+    3: () => ANIM_GENOU_POITRINE(),            // genou ramené vers la poitrine avec les mains
+    4: () => ANIMS.etirement_ciel(),           // grandissez-vous, bras vers le ciel
+  },
+  hanches: {
+    2: () => ANIMS.bas_dos(),                  // genoux souples, cercles avec le bassin : vue de FACE
+    3: () => ANIM_FIGURE4(),                   // assis, cheville sur le genou opposé
+  },
+  nuque_reveil: {
+    0: () => ANIMS.respiration_46(),           // installation + respiration
+    3: () => ANIM_MENTON(),                    // rentrer le menton (double menton)
+    4: () => ANIM_ROTATION_TETE(),             // rotation menton d'une épaule à l'autre
+    5: () => ANIMS.sos_stress(),               // épaules vers les oreilles puis relâcher
+  },
+  dos_derouler: {
+    2: () => ANIMS.rotation_buste(),           // bras croisés, rotation du buste
+    3: () => ANIMS.plongeon_colonne(),         // penché en avant, bras pendants
+    4: () => ANIMS.plongeon_colonne(),         // remonter vertèbre par vertèbre
+  },
+  poignets: {
+    2: () => ANIM_CERCLES_POIGNETS(),          // cercles lents avec les poignets
+    3: () => ANIM_ETOILE_POING(),              // doigts en étoile, puis poing
+  },
+  sos_stress: {
+    0: () => ANIMS.reset_1min(),               // pieds au sol, on se redresse
+    3: () => ANIMS.respiration_46(),           // respiration lente 4-6
+    4: () => ANIMS.respiration_46(),
+    5: () => ANIMS.yeux_focus(),               // regard au loin
+  },
+  jambes_circulation: {
+    0: () => ANIMS.montees_pointes(),          // montées sur pointes
+    2: () => ANIMS.mini_squats(),              // flexions de genoux
+    3: () => ANIMS.marche_consciente(),        // pas sur place
+    4: () => ANIM_MASSAGE_MOLLET(),            // massage du mollet, jambe croisée
+  },
+  yeux_focus: {
+    1: () => ANIM_CLIGNER(),                   // cligner des yeux
+    2: () => ANIM_PALMING(),                   // paumes en coque sur les yeux
+  },
+  recup_charges: {
+    1: () => ANIM_EXTENSION_ARRIERE(),         // mains bas du dos, poitrine vers le ciel
+    3: () => ANIMS._defaut(),                  // trois grandes respirations
+  },
+  boost_dynamique: {
+    2: () => ANIM_MOULINETS(),                 // grands cercles de bras vers l'arrière
+    3: () => ANIMS.mini_squats(),              // flexions dynamiques
+    4: () => ANIM_BOXE(),                      // boxer doucement dans le vide
+    5: () => ANIMS.etirement_ciel(),           // inspirations toniques bras qui montent
+  },
+  detente_douce: {
+    1: () => ANIMS.nuque_reveil(),             // nuque : oreille vers l'épaule
+    2: () => ANIMS.etirement_ciel(),           // bras vers le ciel puis redescendre
+    3: () => ANIMS.plongeon_colonne(),         // penché en avant, dos rond
+    4: () => ANIMS.respiration_46(),           // respiration 4-6
+  },
+  genoux: {
+    1: () => ANIMS.mini_squats(),              // flexions debout sans verrouiller
+    2: () => ANIM_QUADRI(),                    // cheville attrapée derrière, devant de cuisse
+    3: () => ANIMS.marche_consciente(),        // pas souples
   },
   neutre_30: {
     0: () => ANIM_BASSIN_BASCULE(),            // rouler le bassin d'avant en arrière
@@ -3512,9 +3675,11 @@ function rendreProfil(){
 }
 
 /* ---------- Démarrage ---------- */
-/* Mon poste & moi — v0.61 : animations PAR ÉTAPE (ANIMS_ETAPE + srcIdx) pour les séances multi-gestes.
-   Épaules libres : 5 animations — cercles mains sur épaules, doigts entrelacés dans le dos (profil),
-   bras tendu tiré vers la poitrine (droit puis gauche), secouer bras et mains. */
+/* Mon poste & moi — v0.62 : passe systématique sur les visuels, étape par étape, d'après le texte
+   de chaque consigne — 45 animations d'étapes couvrant les 13 séances multi-gestes, 12 nouveaux
+   gestes dessinés (menton rentré, rotation de tête, cercles de poignets, étoile-poing, clignement,
+   palming, massage du mollet, extension arrière, moulinets, boxe, quadriceps, genou-poitrine,
+   bascule du bassin, roulement d'épaules, oui/non, figure-4, cheville sur genou corrigée). */
 document.getElementById("logo-accueil").innerHTML = logoImg(120);
 /* bandeau de marque global, injecté une fois */
 const _entete = document.createElement("div");
