@@ -1292,7 +1292,24 @@ const ANIM_ROT_BUSTE_DROITE = () => ANIMS.rotation_buste()
   .replace(/-16 100 104;16 100 104;-16 100 104/g,"0 100 104;18 100 104;0 100 104");
 const ANIM_FLANC_DROITE = () => ANIMS.etirement_flancs()
   .replace("-9 100 164;9 100 164;-9 100 164","0 100 164;11 100 164;0 100 164");
+const ANIM_VISAGE_SOURCILS = () => AN.svg(AN.visage(
+  /* 1re moitié : lissage AU-DESSUS des sourcils, du centre vers l'extérieur ;
+     2e moitié : sous les yeux, toujours vers l'extérieur */
+  `<path d="M78 77 q 8 -4 16 0 M106 77 q 8 -4 16 0" stroke="#1a6b5a" stroke-width="1.5" fill="none" opacity=".35"/>`
+  + `<circle cy="73" r="3" fill="#e8a13c">${AN.av("cx","93;80;80;93",3,"0;.45;.5;1")}<animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="1;1;0;0" keyTimes="0;.45;.5;1"/></circle>`
+  + `<circle cy="73" r="3" fill="#e8a13c">${AN.av("cx","107;120;120;107",3,"0;.45;.5;1")}<animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="1;1;0;0" keyTimes="0;.45;.5;1"/></circle>`
+  + `<circle cy="95" r="3" fill="#e8a13c">${AN.av("cx","93;93;93;80",3,"0;.5;.55;1")}<animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="0;0;1;1" keyTimes="0;.5;.55;1"/></circle>`
+  + `<circle cy="95" r="3" fill="#e8a13c">${AN.av("cx","107;107;107;120",3,"0;.5;.55;1")}<animate attributeName="opacity" dur="3s" repeatCount="indefinite" values="0;0;1;1" keyTimes="0;.5;.55;1"/></circle>`));
+const ANIM_VISAGE_NEZ_BOUCHE = () => AN.svg(AN.visage(
+  /* les doigts descendent le long du nez, contournent la bouche et finissent au menton */
+  `<path d="M100 82 v16" stroke="#1a6b5a" stroke-width="1.5" opacity=".3" fill="none"/>`
+  + `<circle r="3.2" fill="#e8a13c"><animateMotion dur="2.6s" repeatCount="indefinite" path="M97 82 C 96 88, 96 94, 95 100 C 87 102, 85 110, 91 117 C 95 121, 99 121, 100 120"/></circle>`
+  + `<circle r="3.2" fill="#e8a13c"><animateMotion dur="2.6s" repeatCount="indefinite" path="M103 82 C 104 88, 104 94, 105 100 C 113 102, 115 110, 109 117 C 105 121, 101 121, 100 120"/></circle>`));
 const ANIMS_ETAPE = {
+  massage_visage: {
+    1: () => ANIM_VISAGE_SOURCILS(),           // au-dessus des sourcils, puis sous les yeux
+    2: () => ANIM_VISAGE_NEZ_BOUCHE(),         // le long du nez, autour de la bouche, jusqu'au menton
+  },
   cercles_epaules: {
     1: ANIM_SENS_INVERSE(() => ANIMS.cercles_epaules()),   // puis cercles vers l'avant
   },
