@@ -20,11 +20,11 @@
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   /* bandeau de marque, fil conducteur sur toutes les pages */
   #entete-app{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:60;
-    display:none;align-items:center;justify-content:center;gap:9px;padding:9px 0 7px;
+    display:none;align-items:center;justify-content:center;gap:10px;padding:8px 0 6px;
     background:rgba(247,244,236,.93);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
     border-bottom:1px solid var(--ligne)}
-  #entete-app img{height:30px;display:block}
-  body.avec-entete .screen{padding-top:74px}
+  #entete-app img{height:44px;display:block}
+  body.avec-entete .screen{padding-top:88px}
   body{font-family:'Nunito',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#e9e4d8;color:var(--encre);min-height:100vh;display:flex;justify-content:center}
   #phone{width:100%;max-width:430px;min-height:100vh;background:var(--fond);display:flex;flex-direction:column;position:relative;box-shadow:0 0 40px rgba(80,65,35,.14)}
   .screen{display:none;flex:1;flex-direction:column;padding:28px 20px 104px;overflow-y:auto}
@@ -155,16 +155,16 @@
   .note-legale{font-size:12px;color:var(--gris);line-height:1.5;text-align:center;margin-top:16px;padding:0 8px}
   .alerte{background:#fdf3e7;border:1px solid #f3ddc0;border-radius:12px;padding:13px;font-size:13.5px;line-height:1.5;color:#7a5a2e;margin-top:14px}
   .fin-check{font-size:64px;text-align:center;margin:30px 0 10px}
-  /* bouton SOS stress */
-  /* bouton SOS flottant, présent sur toutes les pages */
-  #sos-fab{position:fixed;bottom:100px;right:max(14px, calc(50% - 215px + 14px));border-radius:999px;
-    padding:11px 20px;background:linear-gradient(135deg,#f0806f,#d63f2e);color:#fff;display:none;
-    align-items:center;gap:10px;z-index:70;cursor:pointer;user-select:none;border:2.5px solid #fff;
-    box-shadow:0 5px 16px rgba(214,63,46,.45);animation:pulseSOS 1.5s ease-out infinite;transition:transform .1s}
+  /* bouton SOS flottant : rond compact pour ne pas masquer le contenu,
+     pulsation limitée aux premières secondes, s'efface pendant le défilement */
+  #sos-fab{position:fixed;bottom:96px;right:max(14px, calc(50% - 215px + 14px));width:54px;height:54px;border-radius:50%;
+    background:linear-gradient(135deg,#f0806f,#d63f2e);color:#fff;display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:1px;z-index:70;cursor:pointer;user-select:none;border:2px solid #fff;
+    box-shadow:0 5px 16px rgba(214,63,46,.45);animation:pulseSOS 1.5s ease-out 3;transition:transform .1s,opacity .25s}
+  #sos-fab.discret{opacity:.35}
   #sos-fab:active{transform:scale(.94)}
-  #sos-fab .sos-ico{font-size:22px;line-height:1}
-  #sos-fab b{font-size:16px;letter-spacing:.06em;line-height:1.1;display:block}
-  #sos-fab span{font-size:11px;font-weight:700;opacity:.95;letter-spacing:.02em;display:block}
+  #sos-fab .sos-ico{font-size:19px;line-height:1}
+  #sos-fab b{font-size:9.5px;letter-spacing:.05em;line-height:1}
   /* menu SOS (stress / fatigue) */
   #sos-menu{position:fixed;inset:0;z-index:90;display:none}
   #sos-menu .fond{position:absolute;inset:0;background:rgba(20,30,27,.45)}
@@ -303,11 +303,11 @@
       <b style="font-size:15px">🔔 Rappels de pauses</b>
       <p class="sub" style="margin:6px 0 10px;font-size:13px" id="notif-etat">Disponibles uniquement sur la version en ligne de l'app.</p>
       <div class="chips">
-        <span class="chip" id="chip-activer" onclick="activerNotifs()">Activer les rappels</span>
-        <span class="chip" id="chip-tester" onclick="testerNotif()">🔔 Tester maintenant</span>
-        <span class="chip" id="chip-agenda" onclick="telechargerAgenda()">📅 Rappels dans mon agenda</span>
+        <span class="chip" id="chip-agenda" onclick="telechargerAgenda()">📅 Rappels dans mon agenda ⭐</span>
+        <span class="chip" id="chip-activer" onclick="activerNotifs()">🔔 Notifications de l'app</span>
+        <span class="chip" id="chip-tester" onclick="testerNotif()">Tester une notification</span>
       </div>
-      <p class="sub" style="font-size:11.5px;margin:10px 0 0">Important : les notifications de l'app ne partent que si elle est ouverte ou en arrière-plan récent. Pour des rappels garantis même app fermée, touchez « 📅 Rappels dans mon agenda » : vos 5 pauses s'ajoutent à votre calendrier, à vos horaires, uniquement vos jours de travail.</p>
+      <p class="sub" style="font-size:11.5px;margin:10px 0 0">⭐ L'agenda est la seule option qui sonne <b>même app fermée</b> : vos 5 pauses s'ajoutent à votre calendrier, à vos horaires, uniquement vos jours de travail. Les notifications de l'app, elles, ne partent que si elle est ouverte ou en arrière-plan récent.</p>
       <p class="sub" style="font-size:11.5px;margin:6px 0 0">Horaires réglés lors de votre bilan — modifiables via « Signaler un changement » ci-dessous.</p>
     </div>
     <div class="carte">
@@ -326,8 +326,7 @@
 
   <!-- ======= BOUTON SOS FLOTTANT (stress ou coup de fatigue) ======= -->
   <div id="sos-fab" onclick="ouvrirSOS()" title="SOS — stress ou fatigue">
-    <span class="sos-ico">🆘</span>
-    <div><b>SOS</b><span>stress · fatigue</span></div>
+    <span class="sos-ico">🆘</span><b>SOS</b>
   </div>
 
   <!-- ======= MENU SOS ======= -->
@@ -967,6 +966,16 @@ function montrerOnglet(nom){
 }
 function navVisible(v){ document.getElementById("nav").style.display = v?"flex":"none"; }
 
+/* Le bouton SOS s'estompe pendant le défilement pour laisser lire le contenu */
+let _fabScrollT=null;
+document.addEventListener("scroll", ()=>{
+  const fab=document.getElementById("sos-fab");
+  if(!fab || fab.style.display==="none") return;
+  fab.classList.add("discret");
+  clearTimeout(_fabScrollT);
+  _fabScrollT=setTimeout(()=>fab.classList.remove("discret"), 450);
+}, true);
+
 /* =========================================================
    BILAN
    ========================================================= */
@@ -975,7 +984,7 @@ function etapesBilan(){
   // Bilan allégé : la typologie d'activité suffit (la liste des métiers alourdissait le parcours)
   const e = ["identite","poste"];
   if(bilan.poste==="bureau") e.push("lieu");
-  e.push("heures","jours","zones","etat","amenagement");
+  e.push("heures","jours","zones","etat","amenagement","rappels");
   return e;
 }
 /* Jour travaillé ? Planning du bilan + exception ponctuelle du jour (un clic). */
@@ -1110,6 +1119,22 @@ function rendreBilan(){
           <div class="chips">${choix}</div>
         </div>`;
       }).join("");
+  }
+
+  if(e==="rappels"){
+    html = `<h1>Vos rappels de pauses</h1>
+      <p class="sub">Sans rappel, pas de rituel : c'est lui qui pense à vous quand vous êtes concentré·e. Deux options — la première est la plus fiable.</p>
+      <div class="carte" style="border:1.5px solid var(--vert);background:#f2faf7">
+        <b style="font-size:15px">📅 Dans mon agenda <span style="font-size:11px;font-weight:800;color:var(--vert)">RECOMMANDÉ</span></b>
+        <p class="sub" style="margin:6px 0 12px;font-size:13px">Vos 5 pauses s'ajoutent à votre calendrier, à vos horaires, uniquement vos jours de travail. Elles sonnent <b>même app fermée et téléphone verrouillé</b>.</p>
+        <button class="btn" style="font-size:15px;padding:13px" onclick="telechargerAgenda(bilan.rappels_h, bilan.jours)">📅 Ajouter mes 5 rappels à l'agenda</button>
+      </div>
+      <div class="carte">
+        <b style="font-size:15px">🔔 Notifications de l'app</b>
+        <p class="sub" style="margin:6px 0 12px;font-size:13px">Un coup de pouce en plus — mais elles ne partent que si l'app est ouverte ou en arrière-plan récent.</p>
+        <button class="btn secondaire" style="font-size:15px;padding:13px" onclick="activerNotifs()">Activer les notifications</button>
+      </div>
+      <p class="sub" style="font-size:12.5px">Vous pourrez changer d'avis à tout moment dans « Mon profil ».</p>`;
   }
 
   if(editionSeule){
@@ -1400,7 +1425,7 @@ function programmeDuJour(){
     {moment:"☀️ Réveil du corps — multi-zones", id: construireReveil(jour)},
     {moment:"🎯 Matinée — pause active sur place", id: mixAm},
     tt ? {moment:"🍽️ Pause repas — sortez marcher", id:"marche_consciente"}
-       : {moment:"🍽️ Pause repas — on relâche", id: ["sos_stress","respiration_46","respi_4temps","plexus_solaire"][jour % 4]},
+       : {moment:"🍽️ Pause repas — on relâche", id: ["detente_douce","respiration_46","respi_4temps","plexus_solaire"][jour % 4]},
     {moment:"🚶 Après-midi — on bouge", id: deplJour},
     tt && profil.stress>=4
        ? {moment:"🧘 Fin d'après-midi — on souffle", id:"respiration_46"}
@@ -1625,14 +1650,17 @@ function rendreAccueil(){
   const creneau = h<10 ? 0 : h<13 ? 1 : h<16 ? 2 : 3;
   const tick = jourAnnee*4 + creneau;
 
-  // Le mot de Claire : message contextuel + tip du moment, fusionnés dans un seul encart
+  // Le mot de Claire : une ligne compacte, l'astuce du jour se déplie au toucher
   const tip = tipDuJour(tick);
   const b=document.getElementById("bandeau-conseil");
-  b.innerHTML = `<div style="display:flex;gap:10px;align-items:flex-start">
-      <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;border:2px solid rgba(255,255,255,.5)">🧑‍⚕️</div>
-      <div style="flex:1">
-        <b>☕ Le mot de Claire</b>
-        <p>${messageCoach()}</p>
+  b.innerHTML = `<div onclick="basculerMotClaire()" style="cursor:pointer">
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:16px">🧑‍⚕️</span>
+        <b style="font-size:13.5px">Le mot de Claire</b>
+        <span id="mot-claire-fleche" style="margin-left:auto;font-size:12px;opacity:.85">▾ l'astuce du jour</span>
+      </div>
+      <p style="font-size:13px;margin-top:5px">${messageCoach()}</p>
+      <div id="mot-claire-plus" hidden>
         <div style="margin-top:8px;background:rgba(255,255,255,.16);border-radius:10px;padding:8px 11px">
           <div style="display:flex;justify-content:space-between;align-items:baseline">
             <b style="font-size:12px;letter-spacing:.03em">${tip.label}</b>
@@ -1643,17 +1671,6 @@ function rendreAccueil(){
         <p class="signature" style="text-align:right;margin-top:6px;font-size:13px">Claire — ostéopathe D.O.</p>
       </div>
     </div>`;
-  // Bloc 2 — l'œil de l'ostéo : carrousel de TOUTES les remarques issues du bilan
-  const oeil = messagesOeil();
-  const htmlInsight = oeil.length ? `<div class="carte" style="border-left:4px solid var(--ambre);background:#fffaf2;padding:13px 15px">
-      <div style="display:flex;justify-content:space-between;align-items:baseline">
-        <b style="font-size:14.5px">🔍 L'œil de l'ostéo</b>
-        ${oeil.length>1?`<span class="sub" style="margin:0;font-size:11px" id="oeil-num">1/${oeil.length}</span>`:""}
-      </div>
-      <div id="oeil-slides">${oeil.map(m=>`<p style="font-size:13.5px;line-height:1.55">${m}</p>`).join("")}</div>
-      ${oeil.length>1?`<div id="oeil-dots">${oeil.map((_,k)=>`<span${k===0?' style="background:var(--ambre)"':''}></span>`).join("")}</div>
-      <p class="sub" style="font-size:10.5px;margin:6px 0 0;text-align:center">← faites glisser pour voir les ${oeil.length} observations →</p>`:""}
-    </div>` : "";
   // Outil rapide sous le rituel (le réalignement vit désormais DANS le rituel)
   const htmlOutils = `<div class="carte seance" onclick="ouvrirZones()" style="margin-top:14px;padding:13px 16px">
       <div style="font-size:22px">🎯</div>
@@ -1715,17 +1732,20 @@ function rendreAccueil(){
     </div>`;
   }
 
-  // Changement de programme : petit encart discret, le choix se fait sur une page dédiée
+  // Changement de programme : carte visible seulement quand un changement est actif,
+  // sinon simple lien discret pour ne pas encombrer le haut de page
   const pjour = posteDuJour();
   const enChangement = pjour !== profil.poste;
-  const htmlChangement = `<div class="carte seance" onclick="ouvrirChangement()" style="padding:11px 16px;${enChangement?"border:1.5px solid var(--ambre);background:#fffaf2":""}">
-      <div style="font-size:20px">🔁</div>
-      <div class="infos">
-        <b style="font-size:13.5px">Changement de programme</b>
-        <span style="font-size:11.5px">${enChangement ? "Aujourd'hui : "+PROFILS[pjour].ico+" "+PROFILS[pjour].label : "activité inhabituelle aujourd'hui ?"}</span>
-      </div>
-      <div class="etat" style="font-size:12px">${enChangement?"Modifier ›":"›"}</div>
-    </div>`;
+  const htmlChangement = enChangement
+    ? `<div class="carte seance" onclick="ouvrirChangement()" style="padding:11px 16px;border:1.5px solid var(--ambre);background:#fffaf2">
+        <div style="font-size:20px">🔁</div>
+        <div class="infos">
+          <b style="font-size:13.5px">Changement de programme</b>
+          <span style="font-size:11.5px">Aujourd'hui : ${PROFILS[pjour].ico} ${PROFILS[pjour].label}</span>
+        </div>
+        <div class="etat" style="font-size:12px">Modifier ›</div>
+      </div>`
+    : `<p style="font-size:12px;text-align:right;margin:0 0 6px"><span onclick="ouvrirChangement()" style="color:var(--gris);text-decoration:underline;cursor:pointer">🔁 activité inhabituelle aujourd'hui ?</span></p>`;
 
   const repos = !estJourTravail(d);
   const prog = repos ? [] : programmeDuJour(); const faites = faitesAujourdhui();
@@ -1749,7 +1769,8 @@ function rendreAccueil(){
       <span class="ss">bassin · épaules · tête — retrouvez votre position neutre</span>
     </div>`;
 
-  document.getElementById("programme").innerHTML = htmlMaj + htmlInsight + htmlCheckin + htmlRituel + prog.map((x,i)=>{
+  // Le rituel d'abord (c'est l'action !), les suivis et encarts d'info ensuite
+  document.getElementById("programme").innerHTML = htmlRituel + prog.map((x,i)=>{
     const s=SEQUENCES[x.id]; const faite=faites.includes(x.id);
     return `<p class="moment">${x.moment}</p>
       <div class="carte seance ${faite?'faite':''}" onclick="lancerSeance('${x.id}')">
@@ -1757,8 +1778,13 @@ function rendreAccueil(){
         <div class="infos"><b>${s.titre}</b><span>${zoneBadges(s.zone)} ${s.duree} · ${s.zone}</span></div>
         <div class="etat">${faite?'Faite':'Lancer ›'}</div>
       </div>` + ((i===1||i===3) ? miniNeutre : "");
-  }).join("") + htmlOutils + htmlScore;
-  initOeil();
+  }).join("") + htmlOutils + htmlCheckin + htmlMaj + htmlScore;
+}
+function basculerMotClaire(){
+  const p=document.getElementById("mot-claire-plus"), f=document.getElementById("mot-claire-fleche");
+  if(!p) return;
+  p.hidden = !p.hidden;
+  if(f) f.textContent = p.hidden ? "▾ l'astuce du jour" : "▴ replier";
 }
 function initOeil(){
   const s=document.getElementById("oeil-slides");
@@ -2584,6 +2610,21 @@ function rendrePoste(){
   });
   let html = "";
 
+  // L'œil de l'ostéo : les observations croisant tensions et poste, issues du bilan.
+  // Elles vivent ici (et plus sur l'accueil) : c'est du poste qu'elles parlent.
+  const oeil = messagesOeil();
+  if(oeil.length){
+    html += `<div class="carte" style="border-left:4px solid var(--ambre);background:#fffaf2;padding:13px 15px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <b style="font-size:14.5px">🔍 L'œil de l'ostéo</b>
+        ${oeil.length>1?`<span class="sub" style="margin:0;font-size:11px" id="oeil-num">1/${oeil.length}</span>`:""}
+      </div>
+      <div id="oeil-slides">${oeil.map(m=>`<p style="font-size:13.5px;line-height:1.55">${m}</p>`).join("")}</div>
+      ${oeil.length>1?`<div id="oeil-dots">${oeil.map((_,k)=>`<span${k===0?' style="background:var(--ambre)"':''}></span>`).join("")}</div>
+      <p class="sub" style="font-size:10.5px;margin:6px 0 0;text-align:center">← faites glisser pour voir les ${oeil.length} observations →</p>`:""}
+    </div>`;
+  }
+
   if(aCorriger.length){
     html += `<p class="moment">🛠️ On règle ça en priorité (${aCorriger.length})</p>` +
       aCorriger.map((c,i)=>{
@@ -2657,6 +2698,7 @@ function rendrePoste(){
 
   html += `<button class="btn secondaire" style="margin-top:10px" onclick="refaireBilan()">Mettre à jour mes réponses</button>`;
   document.getElementById("conseils-poste").innerHTML = html;
+  initOeil();
 }
 
 /* ---------- Schémas types d'aménagement (SVG — photos/vidéos à venir) ---------- */
@@ -2789,6 +2831,26 @@ function sauverCheckin(){
   window.scrollTo(0,0);
 }
 
+/* Partage du point de la semaine : message pré-rempli à envoyer (WhatsApp, e-mail…).
+   Les données restant sur l'appareil, c'est le canal de remontée pendant le pilote. */
+function partagerCheckin(){
+  const c = checkins.length ? checkins[checkins.length-1] : null;
+  if(!c){ toast("Faites d'abord votre point de la semaine"); return; }
+  const zones = Object.entries(c.zones||{}).map(([z,v])=>`${z} ${v}/10`).join(", ");
+  const txt = `📊 Mon point de la semaine — Mon poste & moi (${new Date(c.date).toLocaleDateString("fr-FR",{day:"numeric",month:"short"})})\n`
+    + `Tensions globales : ${c.tensions}/10`
+    + (zones ? `\nPar zone : ${zones}` : "")
+    + `\nÉnergie fin de journée : ${c.energie}/10`
+    + `\nLe rituel m'aide : ${c.utilite}/10`
+    + `\nAssiduité : ${joursActifsSemaine()} jour(s) actif(s) sur 7`;
+  if(navigator.share){
+    navigator.share({text:txt}).then(()=>toast("Point partagé 📤")).catch(()=>{});
+  } else if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>toast("Point copié 📋 — collez-le dans votre message"))
+      .catch(()=>toast("Partage indisponible sur cet appareil"));
+  } else toast("Partage indisponible sur cet appareil");
+}
+
 /* Assiduité de la semaine : combien de jours (sur 7) avec au moins 3 micro-pauses ? */
 function joursActifsSemaine(){
   let n=0; const d=new Date();
@@ -2821,7 +2883,8 @@ function planApresCheckin(tmp, prev){
       <p class="sub" style="text-align:center;font-size:13px">${delta<=-1 && ja>=4
         ? "Et ce n'est pas un hasard : rituel suivi "+ja+" jours sur 7 cette semaine. Le lien est là — continuez !"
         : "Continuez le rituel : c'est la régularité qui protège."}</p>
-      <button class="btn" onclick="retourAccueil()">Retour à ma journée</button>`;
+      <button class="btn secondaire" onclick="partagerCheckin()">📤 Envoyer mon point (WhatsApp, e-mail…)</button>
+      <button class="btn" style="margin-top:10px" onclick="retourAccueil()">Retour à ma journée</button>`;
   }
 
   // Dégradation MAIS rituel peu suivi → le problème n'est probablement pas le poste : on remotive
@@ -2834,7 +2897,8 @@ function planApresCheckin(tmp, prev){
       </div>
       <div class="mini-neutre" onclick="lancerSeance('neutre_30')">📐 <span class="tg">Commencez maintenant : réalignement 30 s</span> ›</div>
       ${tmp.tensions>=7?`<p class="sub" style="font-size:12px;margin-top:10px">⚠️ Une douleur forte qui persiste ou s'intensifie, ce n'est plus de la prévention : parlez-en à un professionnel de santé.</p>`:""}
-      <button class="btn" style="margin-top:12px" onclick="retourAccueil()">C'est parti pour aujourd'hui ›</button>`;
+      <button class="btn secondaire" style="margin-top:12px" onclick="partagerCheckin()">📤 Envoyer mon point (WhatsApp, e-mail…)</button>
+      <button class="btn" style="margin-top:10px" onclick="retourAccueil()">C'est parti pour aujourd'hui ›</button>`;
   }
 
   // Plan de réaction : séquences prioritaires + aménagements liés
@@ -2859,7 +2923,8 @@ function planApresCheckin(tmp, prev){
     <div class="mini-neutre" onclick="lancerSeance('neutre_30')">📐 <span class="tg">Réalignement éclair · 30 s</span> ›<br><span class="ss">plusieurs fois par jour, c'est lui qui entretient la position neutre</span></div>
     ${amgHtml}
     ${tmp.tensions>=7?`<p class="sub" style="font-size:12px;margin-top:12px">⚠️ Une douleur forte qui persiste ou s'intensifie malgré tout, ce n'est plus de la prévention : parlez-en à un professionnel de santé.</p>`:""}
-    <button class="btn" style="margin-top:12px" onclick="retourAccueil()">Retour à ma journée</button>`;
+    <button class="btn secondaire" style="margin-top:12px" onclick="partagerCheckin()">📤 Envoyer mon point (WhatsApp, e-mail…)</button>
+    <button class="btn" style="margin-top:10px" onclick="retourAccueil()">Retour à ma journée</button>`;
 }
 function rendreHistoCheckin(){
   const h=document.getElementById("checkin-histo");
@@ -2919,12 +2984,13 @@ function rendreProfil(){
 }
 
 /* ---------- Démarrage ---------- */
-/* Mon poste & moi — v0.55 : logo officiel cygne-danseur (logo-cygne.png) + bandeau de marque fil conducteur sur toutes les pages */
+/* Mon poste & moi — v0.56 : SOS compact et hors rituel, accueil allégé (rituel d'abord, œil de l'ostéo dans Mon poste),
+   logo agrandi, rappels agenda mis en avant (étape de bilan dédiée), partage du point de la semaine */
 document.getElementById("logo-accueil").innerHTML = logoImg(120);
 /* bandeau de marque global, injecté une fois */
 const _entete = document.createElement("div");
 _entete.id = "entete-app";
-_entete.innerHTML = logoImg(30) + `<span class="titre-mini" style="font-size:15px">Mon poste &amp; moi</span>`;
+_entete.innerHTML = logoImg(44) + `<span class="titre-mini" style="font-size:17.5px">Mon poste &amp; moi</span>`;
 document.body.appendChild(_entete);
 if(profil){ navVisible(true); montrerOnglet("accueil"); }
 
@@ -2986,12 +3052,14 @@ function testerNotif(){
   const ok = montrerNotif("Mon poste & moi", "🔔 Test réussi ! Les rappels fonctionnent sur cet appareil.");
   toast(ok ? "Notification de test envoyée 🔔" : "Notification impossible sur cet appareil");
 }
-/* Rappels garantis même app fermée : fichier agenda (.ics) aux 5 horaires, jours de travail uniquement */
-function telechargerAgenda(){
+/* Rappels garantis même app fermée : fichier agenda (.ics) aux 5 horaires, jours de travail uniquement.
+   Les overrides permettent l'appel depuis le bilan, avant que le profil ne soit enregistré. */
+function telechargerAgenda(hOverride, joursOverride){
   marquerChip("chip-agenda");
   setTimeout(()=>{ const c=document.getElementById("chip-agenda"); if(c) c.classList.remove("ok"); }, 1400);
-  const h = horairesRappels();
-  const jours = (profil && profil.jours && profil.jours.length) ? profil.jours : [1,2,3,4,5];
+  const h = (hOverride && hOverride.length) ? hOverride : horairesRappels();
+  const jours = (joursOverride && joursOverride.length) ? joursOverride
+    : (profil && profil.jours && profil.jours.length) ? profil.jours : [1,2,3,4,5];
   const BY = {0:"SU",1:"MO",2:"TU",3:"WE",4:"TH",5:"FR",6:"SA"};
   const byday = jours.map(j=>BY[j]).join(",");
   const d = new Date();
