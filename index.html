@@ -807,12 +807,17 @@ const AN = {
   s(d,w,o){ return `<path d="${d}" fill="none" stroke="#1a6b5a" stroke-width="${w||2.2}" stroke-linecap="round" opacity="${o||.7}"/>`; },
   d(d,w){ return `<path d="${d}" fill="none" stroke="#ddd5c3" stroke-width="${w||2.2}" stroke-linecap="round"/>`; },
   guide(cx,cy,r){ return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#e8a13c" stroke-width=".9" stroke-dasharray="2 5" opacity=".4"/>`; },
-  /* corps de face sans tête (pour les têtes animées) */
+  /* articulation visible (coude, poignet, genou…) : petit point vert d'eau */
+  joint(cx,cy,r){ return `<circle cx="${cx}" cy="${cy}" r="${r||2.4}" fill="#4a9d8a"/>`; },
+  jointAnim(cxVals,cyVals,dur,r){ return `<circle r="${r||2.4}" fill="#4a9d8a">${AN.av("cx",cxVals,dur)}${AN.av("cy",cyVals,dur)}</circle>`; },
+  /* corps de face sans tête (pour les têtes animées) — genoux marqués */
   corpsFace(){ return AN.p("M100 50 C 101 62, 99 82, 100 101",3.4)
     + AN.p("M100 101 C 95 124, 91 145, 88 164 M100 101 C 105 124, 109 145, 112 164",3)
+    + AN.joint(92,134) + AN.joint(108,134)
     + AN.s("M88 164 q -5 3 -10 3 M112 164 q 5 3 10 3"); },
   deboutFace(bras){ return AN.t(100,40) + AN.corpsFace() + (bras||""); },
-  brasBas(){ return AN.p("M89 58 C 84 74, 82 88, 83 98 M111 58 C 116 74, 118 88, 117 98",2.6); },
+  brasBas(){ return AN.p("M89 58 C 84 74, 82 88, 83 98 M111 58 C 116 74, 118 88, 117 98",2.6)
+    + AN.joint(84,77) + AN.joint(116,77) + AN.joint(83,98) + AN.joint(117,98); },
   /* buste de face (tête + torse + amorces de bras), pour automassages */
   buste(extra){ return AN.t(100,44,9) + AN.p("M100 54 C 101 68, 99 88, 100 110",3.4)
     + AN.p("M100 62 C 88 66, 80 76, 78 90 M100 62 C 112 66, 120 76, 122 90",2.8) + (extra||""); },
@@ -840,12 +845,25 @@ const AN = {
 const ANIMS = {
   /* ---------- Épaules & bras ---------- */
   cercles_epaules: () => AN.svg(AN.deboutFace(
-    AN.guide(85,60,16) + AN.guide(115,60,16)
-    + `<g transform="translate(88,58)"><g>${AN.rotLin("0;-360",3.2)}${AN.p("M0 0 C -6 2, -11 7, -13 13",2.8)}${AN.dot(-13,13,3.4)}</g></g>`
-    + `<g transform="translate(112,58)"><g>${AN.rotLin("0;360",3.2)}${AN.p("M0 0 C 6 2, 11 7, 13 13",2.8)}${AN.dot(13,13,3.4)}</g></g>`)),
+    AN.guide(85,62,15) + AN.guide(115,62,15)
+    /* main posée sur l'épaule : le bras plié (épaule → coude → main) pivote autour de l'épaule */
+    + `<g transform="translate(88,58)">${AN.joint(0,0,2.8)}<g>${AN.rotLin("0;-360",3.2)}
+        ${AN.p("M0 0 C -9 4, -14 9, -14 15 C -12 9, -7 3, -2 1",2.6)}
+        ${AN.dot(-14,15,3.2)}${AN.joint(-2,1)}</g></g>`
+    + `<g transform="translate(112,58)">${AN.joint(0,0,2.8)}<g>${AN.rotLin("0;360",3.2)}
+        ${AN.p("M0 0 C 9 4, 14 9, 14 15 C 12 9, 7 3, 2 1",2.6)}
+        ${AN.dot(14,15,3.2)}${AN.joint(2,1)}</g></g>`)),
   epaules_libres: () => AN.svg(AN.deboutFace(
-    AN.pAnim("M89 58 C 80 66, 76 80, 78 94;M89 58 C 72 54, 60 56, 52 64;M89 58 C 80 66, 76 80, 78 94",4,2.8)
-    + AN.pAnim("M111 58 C 120 66, 124 80, 122 94;M111 58 C 128 54, 140 56, 148 64;M111 58 C 120 66, 124 80, 122 94",4,2.8))),
+    /* ouverture de la poitrine : bras articulés (épaule → coude → poignet) qui se déploient */
+    AN.joint(89,58,2.8) + AN.joint(111,58,2.8)
+    + AN.pAnim("M89 58 C 84 64, 80 69, 78 74;M89 58 C 81 60, 73 59, 66 58;M89 58 C 84 64, 80 69, 78 74",4,2.7)
+    + AN.pAnim("M78 74 C 76 80, 75 85, 74 90;M66 58 C 60 55, 55 52, 50 50;M78 74 C 76 80, 75 85, 74 90",4,2.5)
+    + AN.jointAnim("78;66;78","74;58;74",4)
+    + AN.jointAnim("74;50;74","90;50;90",4)
+    + AN.pAnim("M111 58 C 116 64, 120 69, 122 74;M111 58 C 119 60, 127 59, 134 58;M111 58 C 116 64, 120 69, 122 74",4,2.7)
+    + AN.pAnim("M122 74 C 124 80, 125 85, 126 90;M134 58 C 140 55, 145 52, 150 50;M122 74 C 124 80, 125 85, 126 90",4,2.5)
+    + AN.jointAnim("122;134;122","74;58;74",4)
+    + AN.jointAnim("126;150;126","90;50;90",4))),
   etirement_ciel: () => AN.svg(AN.deboutFace(
     `<g>${AN.trans("0 0;0 -5;0 0",3)}
      ${AN.p("M89 58 C 90 44, 94 30, 99 19 M111 58 C 110 44, 106 30, 101 19",2.8)}${AN.dot(100,16,4)}</g>`)),
@@ -855,6 +873,7 @@ const ANIMS = {
     + `<g>${AN.rot("-2 100 101;3 100 101;-2 100 101",4)}</g>`)),
   mobilite_coudes: () => AN.svg(AN.deboutFace(
     AN.p("M89 58 C 86 68, 85 76, 86 82 M111 58 C 114 68, 115 76, 114 82",2.6)
+    + AN.joint(86,82,2.8) + AN.joint(114,82,2.8)
     + `<g transform="translate(86,82)"><g>${AN.rot("0;-145;0",2.6)}${AN.p("M0 0 C 1 8, 1 14, 0 19",2.6)}${AN.dot(0,19,3.2)}</g></g>`
     + `<g transform="translate(114,82)"><g>${AN.rot("0;145;0",2.6)}${AN.p("M0 0 C -1 8, -1 14, 0 19",2.6)}${AN.dot(0,19,3.2)}</g></g>`)),
   rotations_avant_bras: () => AN.svg(AN.deboutFace(
@@ -946,10 +965,27 @@ const ANIMS = {
     + AN.guide(100,84,9))),
 
   /* ---------- Bassin, hanches & jambes ---------- */
-  bas_dos: () => AN.svg(AN.corpsFace() + AN.brasBas() + AN.t(100,40) + AN.guide(100,101,10)
-    + `<g transform="translate(100,101)"><circle r="4.5" fill="#e8a13c">${AN.orbite(7,3)}</circle></g>`),
-  hanches: () => AN.svg(AN.corpsFace() + AN.brasBas() + AN.t(100,40) + AN.guide(100,101,12)
-    + `<g transform="translate(100,101)"><circle r="4.5" fill="#e8a13c">${AN.orbite(9,3.5)}</circle></g>`),
+  bas_dos: () => AN.svg(
+    /* cercles du bassin : la tête reste stable, le bassin orbite, les jambes suivent (genoux marqués) */
+    AN.t(100,40) + AN.guide(100,102,8)
+    + AN.pAnim("M100 56 C 102 72, 106 88, 107 102;M100 56 C 101 74, 100 92, 100 109;M100 56 C 98 72, 94 88, 93 102;M100 56 C 99 74, 100 88, 100 95;M100 56 C 102 72, 106 88, 107 102",3.5,3.4)
+    + AN.pAnim("M107 102 C 99 124, 92 146, 88 164;M100 109 C 95 128, 90 148, 88 164;M93 102 C 90 124, 88 146, 88 164;M100 95 C 95 120, 90 144, 88 164;M107 102 C 99 124, 92 146, 88 164",3.5,3)
+    + AN.pAnim("M107 102 C 110 124, 112 146, 112 164;M100 109 C 105 128, 110 148, 112 164;M93 102 C 101 124, 108 146, 112 164;M100 95 C 105 120, 110 144, 112 164;M107 102 C 110 124, 112 146, 112 164",3.5,3)
+    + AN.jointAnim("95;92;89;92;95","133;136;133;130;133",3.5)
+    + AN.jointAnim("111;108;105;108;111","133;136;133;130;133",3.5)
+    + `<circle r="4.5" fill="#e8a13c">${AN.av("cx","107;100;93;100;107",3.5)}${AN.av("cy","102;109;102;95;102",3.5)}</circle>`
+    + AN.s("M88 164 q -5 3 -10 3 M112 164 q 5 3 10 3")),
+  hanches: () => AN.svg(
+    /* la fente : un grand pas, le genou avant plie, le corps descend — hanche, genoux et chevilles articulés */
+    AN.d("M56 162 h96",2)
+    + `<g>${AN.trans("0 0;0 6;0 0",3.5)}${AN.t(94,48)}${AN.p("M95 58 C 96 72, 96 88, 96 104",3.4)}
+       ${AN.p("M93 66 C 88 78, 86 90, 87 100",2.4)}${AN.joint(87,100)}</g>`
+    + AN.jointAnim("96;96;96","104;110;104",3.5,3)
+    + AN.pAnim("M96 104 C 90 122, 84 140, 78 158;M96 110 C 88 126, 82 142, 78 158;M96 104 C 90 122, 84 140, 78 158",3.5,3)
+    + AN.jointAnim("87;85;87","131;135;131",3.5)
+    + AN.pAnim("M96 104 C 108 116, 116 136, 119 158;M96 110 C 111 116, 121 136, 121 158;M96 104 C 108 116, 116 136, 119 158",3.5,3)
+    + AN.jointAnim("111;115;111","128;131;128",3.5)
+    + AN.s("M78 158 q -6 3 -11 3 M119 158 q 6 3 11 3")),
   ouverture_hanche: () => AN.svg(
     AN.t(100,40) + AN.p("M100 50 C 101 62, 99 82, 100 101",3.4)
     + AN.p("M100 101 C 97 124, 95 145, 94 164",3) + AN.s("M94 164 q -5 3 -10 3")
@@ -964,7 +1000,7 @@ const ANIMS = {
     + AN.p("M105 128 C 103 140, 100 152, 97 164",3) + AN.s("M97 164 q 6 3 12 3")),
   genoux: () => AN.svg(AN.d("M60 140 h56",2.4) + AN.d("M70 140 v28 M108 140 v28",2)
     + AN.t(102,74,8) + AN.p("M100 84 C 96 102, 94 120, 92 138",3.2)
-    + AN.p("M92 138 C 104 135, 116 136, 124 141",3)
+    + AN.p("M92 138 C 104 135, 116 136, 124 141",3) + AN.joint(124,141,2.8)
     + `<g transform="translate(124,141)"><g>${AN.rot("8;-72;8",3.5)}${AN.p("M0 0 C 2 9, 2 18, 1 26",3)}${AN.dot(1,26,3.2)}</g></g>`),
   etirement_ischios: () => AN.svg(AN.d("M60 140 h56",2.4) + AN.d("M70 140 v28 M108 140 v28",2)
     + AN.p("M92 138 C 108 140, 128 146, 144 156",3) + AN.s("M144 156 l 8 -6",2.4,.8)
@@ -3380,9 +3416,9 @@ function rendreProfil(){
 }
 
 /* ---------- Démarrage ---------- */
-/* Mon poste & moi — v0.58 : pictogrammes animés SVG pour les 52 séquences (style cygne : trait fin,
-   dégradé vert→ambre, proportions humaines) affichés dans le player à chaque étape, y compris dans les
-   séances composées (cocktails, SOS, réveil, zones) via le champ src des étapes. */
+/* Mon poste & moi — v0.59 : personnage articulé (coudes, poignets, genoux marqués en vert d'eau) ;
+   animations épaules refaites avec bras articulés, cercles du bassin avec jambes qui suivent,
+   et la fente (séance hanches) avec genoux et descente du corps. */
 document.getElementById("logo-accueil").innerHTML = logoImg(120);
 /* bandeau de marque global, injecté une fois */
 const _entete = document.createElement("div");
