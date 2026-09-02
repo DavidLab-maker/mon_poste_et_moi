@@ -2991,7 +2991,10 @@ document.getElementById("logo-accueil").innerHTML = logoImg(120);
 /* bandeau de marque global, injecté une fois */
 const _entete = document.createElement("div");
 _entete.id = "entete-app";
-_entete.innerHTML = logoImg(44) + `<span class="titre-mini" style="font-size:17.5px">Mon poste &amp; moi</span>`;
+_entete.innerHTML = logoImg(44) + `<span style="display:flex;flex-direction:column;line-height:1.25">
+    <span class="titre-mini" style="font-size:17px">Mon poste &amp; moi</span>
+    <span style="font-size:11px;font-weight:700;color:var(--vert);letter-spacing:.02em">Petites pauses, grands effets.</span>
+  </span>`;
 document.body.appendChild(_entete);
 if(profil){ navVisible(true); montrerOnglet("accueil"); }
 
