@@ -462,7 +462,7 @@ const SEQUENCES = {
       {t:"Assis, posez la cheville droite sur le genou gauche et penchez-vous légèrement en avant. Puis changez.", s:35},
     ]},
   yeux_focus: {
-    titre:"Reposer les yeux", ico:"👁️", zone:"yeux", duree:"1,5 min",
+    titre:"Reposer les yeux", ico:"👁️", zone:"yeux / tête", duree:"1,5 min",
     etapes:[
       {t:"Détournez le regard de l'écran. Fixez un point le plus loin possible (fenêtre, fond de la pièce).", s:20},
       {t:"Clignez volontairement des yeux une dizaine de fois pour réhydrater.", s:12},
@@ -683,6 +683,58 @@ const SEQUENCES = {
       {t:"Puis au-dessus des sourcils, en lissant vers l'extérieur… ensuite sous les yeux, toujours sans appuyer fort.", s:20},
       {t:"Descendez le long du nez, puis autour de la bouche jusqu'au menton. Reprenez le trajet complet — trois passages en tout.", s:25},
     ]},
+
+  /* ---------- Enrichissement des viviers (v0.57) — à valider par l'ostéopathe ---------- */
+  rotations_avant_bras: {
+    titre:"Rotations des avant-bras", ico:"🔄", zone:"coudes", duree:"40 s",
+    etapes:[
+      {t:"Coudes pliés à angle droit, serrés près du corps, paumes vers le ciel… puis tournez lentement les paumes vers le sol. Dix allers-retours souples : la rotation vient des avant-bras, les coudes ne bougent pas.", s:25},
+      {t:"Terminez en secouant doucement bras et mains, épaules relâchées.", s:15},
+    ]},
+  etirement_avant_bras: {
+    titre:"Étirement doux des avant-bras", ico:"🫴", zone:"coudes · poignets", duree:"50 s",
+    etapes:[
+      {t:"Bras droit tendu devant vous, paume vers le sol : avec l'autre main, amenez doucement le dos de la main vers vous. L'étirement se sent sur le dessus de l'avant-bras, jusqu'au coude. Respirez.", s:25},
+      {t:"Puis paume vers le ciel : tirez doucement les doigts vers le bas — l'intérieur de l'avant-bras s'étire à son tour. Changez de bras et refaites les deux.", s:25},
+    ]},
+  massage_crane: {
+    titre:"Réveil du cuir chevelu", ico:"🧖", zone:"yeux / tête", duree:"50 s",
+    etapes:[
+      {t:"Doigts écartés posés sur le crâne, comme pour un shampoing : massez en petits cercles, en déplaçant lentement les mains du front vers l'arrière.", s:25},
+      {t:"Terminez à la base du crâne, juste au-dessus de la nuque : petits cercles du bout des doigts, tête souple, en respirant.", s:25},
+    ]},
+  huit_du_regard: {
+    titre:"Le 8 du regard", ico:"♾️", zone:"yeux / tête", duree:"40 s",
+    etapes:[
+      {t:"Tête immobile : dessinez lentement un grand 8 couché avec les yeux, comme si vous suiviez un pinceau invisible. Trois passages dans un sens.", s:20},
+      {t:"Puis trois passages dans l'autre sens… et clignez doucement des yeux plusieurs fois pour réhydrater.", s:20},
+    ]},
+  coherence_55: {
+    titre:"Respiration 5-5", ico:"🌊", zone:"stress", duree:"1,5 min",
+    etapes:[
+      {t:"Installez-vous, dos soutenu, épaules basses, pieds bien à plat.", s:10},
+      {t:"Inspirez par le nez en comptant jusqu'à 5… soufflez par la bouche en comptant jusqu'à 5. Un rythme régulier, comme une vague.", s:40},
+      {t:"Continuez cette vague 5-5, sans forcer l'amplitude. C'est la régularité du rythme qui apaise, pas la profondeur.", s:40},
+    ]},
+  soupir_apaisant: {
+    titre:"Le double souffle", ico:"😮‍💨", zone:"stress", duree:"45 s",
+    etapes:[
+      {t:"Inspirez par le nez… et sans souffler, ajoutez une deuxième petite inspiration par-dessus, comme pour compléter le remplissage. Puis soufflez très longuement par la bouche.", s:20},
+      {t:"Recommencez deux ou trois fois, pas plus : double inspiration… long soupir. Puis laissez la respiration revenir à son rythme naturel.", s:25},
+    ]},
+  ancrage_express: {
+    titre:"Ancrage express", ico:"🌳", zone:"stress", duree:"1 min",
+    etapes:[
+      {t:"Posez les deux pieds au sol et sentez leurs appuis. Regardez autour de vous et nommez mentalement trois choses que vous voyez.", s:20},
+      {t:"Fermez les yeux si possible : repérez deux sons autour de vous, sans les juger. Juste les entendre.", s:15},
+      {t:"Enfin, une sensation : le contact du siège, des pieds, des mains. Respirez lentement — vous êtes ici, le reste peut attendre.", s:25},
+    ]},
+  balancier_bras: {
+    titre:"Le balancier", ico:"🎐", zone:"haut du dos · bas du dos", duree:"40 s",
+    etapes:[
+      {t:"Debout, pieds largeur de bassin, bras complètement relâchés : tournez le buste à droite puis à gauche, en laissant les bras fouetter doucement autour du corps, comme des cordes.", s:25},
+      {t:"Ralentissez progressivement le mouvement… jusqu'à l'arrêt. Sentez le dos délié.", s:15},
+    ]},
 };
 
 /* ---------- Les gestes de Claire (liste globale) + zones d'une séquence ---------- */
@@ -763,6 +815,9 @@ const POS_SEQ = {
   plongeon_colonne:"assis", respi_4temps:"libre", plexus_solaire:"libre", massage_trapezes:"libre",
   massage_avant_bras:"libre", mini_squats:"debout", dos_rond_creux:"assis", etirement_flancs:"debout",
   etirement_triceps:"libre", etirement_ischios:"assis", auto_etreinte:"libre",
+  rotations_avant_bras:"libre", etirement_avant_bras:"libre", massage_crane:"libre",
+  huit_du_regard:"libre", coherence_55:"assis", soupir_apaisant:"libre",
+  ancrage_express:"libre", balancier_bras:"debout",
 };
 const POS_ETAPE = {
   bas_dos:{0:"assis"},              // bascule du bassin assise, puis tout debout
@@ -813,16 +868,16 @@ function svgPos(pos, px=42){
 const PROFILS = {
   bureau:   { label:"Travail sur écran", ico:"💻", zones:["nuque/cervicales","épaules","poignets","bas du dos","yeux"],
               matin:["dos_derouler","nuque_reveil","etirement_ciel","dos_rond_creux"], midi:["marche_consciente","bas_dos","rotation_buste","plongeon_colonne","etirement_flancs"],
-              aprem:["nuque_reveil","epaules_libres","poignets","yeux_focus","etirement_trapeze","cercles_epaules","poignets_croises","cercles_tete","massage_trapezes","pompes_chevilles","massage_avant_bras","auto_etreinte","etirement_ischios","etirement_cervicales","massage_cervicales","massage_visage","mobilite_coudes"] },
+              aprem:["nuque_reveil","epaules_libres","poignets","yeux_focus","etirement_trapeze","cercles_epaules","poignets_croises","cercles_tete","massage_trapezes","pompes_chevilles","massage_avant_bras","auto_etreinte","etirement_ischios","etirement_cervicales","massage_cervicales","massage_visage","mobilite_coudes","rotations_avant_bras","etirement_avant_bras","huit_du_regard","massage_crane"] },
   debout:   { label:"Travail debout / piétinement", ico:"🧍", zones:["jambes","bas du dos","hanches"],
               matin:["reset_1min","bas_dos","etirement_ciel","ronds_genoux"], midi:["jambes_circulation","hanches","ouverture_hanche","montees_pointes","etirement_flancs"],
-              aprem:["bas_dos","jambes_circulation","cercles_epaules","cercles_chevilles","plongeon_colonne","etirement_ischios","auto_etreinte","massage_lombaires"] },
+              aprem:["bas_dos","jambes_circulation","cercles_epaules","cercles_chevilles","plongeon_colonne","etirement_ischios","auto_etreinte","massage_lombaires","balancier_bras"] },
   physique: { label:"Port de charges / gestes répétitifs", ico:"🏗️", zones:["bas du dos","épaules","poignets"],
               matin:["reset_1min","epaules_libres","cercles_epaules","ronds_genoux","mini_squats"], midi:["recup_charges","poignets","etirement_ciel","massage_avant_bras","mobilite_coudes"],
-              aprem:["recup_charges","bas_dos","etirement_trapeze","poignets_croises","massage_trapezes","plongeon_colonne","etirement_triceps","auto_etreinte","massage_lombaires"] },
+              aprem:["recup_charges","bas_dos","etirement_trapeze","poignets_croises","massage_trapezes","plongeon_colonne","etirement_triceps","auto_etreinte","massage_lombaires","etirement_avant_bras","balancier_bras"] },
   mobile:   { label:"Conduite / déplacements", ico:"🚗", zones:["nuque/cervicales","bas du dos","hanches"],
               matin:["nuque_reveil","reset_1min","cercles_tete","mini_squats"], midi:["hanches","marche_consciente","ouverture_hanche","pompes_chevilles","etirement_ischios"],
-              aprem:["bas_dos","nuque_reveil","rotation_buste","etirement_trapeze","massage_trapezes","massage_avant_bras","etirement_flancs","etirement_cervicales","massage_lombaires"] },
+              aprem:["bas_dos","nuque_reveil","rotation_buste","etirement_trapeze","massage_trapezes","massage_avant_bras","etirement_flancs","etirement_cervicales","massage_lombaires","massage_crane","balancier_bras"] },
 };
 
 const ZONES = ["nuque / cervicales","épaules","haut du dos","bas du dos","coudes","poignets","hanches","genoux","jambes","yeux / tête"];
@@ -1426,7 +1481,7 @@ function programmeDuJour(){
     {moment:"☀️ Réveil du corps — multi-zones", id: construireReveil(jour)},
     {moment:"🎯 Matinée — pause active sur place", id: mixAm},
     tt ? {moment:"🍽️ Pause repas — sortez marcher", id:"marche_consciente"}
-       : {moment:"🍽️ Pause repas — on relâche", id: ["detente_douce","respiration_46","respi_4temps","plexus_solaire"][jour % 4]},
+       : {moment:"🍽️ Pause repas — on relâche", id: ["detente_douce","respiration_46","coherence_55","respi_4temps","plexus_solaire","ancrage_express"][jour % 6]},
     {moment:"🚶 Après-midi — on bouge", id: deplJour},
     tt && profil.stress>=4
        ? {moment:"🧘 Fin d'après-midi — on souffle", id:"respiration_46"}
@@ -1462,7 +1517,7 @@ function majSerie(){
    60 pts : jusqu'à 3 micro-pauses (20 chacune)
    10 pts : variété (au moins 1 mobilité ET 1 anti-stress)
    30 pts : régularité (3 pts par jour consécutif, plafonné) */
-const IDS_STRESS = new Set(["respiration_46","sos_stress","detente_douce","respi_4temps","plexus_solaire","sos_calme"]);
+const IDS_STRESS = new Set(["respiration_46","sos_stress","detente_douce","respi_4temps","plexus_solaire","sos_calme","coherence_55","soupir_apaisant","ancrage_express"]);
 function scoreBase(dk){
   const u = [...new Set(idsDu(dk))];
   let p = Math.min(u.length,3)*20;
@@ -1556,23 +1611,52 @@ function messagesOeil(){
   return liensDouleurPoste().map((l,i)=>tournureOeil(l,i));
 }
 
-/* ---------- Coach contextuel (basé sur ce que l'app mesure vraiment) ---------- */
+/* ---------- Coach contextuel (basé sur ce que l'app mesure vraiment) ----------
+   Chaque situation dispose de plusieurs tournures, qui tournent avec les jours
+   (anti-lassitude, comme les exercices). */
+function varianteJour(arr){ return arr[Math.floor(Date.now()/864e5) % arr.length]; }
 function messageCoach(){
   const faites = faitesAujourdhui();
   const h = new Date().getHours();
   const lp = dernierePause();
-  if(faites.length>=3) return "Programme du jour bouclé — belle discipline. Chaque pause compte, et votre corps les enregistre toutes.";
+  if(faites.length>=3) return varianteJour([
+    "Programme du jour bouclé — belle discipline. Chaque pause compte, et votre corps les enregistre toutes.",
+    "Trois pauses ou plus aujourd'hui : le contrat est rempli. Le reste, c'est du bonus pour votre corps.",
+    "Journée déjà gagnée côté prévention. Savourez — la régularité, c'est vous.",
+  ]);
   if(faites.length===0){
-    if(h<10)  return "Nouvelle journée : lancez-la avec 2 minutes d'activation, avant que les mails ne prennent le dessus.";
-    if(h<14)  return "Aucune micro-pause encore aujourd'hui — sans doute concentré·e depuis un bon moment. C'est exactement le signal pour en faire une.";
-    return "La journée avance et le corps n'a pas encore eu sa pause. Deux minutes maintenant valent mieux qu'un long étirement ce soir.";
+    if(h<10)  return varianteJour([
+      "Nouvelle journée : lancez-la avec 2 minutes d'activation, avant que les mails ne prennent le dessus.",
+      "Le corps démarre mieux réveillé que bousculé : 2 minutes de mise en route, et la journée change de ton.",
+      "Avant le premier café ou juste après : votre réveil du corps n'attend que vous.",
+    ]);
+    if(h<14)  return varianteJour([
+      "Aucune micro-pause encore aujourd'hui — sans doute concentré·e depuis un bon moment. C'est exactement le signal pour en faire une.",
+      "La matinée file et le corps n'a pas bougé : 2 minutes maintenant, et vous repartez plus clair·e.",
+      "Concentré·e depuis des heures ? C'est bien. Deux minutes de pause, et ce sera encore mieux.",
+    ]);
+    return varianteJour([
+      "La journée avance et le corps n'a pas encore eu sa pause. Deux minutes maintenant valent mieux qu'un long étirement ce soir.",
+      "Pas encore de pause aujourd'hui — il n'est jamais trop tard : la meilleure pause, c'est la prochaine.",
+      "Fin de journée en vue : offrez à votre corps au moins une vraie pause avant de partir.",
+    ]);
   }
   if(lp && (Date.now()-lp) > 2*3600e3){
     const heures = Math.floor((Date.now()-lp)/3600e3);
-    return "Plus de "+heures+" h depuis votre dernière pause — probablement autant dans la même position. Votre prochaine micro-pause vous attend.";
+    return varianteJour([
+      "Plus de "+heures+" h depuis votre dernière pause — probablement autant dans la même position. Votre prochaine micro-pause vous attend.",
+      heures+" h sans bouger, c'est long pour un corps. La suite du rituel est prête, elle prend 2 minutes.",
+    ]);
   }
-  if(profil.stress>=4 && h>=14) return "Journée dense ? Le bouton SOS est là pour ça — 2 minutes suffisent à faire redescendre la pression.";
-  return "Bien parti·e ! La régularité compte plus que la durée : gardez le rythme jusqu'à la prochaine pause.";
+  if(profil.stress>=4 && h>=14) return varianteJour([
+    "Journée dense ? Le bouton SOS est là pour ça — 2 minutes suffisent à faire redescendre la pression.",
+    "Quand la pression monte, une expiration longue vaut tous les discours. Le bouton SOS vous guide.",
+  ]);
+  return varianteJour([
+    "Bien parti·e ! La régularité compte plus que la durée : gardez le rythme jusqu'à la prochaine pause.",
+    "C'est lancé, et bien lancé. La prochaine pause viendra à son heure — votre corps suit, tout va bien.",
+    "Beau rythme. Chaque pause d'aujourd'hui est un point pour le corps de demain.",
+  ]);
 }
 
 /* ---------- Rendu accueil ---------- */
@@ -1607,6 +1691,18 @@ const CONSEILS = [
   "Grandissez-vous là, maintenant : un fil tire le sommet de votre crâne. Voilà, c'est mieux.",
   "Escaliers plutôt qu'ascenseur : 30 secondes d'effort, des heures de circulation relancée.",
   "Le sac toujours sur la même épaule ? Changez de côté aujourd'hui.",
+  "Devant un écran, on cligne deux fois moins des yeux : clignez, tout simplement.",
+  "Vos épaules ne sont pas des porte-manteaux : rien à porter pendant que vous tapez au clavier.",
+  "Sortir marcher 10 minutes le midi, c'est la pause la plus rentable de la journée.",
+  "Un post-it « respire » au bord de l'écran : le rappel le plus simple du monde.",
+  "Étirez-vous comme un chat au réveil : lentement, sans objectif, juste pour le plaisir.",
+  "La voiture aussi est un poste de travail : dossier redressé, et une vraie pause toutes les 2 heures.",
+  "Poings ou mâchoire serrés quand vous êtes concentré·e ? Desserrez-les : la concentration restera.",
+  "Debout toute la journée ? Vos mollets sont votre deuxième cœur : montez sur pointes de temps en temps.",
+  "Après un effort inhabituel, le mieux n'est pas le canapé : c'est de bouger doucement le lendemain.",
+  "L'hiver, des mains froides travaillent mal : réchauffez-les avant les longues sessions de clavier.",
+  "Le regard aussi a besoin d'horizon : une fenêtre, un point lointain, plusieurs fois par jour.",
+  "Une tension qui revient chaque jour au même endroit, c'est un message : écoutez-le dans « Mon poste ».",
 ];
 /* ---------- Tips ostéo catégorisés (rotation quotidienne, avec note d'impact) ---------- */
 const TIPS_ERGO = [
@@ -1618,6 +1714,12 @@ const TIPS_ERGO = [
   {t:"Document, écran, clavier : les trois alignés face à vous. C'est le triangle qui sauve la nuque.", n:3},
   {t:"Debout prolongé : un pied posé en alternance sur un petit rehausseur soulage nettement les lombaires.", n:2},
   {t:"Réunion visio ? Caméra à hauteur des yeux, pas en contre-plongée depuis le bureau.", n:1},
+  {t:"Deux écrans ? Le principal bien en face, le second légèrement incliné — on tourne les yeux, pas le cou.", n:3},
+  {t:"La lumière du jour de côté, jamais dans le dos ni face à l'écran : finis les reflets qui font pencher la tête.", n:2},
+  {t:"Clavier à plat ou presque : les petits pieds relevés cassent les poignets vers le haut toute la journée.", n:2},
+  {t:"Ordinateur portable seul = écran OU clavier bien placé, jamais les deux : le rehausseur et le clavier externe ne sont pas un luxe.", n:3},
+  {t:"Le téléphone remonte à hauteur du regard — pas la tête qui descend vers lui. Une nuque penchée pèse lourd.", n:3},
+  {t:"En télétravail sans siège réglable : un coussin ferme sous l'assise et un dossier bien calé changent déjà beaucoup.", n:2},
 ];
 const TIPS_ERREURS = [
   {t:"Le combiné calé entre l'oreille et l'épaule : LE classique des tensions cervicales. Casque, toujours.", n:3},
@@ -1628,6 +1730,12 @@ const TIPS_ERREURS = [
   {t:"S'affaler « pour reposer le dos » : sans appui, il travaille encore plus. Se caler, oui ; s'effondrer, non.", n:2},
   {t:"Attendre d'avoir mal pour bouger : la pause se prend AVANT le signal, c'est ça la prévention.", n:3},
   {t:"Le sac lourd toujours sur la même épaule, année après année. Changez de côté, ou passez au sac à dos.", n:2},
+  {t:"Sauter la pause « parce que ça va » : c'est justement quand ça va qu'elle entretient. Après, c'est du rattrapage.", n:3},
+  {t:"Bloquer sa respiration pendant un effort ou un geste précis : soufflez pendant l'effort, toujours.", n:2},
+  {t:"Rester assis en tailleur sur la chaise pendant des heures : agréable 10 minutes, piège au-delà.", n:2},
+  {t:"Masser fort un point douloureux « pour faire passer » : sur une zone qui proteste, c'est la douceur qui aide.", n:2},
+  {t:"Tout porter en un seul voyage pour gagner du temps : deux allers légers valent mieux qu'un aller chargé.", n:2},
+  {t:"Garder le siège aux réglages de la personne d'avant — ou de l'année d'avant. Votre corps a changé, le siège doit suivre.", n:2},
 ];
 function tipDuJour(jourAnnee){
   const CAT = [
@@ -1804,8 +1912,8 @@ function initOeil(){
 /* Pools SOS — les séances d'urgence sont COMPOSÉES et tournent chaque jour.
    Fatigue = mobilité DYNAMIQUE des différentes zones pour réveiller le système
    nerveux (pas d'étirements ni de respiration — ça, c'est le pool anti-stress). */
-const POOL_STRESS  = ["sos_stress","respiration_46","respi_4temps","plexus_solaire","detente_douce","massage_trapezes","massage_visage"];
-const POOL_FATIGUE = ["boost_dynamique","mini_squats","montees_pointes","cercles_epaules","mobilite_coudes","ronds_genoux","pompes_chevilles","poignets_croises","ouverture_hanche","rotation_buste","dos_rond_creux","cercles_chevilles","cercles_tete","hanches"];
+const POOL_STRESS  = ["sos_stress","respiration_46","respi_4temps","plexus_solaire","detente_douce","massage_trapezes","massage_visage","coherence_55","soupir_apaisant","ancrage_express"];
+const POOL_FATIGUE = ["boost_dynamique","mini_squats","montees_pointes","cercles_epaules","mobilite_coudes","ronds_genoux","pompes_chevilles","poignets_croises","ouverture_hanche","rotation_buste","dos_rond_creux","cercles_chevilles","cercles_tete","hanches","balancier_bras","rotations_avant_bras"];
 
 function composerPool(pool, jour, titre, ico, zone, idMix){
   const dispo = pool.filter(id=>SEQUENCES[id]);
@@ -2077,6 +2185,16 @@ function etapeSuivante(){
       {t:"Votre corps approuve !", m:"La machine est relancée, tout en douceur."},
       {t:"Quelle constance !",     m:"Un geste de plus vers un corps qui travaille pour vous."},
       {t:"Impeccable !",           m:"Vous venez de prouver que deux minutes suffisent."},
+      {t:"Joli réflexe !",         m:"Votre corps retient tout — surtout la régularité."},
+      {t:"Pause validée !",        m:"Petites pauses, grands effets : vous êtes en plein dedans."},
+      {t:"On y est !",             m:"Ce que vous venez de faire, peu de gens le font. Continuez."},
+      {t:"Respirez… voilà.",       m:"Deux minutes de gagnées sur la tension de la journée."},
+      {t:"Encore gagné !",         m:"Votre nuque, vos épaules et votre dos votent pour vous."},
+      {t:"Belle pause !",          m:"Le corps est une mécanique qui aime l'entretien — c'est fait pour aujourd'hui."},
+      {t:"Ça, c'est fait !",       m:"Le plus dur, c'était de commencer. Le reste, c'est du bonus."},
+      {t:"Votre dos applaudit !",  m:"Discrètement, mais il applaudit."},
+      {t:"Un geste de plus !",     m:"La série continue — et c'est elle qui protège."},
+      {t:"Bien vu !",              m:"Prendre soin de soi au travail, ça s'apprend — et vous apprenez vite."},
     ];
     const f = FELICITATIONS[Math.floor(Math.random()*FELICITATIONS.length)];
     document.getElementById("fin-titre").innerHTML = f.t.replace(" !","&nbsp;!");
@@ -2985,8 +3103,9 @@ function rendreProfil(){
 }
 
 /* ---------- Démarrage ---------- */
-/* Mon poste & moi — v0.56 : SOS compact et hors rituel, accueil allégé (rituel d'abord, œil de l'ostéo dans Mon poste),
-   logo agrandi, rappels agenda mis en avant (étape de bilan dédiée), partage du point de la semaine */
+/* Mon poste & moi — v0.57 : enrichissement des contenus — 8 nouvelles séquences (coudes, yeux/tête, respiration-détente,
+   mobilité dos), rotation du midi élargie, +12 encouragements de fin, +13 astuces, +13 tips ergo/erreurs,
+   mot de Claire avec variantes quotidiennes. Nouvelles séquences à valider par l'ostéopathe. */
 document.getElementById("logo-accueil").innerHTML = logoImg(120);
 /* bandeau de marque global, injecté une fois */
 const _entete = document.createElement("div");
