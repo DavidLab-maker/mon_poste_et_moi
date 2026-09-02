@@ -1262,18 +1262,78 @@ const ANIM_MASSAGE_MOLLET = () => AN.svg(
   + AN.joint(98,136)
   + AN.p("M94 62 C 102 78, 107 94, 108 106",2.4)
   + `<circle r="3.8" fill="#e8a13c">${AN.av("cx","109;107;109",4)}${AN.av("cy","113;110;113",4)}</circle>`);
+/* Adapter le CÔTÉ et le SENS au texte de chaque étape :
+   - miroir horizontal pour « changez de côté / de bras / de jambe »
+   - inversion du sens de rotation pour « puis dans l'autre sens »
+   Convention : la silhouette agit comme dans un miroir — quand le texte dit
+   « à droite », le mouvement part vers la droite de l'écran. */
+const ANIM_MIROIR = fab => () => fab()
+  .replace("</defs>", `</defs><g transform="translate(200 0) scale(-1 1)">`)
+  .replace("</svg>","</g></svg>");
+const ANIM_SENS_INVERSE = fab => () => fab()
+  .replace(/values="0;-360"/g,'values="@@INV@@"')
+  .replace(/values="0;360"/g,'values="0;-360"')
+  .replace(/values="@@INV@@"/g,'values="0;360"');
+const ANIM_TILT_TETE = sens => () => AN.svg(AN.corpsFace() + AN.brasBas()
+  + `<circle r="8.5" fill="#e8a13c">${AN.av("cx",`100;${100+11*sens};100`,3.5)}${AN.av("cy","40;44;40",3.5)}</circle>`);
+const ANIM_ROT_BUSTE_DROITE = () => ANIMS.rotation_buste()
+  .replace(/-16 100 104;16 100 104;-16 100 104/g,"0 100 104;18 100 104;0 100 104");
+const ANIM_FLANC_DROITE = () => ANIMS.etirement_flancs()
+  .replace("-9 100 164;9 100 164;-9 100 164","0 100 164;11 100 164;0 100 164");
 const ANIMS_ETAPE = {
+  cercles_epaules: {
+    1: ANIM_SENS_INVERSE(() => ANIMS.cercles_epaules()),   // puis cercles vers l'avant
+  },
+  cercles_tete: {
+    1: ANIM_SENS_INVERSE(() => ANIMS.cercles_tete()),      // puis dans l'autre sens
+  },
+  ronds_genoux: {
+    1: ANIM_SENS_INVERSE(() => ANIMS.ronds_genoux()),      // puis dans l'autre sens
+  },
+  rotation_buste: {
+    0: () => ANIM_ROT_BUSTE_DROITE(),                      // rotations vers la droite
+    1: ANIM_MIROIR(ANIM_ROT_BUSTE_DROITE),                 // puis vers la gauche
+  },
+  etirement_trapeze: {
+    1: ANIM_MIROIR(() => ANIMS.etirement_trapeze()),       // changez de côté
+  },
+  etirement_triceps: {
+    0: ANIM_MIROIR(() => ANIMS.etirement_triceps()),       // main gauche derrière le dos
+    1: () => ANIMS.etirement_triceps(),                    // changez de côté
+  },
+  etirement_flancs: {
+    0: () => ANIM_FLANC_DROITE(),                          // inclinaison vers la droite
+    1: ANIM_MIROIR(ANIM_FLANC_DROITE),                     // changez de côté
+  },
+  etirement_ischios: {
+    1: ANIM_MIROIR(() => ANIMS.etirement_ischios()),       // changez de jambe
+  },
+  cercles_chevilles: {
+    1: ANIM_MIROIR(() => ANIMS.cercles_chevilles()),       // changez de côté
+  },
+  ouverture_hanche: {
+    1: ANIM_MIROIR(() => ANIMS.ouverture_hanche()),        // changez de jambe
+  },
+  etirement_avant_bras: {
+    1: ANIM_MIROIR(() => ANIMS.etirement_avant_bras()),    // paume vers le ciel, puis l'autre bras
+  },
+  massage_avant_bras: {
+    1: ANIM_MIROIR(() => ANIMS.massage_avant_bras()),      // puis changez de bras
+  },
   bas_dos: {
     0: () => ANIM_BASSIN_BASCULE(),            // assis : bascule du bassin avant/arrière (profil)
     3: () => ANIM_GENOU_POITRINE(),            // genou ramené vers la poitrine avec les mains
     4: () => ANIMS.etirement_ciel(),           // grandissez-vous, bras vers le ciel
   },
   hanches: {
+    1: ANIM_MIROIR(() => ANIMS.hanches()),     // fente : changez de jambe
     2: () => ANIMS.bas_dos(),                  // genoux souples, cercles avec le bassin : vue de FACE
     3: () => ANIM_FIGURE4(),                   // assis, cheville sur le genou opposé
   },
   nuque_reveil: {
     0: () => ANIMS.respiration_46(),           // installation + respiration
+    1: ANIM_TILT_TETE(1),                      // oreille droite vers l'épaule droite
+    2: ANIM_TILT_TETE(-1),                     // même chose de l'autre côté
     3: () => ANIM_MENTON(),                    // rentrer le menton (double menton)
     4: () => ANIM_ROTATION_TETE(),             // rotation menton d'une épaule à l'autre
     5: () => ANIMS.sos_stress(),               // épaules vers les oreilles puis relâcher
@@ -1284,6 +1344,7 @@ const ANIMS_ETAPE = {
     4: () => ANIMS.plongeon_colonne(),         // remonter vertèbre par vertèbre
   },
   poignets: {
+    1: ANIM_MIROIR(() => ANIMS.poignets()),    // paume vers le sol, puis changez de bras
     2: () => ANIM_CERCLES_POIGNETS(),          // cercles lents avec les poignets
     3: () => ANIM_ETOILE_POING(),              // doigts en étoile, puis poing
   },
