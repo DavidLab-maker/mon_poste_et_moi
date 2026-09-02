@@ -348,12 +348,12 @@
     <div class="feuille">
       <h2 style="text-align:center;margin-bottom:4px">Besoin d'une pause, là maintenant ?</h2>
       <p class="sub centre" style="margin-bottom:16px;font-size:13.5px">2 minutes suffisent. Choisissez ce qui vous arrive :</p>
-      <div class="carte seance" onclick="fermerSOS();lancerSeance('sos_calme')" style="border:1.5px solid var(--ambre);background:#fdf6ec">
+      <div class="carte seance" onclick="lancerSOS('stress')" style="border:1.5px solid var(--ambre);background:#fdf6ec">
         <div class="pastille" style="background:#fbe8cf">🧯</div>
         <div class="infos"><b>Montée de stress</b><span id="sos-stress-desc"></span></div>
         <div class="etat" style="color:var(--ambre)">›</div>
       </div>
-      <div class="carte seance" id="sos-fatigue" onclick="fermerSOS();lancerSeance('sos_fatigue')">
+      <div class="carte seance" id="sos-fatigue" onclick="lancerSOS('fatigue')">
         <div class="pastille">🥱</div>
         <div class="infos"><b>Coup de fatigue</b><span id="sos-fatigue-desc"></span></div>
         <div class="etat">›</div>
@@ -2593,17 +2593,26 @@ function composerPool(pool, jour, titre, ico, zone, idMix){
 function ouvrirSOS(){
   const dso = new Date();
   const jso = Math.floor((dso - new Date(dso.getFullYear(),0,0)) / 864e5);
-  // Anti-stress du jour : respiration + automassage en roulement
-  composerPool(POOL_STRESS, jso, "Anti-stress du jour", "🧯", "détente", "sos_calme");
-  // Coup de fatigue du jour : mobilité dynamique des zones, pour tout le monde
-  composerPool(POOL_FATIGUE, jso, "Coup de boost du jour", "⚡", "énergie", "sos_fatigue");
+  /* La séance CHANGE à chaque utilisation dans la journée (compteur par type),
+     en gardant les principes : détente + respiration pour la montée de stress,
+     mobilisation dynamique du corps pour le coup de fatigue. */
+  const nS = lire("sosn_stress_"+clesJour())||0;
+  const nF = lire("sosn_fatigue_"+clesJour())||0;
+  composerPool(POOL_STRESS, jso + nS*3, "Anti-stress du moment", "🧯", "détente", "sos_calme");
+  composerPool(POOL_FATIGUE, jso + nF*3, "Coup de boost du moment", "⚡", "énergie", "sos_fatigue");
   const dS = document.getElementById("sos-stress-desc");
-  if(dS) dS.textContent = "Aujourd'hui : " + SEQUENCES.sos_calme._titres.join(" + ");
+  if(dS) dS.textContent = (nS ? "Nouvelle séance : " : "Au programme : ") + SEQUENCES.sos_calme._titres.join(" + ");
   const dF = document.getElementById("sos-fatigue-desc");
-  if(dF) dF.textContent = "Aujourd'hui : " + SEQUENCES.sos_fatigue._titres.join(" + ");
+  if(dF) dF.textContent = (nF ? "Nouvelle séance : " : "Au programme : ") + SEQUENCES.sos_fatigue._titres.join(" + ");
   document.getElementById("sos-menu").style.display = "block";
 }
 function fermerSOS(){ document.getElementById("sos-menu").style.display = "none"; }
+function lancerSOS(type){
+  const cle = "sosn_"+type+"_"+clesJour();
+  sauver(cle, (lire(cle)||0)+1);
+  fermerSOS();
+  lancerSeance(type==="stress" ? "sos_calme" : "sos_fatigue");
+}
 
 /* =========================================================
    SÉANCE DE SOULAGEMENT D'UNE ZONE — 1 min 30 à 2 min
@@ -3781,8 +3790,8 @@ if(profil){ navVisible(true); montrerOnglet("accueil"); }
 {
   const _splash = document.getElementById("splash");
   if(_splash){
-    setTimeout(()=>_splash.classList.add("fondu"), 1050);
-    setTimeout(()=>_splash.remove(), 2050);
+    setTimeout(()=>_splash.classList.add("fondu"), 750);
+    setTimeout(()=>_splash.remove(), 1750);
   }
 }
 
