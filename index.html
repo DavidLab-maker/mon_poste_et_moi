@@ -25,6 +25,11 @@
     border-bottom:1px solid var(--ligne)}
   #entete-app img{height:44px;display:block}
   body.avec-entete .screen{padding-top:88px}
+  /* mini-splash de lancement (utilisateurs existants) : logo + mantra, ~1 s puis fondu */
+  #splash{position:fixed;inset:0;background:var(--fond);z-index:200;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:16px;opacity:1;transition:opacity .5s ease}
+  #splash.fondu{opacity:0;pointer-events:none}
+  #splash .s-mantra{font-size:17px;font-weight:700;color:var(--vert);letter-spacing:.01em}
   body{font-family:'Nunito',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#e9e4d8;color:var(--encre);min-height:100vh;display:flex;justify-content:center}
   #phone{width:100%;max-width:430px;min-height:100vh;background:var(--fond);display:flex;flex-direction:column;position:relative;box-shadow:0 0 40px rgba(80,65,35,.14)}
   .screen{display:none;flex:1;flex-direction:column;padding:28px 20px 104px;overflow-y:auto}
@@ -3746,7 +3751,19 @@ _entete.innerHTML = logoImg(44) + `<span style="display:flex;flex-direction:colu
     <span style="font-size:11px;font-weight:700;color:var(--vert);letter-spacing:.02em">Petites pauses, grands effets.</span>
   </span>`;
 document.body.appendChild(_entete);
-if(profil){ navVisible(true); montrerOnglet("accueil"); }
+if(profil){
+  navVisible(true); montrerOnglet("accueil");
+  // Mini-splash de marque : logo en grand + mantra, ~1 s, puis fondu vers Ma journée.
+  // (Les nouveaux utilisateurs voient déjà tout ça sur l'écran de bienvenue.)
+  const _splash = document.createElement("div");
+  _splash.id = "splash";
+  _splash.innerHTML = logoImg(130)
+    + `<span class="titre-mini" style="font-size:22px">Mon poste &amp; moi</span>`
+    + `<span class="s-mantra">Petites pauses, grands effets.</span>`;
+  document.body.appendChild(_splash);
+  setTimeout(()=>_splash.classList.add("fondu"), 1050);
+  setTimeout(()=>_splash.remove(), 1650);
+}
 
 /* PWA : actif uniquement une fois l'app hébergée en ligne (HTTPS) — sans effet en local */
 if("serviceWorker" in navigator && location.protocol==="https:"){
