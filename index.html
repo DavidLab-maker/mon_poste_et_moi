@@ -186,6 +186,13 @@
 </style>
 </head>
 <body>
+  <!-- Splash de lancement : présent dès le premier rendu (pas d'apparition en 2 temps),
+       le script en fin de page déclenche simplement le fondu après ~1 s -->
+  <div id="splash">
+    <img src="logo-cygne.png" style="height:130px;display:block" alt="Mon poste &amp; moi">
+    <span class="titre-mini" style="font-size:22px">Mon poste &amp; moi</span>
+    <span class="s-mantra">Petites pauses, grands effets.</span>
+  </div>
 <div id="phone">
 
   <!-- ======= ACCUEIL / BIENVENUE ======= -->
@@ -3751,18 +3758,14 @@ _entete.innerHTML = logoImg(44) + `<span style="display:flex;flex-direction:colu
     <span style="font-size:11px;font-weight:700;color:var(--vert);letter-spacing:.02em">Petites pauses, grands effets.</span>
   </span>`;
 document.body.appendChild(_entete);
-if(profil){
-  navVisible(true); montrerOnglet("accueil");
-  // Mini-splash de marque : logo en grand + mantra, ~1 s, puis fondu vers Ma journée.
-  // (Les nouveaux utilisateurs voient déjà tout ça sur l'écran de bienvenue.)
-  const _splash = document.createElement("div");
-  _splash.id = "splash";
-  _splash.innerHTML = logoImg(130)
-    + `<span class="titre-mini" style="font-size:22px">Mon poste &amp; moi</span>`
-    + `<span class="s-mantra">Petites pauses, grands effets.</span>`;
-  document.body.appendChild(_splash);
-  setTimeout(()=>_splash.classList.add("fondu"), 1050);
-  setTimeout(()=>_splash.remove(), 1650);
+if(profil){ navVisible(true); montrerOnglet("accueil"); }
+// Fondu du splash statique (affiché dès le premier rendu, pour tout le monde)
+{
+  const _splash = document.getElementById("splash");
+  if(_splash){
+    setTimeout(()=>_splash.classList.add("fondu"), 1050);
+    setTimeout(()=>_splash.remove(), 1650);
+  }
 }
 
 /* PWA : actif uniquement une fois l'app hébergée en ligne (HTTPS) — sans effet en local */
