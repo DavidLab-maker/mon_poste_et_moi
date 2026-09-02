@@ -846,31 +846,40 @@ const ANIMS = {
   /* ---------- Épaules & bras ---------- */
   cercles_epaules: () => AN.svg(AN.deboutFace(
     AN.guide(85,62,15) + AN.guide(115,62,15)
-    /* main posée sur l'épaule : le bras plié (épaule → coude → main) pivote autour de l'épaule */
+    /* les MAINS restent posées sur les épaules (gros points ambrés fixes) ;
+       le bras plié pivote autour de l'épaule, coude marqué */
     + `<g transform="translate(88,58)">${AN.joint(0,0,2.8)}<g>${AN.rotLin("0;-360",3.2)}
-        ${AN.p("M0 0 C -9 4, -14 9, -14 15 C -12 9, -7 3, -2 1",2.6)}
-        ${AN.dot(-14,15,3.2)}${AN.joint(-2,1)}</g></g>`
+        ${AN.p("M0 0 C -9 4, -14 9, -14 15 C -12 9, -7 2, -3 -3",2.6)}
+        ${AN.joint(-14,15,3)}</g></g>`
     + `<g transform="translate(112,58)">${AN.joint(0,0,2.8)}<g>${AN.rotLin("0;360",3.2)}
-        ${AN.p("M0 0 C 9 4, 14 9, 14 15 C 12 9, 7 3, 2 1",2.6)}
-        ${AN.dot(14,15,3.2)}${AN.joint(2,1)}</g></g>`)),
-  epaules_libres: () => AN.svg(AN.deboutFace(
-    /* ouverture de la poitrine : bras articulés (épaule → coude → poignet) qui se déploient */
-    AN.joint(89,58,2.8) + AN.joint(111,58,2.8)
-    + AN.pAnim("M89 58 C 84 64, 80 69, 78 74;M89 58 C 81 60, 73 59, 66 58;M89 58 C 84 64, 80 69, 78 74",4,2.7)
-    + AN.pAnim("M78 74 C 76 80, 75 85, 74 90;M66 58 C 60 55, 55 52, 50 50;M78 74 C 76 80, 75 85, 74 90",4,2.5)
-    + AN.jointAnim("78;66;78","74;58;74",4)
-    + AN.jointAnim("74;50;74","90;50;90",4)
-    + AN.pAnim("M111 58 C 116 64, 120 69, 122 74;M111 58 C 119 60, 127 59, 134 58;M111 58 C 116 64, 120 69, 122 74",4,2.7)
-    + AN.pAnim("M122 74 C 124 80, 125 85, 126 90;M134 58 C 140 55, 145 52, 150 50;M122 74 C 124 80, 125 85, 126 90",4,2.5)
-    + AN.jointAnim("122;134;122","74;58;74",4)
-    + AN.jointAnim("126;150;126","90;50;90",4))),
+        ${AN.p("M0 0 C 9 4, 14 9, 14 15 C 12 9, 7 2, 3 -3",2.6)}
+        ${AN.joint(14,15,3)}</g></g>`
+    + AN.dot(85,53,4) + AN.dot(115,53,4))),
+  epaules_libres: () => AN.svg(
+    /* PROFIL : doigts entrelacés DERRIÈRE le dos (un seul gros point ambré),
+       bras tendus qui s'éloignent du dos, poitrine qui s'ouvre */
+    AN.t(86,42) + AN.pAnim("M89 52 C 93 68, 95 86, 94 104;M85 53 C 92 68, 96 86, 94 104;M89 52 C 93 68, 95 86, 94 104",4,3.4)
+    + AN.p("M94 104 C 92 126, 91 146, 90 164 M94 104 C 97 126, 99 146, 100 164",3)
+    + AN.joint(92,134) + AN.joint(99,134)
+    + AN.s("M90 164 q -6 3 -11 3 M100 164 q 6 3 11 3")
+    + AN.pAnim("M92 62 C 100 74, 106 86, 111 97;M90 62 C 101 72, 110 82, 117 91;M92 62 C 100 74, 106 86, 111 97",4,2.6)
+    + AN.pAnim("M92 66 C 99 77, 105 88, 110 98;M90 66 C 100 75, 109 84, 116 92;M92 66 C 99 77, 105 88, 110 98",4,2.4)
+    + AN.jointAnim("102;106;102","81;77;81",4)
+    + `<circle r="4.2" fill="#e8a13c">${AN.av("cx","112;119;112",4)}${AN.av("cy","100;93;100",4)}</circle>`
+    + `<path d="M74 62 q -7 6 -7 14" fill="none" stroke="#e8a13c" stroke-width="1.3" stroke-linecap="round" opacity=".55">${AN.av("opacity",".2;.7;.2",4)}</path>`),
   etirement_ciel: () => AN.svg(AN.deboutFace(
     `<g>${AN.trans("0 0;0 -5;0 0",3)}
-     ${AN.p("M89 58 C 90 44, 94 30, 99 19 M111 58 C 110 44, 106 30, 101 19",2.8)}${AN.dot(100,16,4)}</g>`)),
+     ${AN.p("M89 58 C 90 44, 94 30, 99 21 M111 58 C 110 44, 106 30, 101 21",2.8)}
+     ${AN.joint(92,42)}${AN.joint(108,42)}
+     ${AN.dot(100,18,4.2)}${AN.s("M93 12 h14",2.4,.85)}</g>`)),
   etirement_triceps: () => AN.svg(AN.deboutFace(
-    AN.p("M111 58 C 122 44, 118 28, 102 26",2.8) + AN.dot(104,27,3.2)
-    + AN.p("M89 58 C 86 44, 90 34, 97 30",2.4)
-    + `<g>${AN.rot("-2 100 101;3 100 101;-2 100 101",4)}</g>`)),
+    /* main droite tombée derrière le dos (estompée = cachée), l'autre main attrape le coude et guide */
+    `<path fill="none" stroke="url(#gAnim)" stroke-width="2.8" stroke-linecap="round">${AN.av("d","M111 58 C 119 46, 118 34, 110 29;M107 58 C 115 46, 114 34, 106 29;M111 58 C 119 46, 118 34, 110 29",4)}</path>`
+    + `<path fill="none" stroke="#4a9d8a" stroke-width="2" stroke-linecap="round" opacity=".45">${AN.av("d","M110 29 C 106 38, 104 47, 103 56;M106 29 C 102 38, 100 47, 99 56;M110 29 C 106 38, 104 47, 103 56",4)}</path>`
+    + `<circle r="2.8" fill="#e8a13c" opacity=".5">${AN.av("cx","103;99;103",4)}${AN.av("cy","57;57;57",4)}</circle>`
+    + AN.jointAnim("115;111;115","38;38;38",4)
+    + AN.p("M89 58 C 87 44, 94 36, 106 36",2.4)
+    + `<circle r="3.6" fill="#e8a13c">${AN.av("cx","113;109;113",4)}${AN.av("cy","37;37;37",4)}</circle>`)),
   mobilite_coudes: () => AN.svg(AN.deboutFace(
     AN.p("M89 58 C 86 68, 85 76, 86 82 M111 58 C 114 68, 115 76, 114 82",2.6)
     + AN.joint(86,82,2.8) + AN.joint(114,82,2.8)
@@ -882,11 +891,11 @@ const ANIMS = {
     + `<g transform="translate(54,84)"><g>${AN.rot("0;180;0",2.4)}${AN.s("M-6 0 L 6 0",2.6,.95)}</g></g>`
     + `<g transform="translate(146,84)"><g>${AN.rot("0;-180;0",2.4)}${AN.s("M-6 0 L 6 0",2.6,.95)}</g></g>`)),
   etirement_avant_bras: () => AN.svg(
+    /* bras tendu, l'AUTRE MAIN (gros point ambré) tient la main étirée et l'amène doucement vers le bas */
     AN.t(56,52,8.5) + AN.p("M58 62 C 62 76, 66 88, 70 98",3.2)
-    + AN.p("M66 74 C 84 78, 108 80, 128 80",2.8)
-    + `<g transform="translate(128,80)"><g>${AN.rot("10;55;10",3.5)}${AN.s("M0 0 L 16 4",2.6,.95)}</g></g>`
-    + AN.p("M70 98 C 90 106, 116 104, 132 94",2.4) + AN.dot(138,90,3.4)
-    + AN.guide(140,86,10)),
+    + AN.p("M66 74 C 84 78, 108 80, 128 80",2.8) + AN.joint(96,79)
+    + `<g transform="translate(128,80)">${AN.joint(0,0,2.8)}<g>${AN.rot("10;55;10",3.5)}${AN.s("M0 0 L 16 4",2.8,.95)}${AN.dot(15,4,4)}</g></g>`
+    + `<path fill="none" stroke="url(#gAnim)" stroke-width="2.4" stroke-linecap="round">${AN.av("d","M70 98 C 92 106, 122 102, 141 88;M70 98 C 92 108, 122 110, 139 100;M70 98 C 92 106, 122 102, 141 88",3.5)}</path>`),
   balancier_bras: () => AN.svg(AN.deboutFace(
     AN.pAnim("M89 58 C 70 70, 62 86, 66 100;M89 58 C 96 74, 104 88, 116 96;M89 58 C 70 70, 62 86, 66 100",2.2,2.4)
     + AN.pAnim("M111 58 C 130 70, 138 86, 134 100;M111 58 C 104 74, 96 88, 84 96;M111 58 C 130 70, 138 86, 134 100",2.2,2.4))),
@@ -897,12 +906,20 @@ const ANIMS = {
   cercles_tete: () => AN.svg(AN.corpsFace() + AN.brasBas() + AN.guide(100,40,10)
     + `<g transform="translate(100,40)"><circle r="8.5" fill="#e8a13c">${AN.orbite(7,4)}</circle></g>`),
   etirement_cervicales: () => AN.svg(AN.corpsFace()
-    + AN.p("M89 58 C 86 42, 90 30, 97 25 M111 58 C 114 42, 110 30, 103 25",2.6)
-    + `<circle r="8.5" fill="#e8a13c">${AN.av("cx","100;100;100",5)}${AN.av("cy","40;48;40",5)}</circle>`),
+    /* mains croisées posées sur le crâne (gros point ambré au sommet), la tête s'enroule vers l'avant */
+    + `<path fill="none" stroke="url(#gAnim)" stroke-width="2.6" stroke-linecap="round">${AN.av("d","M89 58 C 86 44, 90 33, 97 27 M111 58 C 114 44, 110 33, 103 27;M89 58 C 87 48, 91 39, 97 34 M111 58 C 113 48, 109 39, 103 34;M89 58 C 86 44, 90 33, 97 27 M111 58 C 114 44, 110 33, 103 27",5)}</path>`
+    + AN.jointAnim("88;89;88","46;49;46",5) + AN.jointAnim("112;111;112","46;49;46",5)
+    + `<circle r="4" fill="#e8a13c">${AN.av("cx","100;100;100",5)}${AN.av("cy","28;35;28",5)}</circle>`
+    + `<circle r="8.5" fill="#e8a13c">${AN.av("cx","100;100;100",5)}${AN.av("cy","40;47;40",5)}</circle>`),
   etirement_trapeze: () => AN.svg(AN.corpsFace()
-    + AN.p("M111 58 C 122 42, 116 28, 98 30",2.6)
-    + AN.p("M89 58 C 85 72, 84 86, 85 96",2.4)
-    + `<circle r="8.5" fill="#e8a13c">${AN.av("cx","100;108;100",5)}${AN.av("cy","40;44;40",5)}</circle>`),
+    /* main droite par-dessus la tête, POSÉE sur l'oreille opposée : main et tête s'inclinent ensemble,
+       l'épaule libre descend */
+    + `<path fill="none" stroke="url(#gAnim)" stroke-width="2.6" stroke-linecap="round">${AN.av("d","M111 58 C 121 44, 116 30, 100 30;M111 58 C 122 46, 119 32, 105 31;M111 58 C 121 44, 116 30, 100 30",5)}</path>`
+    + AN.jointAnim("116;118;116","40;42;40",5)
+    + `<circle r="3.6" fill="#e8a13c">${AN.av("cx","95;101;95",5)}${AN.av("cy","33;36;33",5)}</circle>`
+    + `<path fill="none" stroke="url(#gAnim)" stroke-width="2.4" stroke-linecap="round">${AN.av("d","M89 58 C 85 72, 84 86, 85 96;M89 61 C 85 75, 84 89, 85 99;M89 58 C 85 72, 84 86, 85 96",5)}</path>`
+    + `<circle r="3" fill="#e8a13c">${AN.av("cx","85;85;85",5)}${AN.av("cy","97;100;97",5)}</circle>`
+    + `<circle r="8.5" fill="#e8a13c">${AN.av("cx","100;106;100",5)}${AN.av("cy","40;43;40",5)}</circle>`),
   massage_cervicales: () => AN.svg(AN.buste(
     `<circle r="3" fill="#e8a13c">${AN.av("cx","96;90;96",1.6)}${AN.av("cy","58;60;58",1.6)}</circle>
      <circle r="3" fill="#e8a13c">${AN.av("cx","104;110;104",1.6)}${AN.av("cy","58;60;58",1.6)}</circle>`)),
@@ -943,18 +960,20 @@ const ANIMS = {
     + `<g>${AN.rot("-13 100 104;13 100 104;-13 100 104",4.5)}
        ${AN.t(100,44,9)}${AN.p("M100 54 C 101 70, 99 88, 100 104",3.4)}
        ${AN.p("M88 62 C 98 70, 108 74, 114 82 M112 62 C 102 70, 92 74, 86 82",2.6)}
-       ${AN.dot(114,82,3)}${AN.dot(86,82,3)}</g>`),
+       ${AN.dot(114,82,3.8)}${AN.dot(86,82,3.8)}</g>`),
   etirement_flancs: () => AN.svg(
+    /* main gauche SUR la hanche (point ambré), bras droit tendu au-dessus de la tête, inclinaison latérale */
     `<g>${AN.rot("-9 100 164;9 100 164;-9 100 164",6)}
       ${AN.t(100,40)}${AN.corpsFace()}
-      ${AN.p("M111 58 C 112 42, 106 28, 96 20",2.8)}
-      ${AN.p("M89 58 C 87 74, 88 88, 91 98",2.4)}</g>`),
+      ${AN.p("M111 58 C 114 42, 108 26, 97 18",2.8)}${AN.joint(112,42)}${AN.dot(96,17,3.6)}
+      ${AN.p("M89 58 C 84 70, 84 82, 89 92",2.4)}${AN.joint(84,76)}${AN.dot(90,94,3.6)}</g>`),
   recup_charges: () => AN.svg(
     AN.p("M100 101 C 96 124, 93 145, 91 164 M100 101 C 104 124, 107 145, 109 164",3)
     + AN.s("M91 164 q -5 3 -10 3 M109 164 q 5 3 10 3")
     + AN.pAnim("M100 101 C 100 82, 100 64, 100 50;M100 101 C 88 88, 74 80, 60 78;M100 101 C 100 82, 100 64, 100 50",6,3.4)
     + `<circle r="8.5" fill="#e8a13c">${AN.av("cx","100;54;100",6)}${AN.av("cy","40;80;40",6)}</circle>`
-    + AN.pAnim("M97 62 C 94 76, 93 88, 94 98;M78 82 C 76 96, 76 106, 78 114;M97 62 C 94 76, 93 88, 94 98",6,2.4)),
+    + AN.pAnim("M97 62 C 94 76, 93 88, 94 98;M78 82 C 76 96, 76 106, 78 114;M97 62 C 94 76, 93 88, 94 98",6,2.4)
+    + `<circle r="3.4" fill="#e8a13c">${AN.av("cx","94;78;94",6)}${AN.av("cy","100;116;100",6)}</circle>`),
   massage_lombaires: () => AN.svg(AN.t(100,40) + AN.p("M100 50 C 101 62, 99 82, 100 101",3.4)
     + AN.p("M100 101 C 95 124, 91 145, 88 164 M100 101 C 105 124, 109 145, 112 164",3)
     + AN.s("M88 164 q -5 3 -10 3 M112 164 q 5 3 10 3")
@@ -1003,9 +1022,12 @@ const ANIMS = {
     + AN.p("M92 138 C 104 135, 116 136, 124 141",3) + AN.joint(124,141,2.8)
     + `<g transform="translate(124,141)"><g>${AN.rot("8;-72;8",3.5)}${AN.p("M0 0 C 2 9, 2 18, 1 26",3)}${AN.dot(1,26,3.2)}</g></g>`),
   etirement_ischios: () => AN.svg(AN.d("M60 140 h56",2.4) + AN.d("M70 140 v28 M108 140 v28",2)
-    + AN.p("M92 138 C 108 140, 128 146, 144 156",3) + AN.s("M144 156 l 8 -6",2.4,.8)
+    /* jambe tendue, talon au sol, pointe relevée ; le buste plonge et les mains glissent le long de la jambe */
+    + AN.p("M92 138 C 108 140, 128 146, 144 156",3) + AN.joint(120,144) + AN.s("M144 156 l 7 -7",2.6,.85)
     + AN.pAnim("M92 138 C 82 122, 84 104, 100 92;M92 138 C 86 120, 92 104, 106 98;M92 138 C 82 122, 84 104, 100 92",5,3.4)
-    + `<circle r="8" fill="#e8a13c">${AN.av("cx","104;114;104",5)}${AN.av("cy","84;92;84",5)}</circle>`),
+    + `<path fill="none" stroke="url(#gAnim)" stroke-width="2.4" stroke-linecap="round">${AN.av("d","M99 100 C 103 106, 106 110, 108 114;M105 104 C 111 112, 117 120, 122 128;M99 100 C 103 106, 106 110, 108 114",5)}</path>`
+    + `<circle r="3.6" fill="#e8a13c">${AN.av("cx","108;123;108",5)}${AN.av("cy","115;129;115",5)}</circle>`
+    + `<circle r="8" fill="#e8a13c">${AN.av("cx","104;112;104",5)}${AN.av("cy","84;92;84",5)}</circle>`),
   cercles_chevilles: () => AN.svg(AN.d("M60 140 h56",2.4) + AN.d("M70 140 v28 M108 140 v28",2)
     + AN.t(100,74,8) + AN.p("M98 84 C 95 102, 93 120, 92 138",3.2)
     + AN.p("M92 138 C 102 132, 112 126, 120 122",3) + AN.guide(122,122,8)
@@ -1041,10 +1063,11 @@ const ANIMS = {
 
   /* ---------- Poignets & mains ---------- */
   poignets: () => AN.svg(
+    /* l'autre main (gros point ambré) tire doucement les doigts, poignet marqué */
     AN.t(54,58,8.5) + AN.p("M56 68 C 60 84, 64 96, 68 106",3.2)
-    + AN.p("M64 82 C 84 86, 106 88, 124 88",2.8)
-    + `<g transform="translate(124,88)"><g>${AN.rot("42;-46;42",2.6)}${AN.s("M0 0 L 20 0",2.8,.95)}${AN.dot(20,0,3)}</g></g>`
-    + AN.guide(126,88,12)),
+    + AN.p("M64 82 C 84 86, 106 88, 124 88",2.8) + AN.joint(94,86)
+    + `<g transform="translate(124,88)">${AN.joint(0,0,2.8)}<g>${AN.rot("42;-46;42",2.6)}${AN.s("M0 0 L 20 0",2.8,.95)}${AN.dot(20,0,4)}</g></g>`
+    + `<path fill="none" stroke="url(#gAnim)" stroke-width="2.4" stroke-linecap="round">${AN.av("d","M68 106 C 90 114, 118 112, 137 100;M68 106 C 90 112, 118 116, 139 96;M68 106 C 90 114, 118 112, 137 100",2.6)}</path>`),
   poignets_croises: () => AN.svg(
     AN.t(100,46,8.5) + AN.p("M100 56 C 101 68, 100 78, 100 88",3.2)
     + AN.p("M100 66 C 88 74, 80 84, 78 96 M100 66 C 112 74, 120 84, 122 96",2.6)
@@ -3416,9 +3439,9 @@ function rendreProfil(){
 }
 
 /* ---------- Démarrage ---------- */
-/* Mon poste & moi — v0.59 : personnage articulé (coudes, poignets, genoux marqués en vert d'eau) ;
-   animations épaules refaites avec bras articulés, cercles du bassin avec jambes qui suivent,
-   et la fente (séance hanches) avec genoux et descente du corps. */
+/* Mon poste & moi — v0.60 : étirements plus visuels et précis (retour de Claire) — mains explicites
+   en gros points ambrés : posées sur les épaules, entrelacées derrière le dos (vue de profil), sur le
+   crâne, sur l'oreille opposée, sur la hanche, glissant le long de la jambe, tirant les doigts. */
 document.getElementById("logo-accueil").innerHTML = logoImg(120);
 /* bandeau de marque global, injecté une fois */
 const _entete = document.createElement("div");
