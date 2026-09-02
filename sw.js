@@ -1,5 +1,5 @@
 /* Mon poste & moi — service worker : installation PWA + fonctionnement hors ligne */
-const CACHE = "monposteetmoi-v066";
+const CACHE = "monposteetmoi-v067";
 const FICHIERS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./logo-cygne.png"];
 
 self.addEventListener("install", (e) => {
