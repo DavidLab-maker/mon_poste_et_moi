@@ -816,6 +816,20 @@ const AN = {
   s(d,w,o){ return `<path d="${d}" fill="none" stroke="#1a6b5a" stroke-width="${w||2.2}" stroke-linecap="round" opacity="${o||.7}"/>`; },
   d(d,w){ return `<path d="${d}" fill="none" stroke="#ddd5c3" stroke-width="${w||2.2}" stroke-linecap="round"/>`; },
   guide(cx,cy,r){ return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#e8a13c" stroke-width=".9" stroke-dasharray="2 5" opacity=".4"/>`; },
+  /* flèche arrondie : arc de cercle + pointe, pour montrer le sens d'une rotation.
+     deb/fin en degrés (0 = à droite, sens horaire écran si fin > deb). */
+  arc(cx,cy,r,deb,fin,o){
+    const rd=a=>a*Math.PI/180; o=o||.65;
+    const x1=cx+r*Math.cos(rd(deb)), y1=cy+r*Math.sin(rd(deb));
+    const x2=cx+r*Math.cos(rd(fin)), y2=cy+r*Math.sin(rd(fin));
+    const grand=Math.abs(fin-deb)>180?1:0, sweep=fin>deb?1:0;
+    const t=rd(fin)+(sweep?1:-1)*Math.PI/2;
+    const ax=x2+7*Math.cos(t), ay=y2+7*Math.sin(t);
+    const px=3.6*Math.cos(rd(fin)), py=3.6*Math.sin(rd(fin));
+    const f=n=>n.toFixed(1);
+    return `<path d="M${f(x1)} ${f(y1)} A${r} ${r} 0 ${grand} ${sweep} ${f(x2)} ${f(y2)}" fill="none" stroke="#e8a13c" stroke-width="1.6" opacity="${o}"/>`
+      + `<path d="M${f(x2+px)} ${f(y2+py)} L${f(ax)} ${f(ay)} L${f(x2-px)} ${f(y2-py)} Z" fill="#e8a13c" opacity="${o}"/>`;
+  },
   /* articulation visible (coude, poignet, genou…) : petit point vert d'eau */
   joint(cx,cy,r){ return `<circle cx="${cx}" cy="${cy}" r="${r||2.4}" fill="#4a9d8a"/>`; },
   jointAnim(cxVals,cyVals,dur,r){ return `<circle r="${r||2.4}" fill="#4a9d8a">${AN.av("cx",cxVals,dur)}${AN.av("cy",cyVals,dur)}</circle>`; },
@@ -855,6 +869,7 @@ const ANIMS = {
   /* ---------- Épaules & bras ---------- */
   cercles_epaules: () => AN.svg(AN.deboutFace(
     AN.guide(85,62,15) + AN.guide(115,62,15)
+    + AN.arc(85,62,20,-20,-200) + AN.arc(115,62,20,200,380)
     /* les MAINS restent posées sur les épaules (gros points ambrés fixes) ;
        le bras plié pivote autour de l'épaule, coude marqué */
     + `<g transform="translate(88,58)">${AN.joint(0,0,2.8)}<g>${AN.rotLin("0;-360",3.2)}
@@ -897,6 +912,7 @@ const ANIMS = {
   rotations_avant_bras: () => AN.svg(AN.deboutFace(
     AN.p("M89 58 C 84 68, 82 76, 82 84 M111 58 C 116 68, 118 76, 118 84",2.6)
     + AN.p("M82 84 C 72 86, 62 86, 54 84 M118 84 C 128 86, 138 86, 146 84",2.6)
+    + AN.arc(54,84,11,150,320,.55) + AN.arc(146,84,11,30,-140,.55)
     + `<g transform="translate(54,84)"><g>${AN.rot("0;180;0",2.4)}${AN.s("M-6 0 L 6 0",2.6,.95)}</g></g>`
     + `<g transform="translate(146,84)"><g>${AN.rot("0;-180;0",2.4)}${AN.s("M-6 0 L 6 0",2.6,.95)}</g></g>`)),
   etirement_avant_bras: () => AN.svg(
@@ -906,13 +922,15 @@ const ANIMS = {
     + `<g transform="translate(128,80)">${AN.joint(0,0,2.8)}<g>${AN.rot("10;55;10",3.5)}${AN.s("M0 0 L 16 4",2.8,.95)}${AN.dot(15,4,4)}</g></g>`
     + `<path fill="none" stroke="url(#gAnim)" stroke-width="2.4" stroke-linecap="round">${AN.av("d","M70 98 C 92 106, 122 102, 141 88;M70 98 C 92 108, 122 110, 139 100;M70 98 C 92 106, 122 102, 141 88",3.5)}</path>`),
   balancier_bras: () => AN.svg(AN.deboutFace(
-    AN.pAnim("M89 58 C 70 70, 62 86, 66 100;M89 58 C 96 74, 104 88, 116 96;M89 58 C 70 70, 62 86, 66 100",2.2,2.4)
+    AN.arc(100,80,42,-40,20,.5) + AN.arc(100,80,42,220,160,.5)
+    + AN.pAnim("M89 58 C 70 70, 62 86, 66 100;M89 58 C 96 74, 104 88, 116 96;M89 58 C 70 70, 62 86, 66 100",2.2,2.4)
     + AN.pAnim("M111 58 C 130 70, 138 86, 134 100;M111 58 C 104 74, 96 88, 84 96;M111 58 C 130 70, 138 86, 134 100",2.2,2.4))),
 
   /* ---------- Nuque, tête & yeux ---------- */
   nuque_reveil: () => AN.svg(AN.corpsFace() + AN.brasBas()
     + `<circle r="8.5" fill="#e8a13c">${AN.av("cx","100;89;100;111;100",6)}${AN.av("cy","40;44;40;44;40",6)}</circle>`),
   cercles_tete: () => AN.svg(AN.corpsFace() + AN.brasBas() + AN.guide(100,40,10)
+    + AN.arc(100,40,16,-20,-200)
     + `<g transform="translate(100,40)"><circle r="8.5" fill="#e8a13c">${AN.orbite(7,4)}</circle></g>`),
   etirement_cervicales: () => AN.svg(AN.corpsFace()
     /* mains croisées posées sur le crâne (gros point ambré au sommet), la tête s'enroule vers l'avant */
@@ -961,6 +979,7 @@ const ANIMS = {
     + `<circle r="8" fill="#e8a13c">${AN.av("cx","104;122;104",6)}${AN.av("cy","84;122;84",6)}</circle>`),
   rotation_buste: () => AN.svg(
     AN.p("M100 104 C 99 118, 100 132, 100 142",3.2) + AN.d("M84 142 h32",2.4)
+    + AN.arc(100,50,30,-55,15) + AN.arc(100,50,30,235,165)
     + `<g>${AN.rot("-16 100 104;16 100 104;-16 100 104",5)}
        ${AN.t(100,44,9)}${AN.p("M100 54 C 101 70, 99 88, 100 104",3.4)}
        ${AN.p("M84 62 C 94 68, 106 68, 116 62",2.8)}${AN.dot(84,62,3.2)}${AN.dot(116,62,3.2)}</g>`),
@@ -996,6 +1015,7 @@ const ANIMS = {
   bas_dos: () => AN.svg(
     /* cercles du bassin : la tête reste stable, le bassin orbite, les jambes suivent (genoux marqués) */
     AN.t(100,40) + AN.guide(100,102,8)
+    + AN.arc(100,102,14,200,380,.55)
     + AN.pAnim("M100 56 C 102 72, 106 88, 107 102;M100 56 C 101 74, 100 92, 100 109;M100 56 C 98 72, 94 88, 93 102;M100 56 C 99 74, 100 88, 100 95;M100 56 C 102 72, 106 88, 107 102",3.5,3.4)
     + AN.pAnim("M107 102 C 99 124, 92 146, 88 164;M100 109 C 95 128, 90 148, 88 164;M93 102 C 90 124, 88 146, 88 164;M100 95 C 95 120, 90 144, 88 164;M107 102 C 99 124, 92 146, 88 164",3.5,3)
     + AN.pAnim("M107 102 C 110 124, 112 146, 112 164;M100 109 C 105 128, 110 148, 112 164;M93 102 C 101 124, 108 146, 112 164;M100 95 C 105 120, 110 144, 112 164;M107 102 C 110 124, 112 146, 112 164",3.5,3)
@@ -1018,12 +1038,14 @@ const ANIMS = {
     AN.t(100,40) + AN.p("M100 50 C 101 62, 99 82, 100 101",3.4)
     + AN.p("M100 101 C 97 124, 95 145, 94 164",3) + AN.s("M94 164 q -5 3 -10 3")
     + AN.brasBas() + AN.guide(124,110,11)
+    + AN.arc(124,110,16,-20,-200,.55)
     + `<g transform="translate(100,101)"><g><animateMotion dur="3s" repeatCount="indefinite" path="M17 2 a 8 8 0 1 0 14 8 a 8 8 0 1 0 -14 -8"/>${AN.dot(0,0,4.2)}</g></g>`
     + AN.p("M100 101 C 108 104, 116 107, 122 110",2.8)),
   ronds_genoux: () => AN.svg(
     AN.t(96,52,8.5) + AN.p("M97 62 C 98 74, 98 84, 97 94",3.4)
     + AN.p("M97 72 C 104 82, 108 92, 108 102",2.4)
     + AN.p("M97 94 C 100 106, 103 116, 105 126",3) + AN.guide(105,128,9)
+    + AN.arc(105,128,14,-20,-200,.55)
     + `<g transform="translate(105,128)"><circle r="4.2" fill="#e8a13c">${AN.orbite(6,2.5)}</circle></g>`
     + AN.p("M105 128 C 103 140, 100 152, 97 164",3) + AN.s("M97 164 q 6 3 12 3")),
   genoux: () => AN.svg(AN.d("M60 140 h56",2.4) + AN.d("M70 140 v28 M108 140 v28",2)
@@ -1046,6 +1068,7 @@ const ANIMS = {
     + AN.p("M92 138 C 82 122, 84 104, 100 92",3.4) + AN.t(104,84,8)
     + AN.p("M100 96 C 106 106, 113 116, 120 126",2.4) + AN.dot(122,130,3.6)
     + AN.guide(126,136,7)
+    + AN.arc(126,136,12,200,380,.55)
     + `<g transform="translate(124,136)">${AN.joint(0,0,2.6)}<g>${AN.rotLin("0;360",2.5)}${AN.s("M2 0 L 13 3",2.8,.95)}</g></g>`),
   pompes_chevilles: () => AN.svg(AN.d("M60 140 h56",2.4) + AN.d("M70 140 v28 M108 140 v28",2)
     + AN.t(98,72,8) + AN.p("M96 82 C 94 100, 93 118, 92 136",3.2)
@@ -1200,6 +1223,7 @@ const ANIM_CERCLES_POIGNETS = () => AN.svg(
   + AN.joint(84,82,2.8) + AN.joint(116,82,2.8)
   + AN.p("M84 82 C 83 76, 82 72, 82 68 M116 82 C 117 76, 118 72, 118 68",2.6)
   + AN.joint(82,68) + AN.joint(118,68) + AN.guide(82,62,7) + AN.guide(118,62,7)
+  + AN.arc(82,62,11,-20,-200,.55) + AN.arc(118,62,11,-20,-200,.55)
   + `<g transform="translate(82,62)"><circle r="3.8" fill="#e8a13c">${AN.orbite(5,1.8)}</circle></g>`
   + `<g transform="translate(118,62)"><circle r="3.8" fill="#e8a13c">${AN.orbite(5,1.8)}</circle></g>`);
 const ANIM_ETOILE_POING = () => AN.svg(
@@ -1258,6 +1282,7 @@ const ANIM_MASSAGE_MOLLET = () => AN.svg(
   + AN.p("M97 104 C 95 126, 94 146, 93 164 M97 104 C 99 126, 101 146, 102 164",3)
   + AN.joint(94,134) + AN.joint(101,134) + AN.s("M93 164 q -6 3 -11 3 M102 164 q 6 3 11 3")
   + AN.guide(97,58,30)
+  + AN.arc(97,58,34,-20,-200)
   + `<g transform="translate(97,58)">${AN.joint(0,0,2.8)}<g>${AN.rotLin("0;-360",1.9)}${AN.p("M0 0 C 1 10, 1 20, 0 29",2.6)}${AN.joint(0,15)}${AN.dot(0,29,3.6)}</g></g>`),
   ANIM_BOXE = () => AN.svg(
   /* boxer doucement dans le vide : un poing part, l'autre revient */
@@ -1283,14 +1308,14 @@ const ANIM_MASSAGE_MOLLET = () => AN.svg(
 const ANIM_MIROIR = fab => () => fab()
   .replace("</defs>", `</defs><g transform="translate(200 0) scale(-1 1)">`)
   .replace("</svg>","</g></svg>");
-const ANIM_SENS_INVERSE = fab => () => fab()
-  .replace(/values="0;-360"/g,'values="@@INV@@"')
-  .replace(/values="0;360"/g,'values="0;-360"')
-  .replace(/values="@@INV@@"/g,'values="0;360"');
+/* « puis dans l'autre sens » : le miroir horizontal inverse à la fois la rotation
+   ET les flèches de sens — plus fiable qu'une inversion des valeurs d'animation */
+const ANIM_SENS_INVERSE = ANIM_MIROIR;
 const ANIM_TILT_TETE = sens => () => AN.svg(AN.corpsFace() + AN.brasBas()
   + `<circle r="8.5" fill="#e8a13c">${AN.av("cx",`100;${100+11*sens};100`,3.5)}${AN.av("cy","40;44;40",3.5)}</circle>`);
 const ANIM_ROT_BUSTE_DROITE = () => ANIMS.rotation_buste()
-  .replace(/-16 100 104;16 100 104;-16 100 104/g,"0 100 104;18 100 104;0 100 104");
+  .replace(/-16 100 104;16 100 104;-16 100 104/g,"0 100 104;18 100 104;0 100 104")
+  .replace(AN.arc(100,50,30,235,165),"");
 const ANIM_FLANC_DROITE = () => ANIMS.etirement_flancs()
   .replace("-9 100 164;9 100 164;-9 100 164","0 100 164;11 100 164;0 100 164");
 const ANIM_VISAGE_SOURCILS = () => AN.svg(AN.visage(
@@ -2889,6 +2914,18 @@ function lancerConfettis(){
   }
 }
 function pauseReprendre(){ enPause=!enPause; document.getElementById("p-pause").textContent=enPause?"Reprendre":"Pause"; if(enPause) stopVoix(); }
+/* App masquée (écran verrouillé, changement d'app…) pendant un exercice :
+   on coupe la voix et on met la séance en pause — elle attend le retour. */
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState!=="hidden") return;
+  stopVoix();
+  const player = document.getElementById("s-player");
+  if(player && player.classList.contains("active") && !enPause){
+    enPause = true;
+    const b = document.getElementById("p-pause");
+    if(b) b.textContent = "Reprendre";
+  }
+});
 function quitterSeance(){ clearInterval(timer); stopVoix(); navVisible(true); montrerOnglet("accueil"); }
 function retourAccueil(){ navVisible(true); montrerOnglet("accueil"); }
 
