@@ -70,6 +70,9 @@ module.exports = async (req, res) => {
   const off = Array.isArray(b.off) ? b.off.filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)) : [];
   const annuler = Array.isArray(b.annuler) ? b.annuler.filter(x => typeof x === "string" && /^[0-9a-f-]{20,}$/i.test(x)).slice(0, 400) : [];
   const nbJours = Math.min(21, Math.max(1, parseInt(b.nbJours, 10) || 14));
+  // « série » : identifiant de la programmation en cours (renouvelé à chaque changement d'horaires
+  // ou réactivation) — sans lui, un rappel annulé puis recréé à l'identique serait ignoré par OneSignal
+  const serie = String(b.serie || "").replace(/[^0-9a-z]/gi, "").slice(0, 32) || "s0";
   const maintenant = new Date();
   const aujourdhui = dateParis(maintenant);
   const depuis = (/^\d{4}-\d{2}-\d{2}$/.test(b.depuis || "") && b.depuis >= aujourdhui) ? b.depuis : aujourdhui;
@@ -103,8 +106,8 @@ module.exports = async (req, res) => {
       chrome_web_icon: URL_APP + "icon-192.png",
       firefox_icon: URL_APP + "icon-192.png",
       send_after: new Date(t.quand).toISOString().replace("T", " ").slice(0, 19) + " GMT+0000",
-      ttl: 3600,
-      idempotency_key: uuidDepuis(`${sub}|${t.ymd}|${t.i}|${t.h}`),
+      ttl: 7200,                                                  // téléphone hors réseau : livré jusqu'à 2 h plus tard
+      idempotency_key: uuidDepuis(`${sub}|${serie}|${t.ymd}|${t.i}|${t.h}`),
     };
     try{
       const r = await fetch("https://onesignal.com/api/v1/notifications", { method: "POST", headers: entetes, body: JSON.stringify(corps) });

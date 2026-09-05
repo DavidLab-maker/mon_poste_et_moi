@@ -3858,7 +3858,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.76";
+const APP_VERSION = "0.77";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -3940,12 +3940,13 @@ async function planifierRappelsPush(force){
   const jours = (profil.jours && profil.jours.length) ? profil.jours : [1,2,3,4,5];
   const auj = dateLocale();
   const off = (lire("travailj_"+auj) === false) ? [auj] : [];
-  const signature = JSON.stringify({ sid, h, jours, off, lien:1 });   // « lien » : version du format des rappels
+  const signature = JSON.stringify({ sid, h, jours, off, lien:2 });   // « lien » : version du format des rappels
   const plan = lire("push_plan") || {};
-  let annuler = [], depuis = auj, notifs = plan.notifs || {};
-  if(plan.signature !== signature){
+  let annuler = [], depuis = auj, notifs = plan.notifs || {}, serie = plan.serie;
+  if(plan.signature !== signature || !serie){
     annuler = Object.values(notifs).filter(Boolean);      // horaires/jours modifiés : on repart de zéro
     notifs = {};
+    serie = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);   // nouvelle série = nouvelles clés
   } else if(plan.jusqu){
     const avance = Math.round((new Date(plan.jusqu) - new Date(auj)) / 864e5);
     if(avance >= 7 && !force) return;                     // encore ≥ 7 jours programmés : rien à faire
@@ -3954,12 +3955,12 @@ async function planifierRappelsPush(force){
   _planEnCours = true;
   try{
     const r = await fetch("/api/mes-rappels", { method:"POST", headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ sub:sid, horaires:h, jours, off, annuler, depuis, nbJours:14, confirmer: !plan.signature }) });
+      body: JSON.stringify({ sub:sid, serie, horaires:h, jours, off, annuler, depuis, nbJours:14, confirmer: !plan.signature }) });
     const d = await r.json();
     if(!r.ok) throw new Error(d.erreur || ("HTTP "+r.status));
     (d.programmes||[]).forEach(p => { if(p.ok && p.id) notifs[p.date+"#"+p.slot] = p.id; });
     Object.keys(notifs).forEach(k => { if(k.slice(0,10) < auj) delete notifs[k]; });   // purge du passé
-    sauver("push_plan", { signature, notifs, jusqu: d.jusqu || plan.jusqu || null, maj: new Date().toISOString(), nb: d.nbProgrammes });
+    sauver("push_plan", { signature, serie, notifs, jusqu: d.jusqu || plan.jusqu || null, maj: new Date().toISOString(), nb: d.nbProgrammes });
     if(!plan.signature) toast("Rappels programmés ✅ — une notification de confirmation arrive");
   }catch(e){ console.warn("planification des rappels", e); }
   finally{ _planEnCours = false; ligneVersion(); }
