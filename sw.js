@@ -1,7 +1,6 @@
-/* Mon poste & moi — service worker : installation PWA + fonctionnement hors ligne
-   + réception des notifications push OneSignal (rappels de pauses, app fermée) */
-importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
-const CACHE = "monposteetmoi-v071";
+/* Mon poste & moi — service worker : installation PWA + fonctionnement hors ligne.
+   (Les notifications push ont leur propre worker : OneSignalSDKWorker.js) */
+const CACHE = "monposteetmoi-v072";
 const FICHIERS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./logo-cygne.png"];
 
 self.addEventListener("install", (e) => {

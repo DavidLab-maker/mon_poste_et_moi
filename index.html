@@ -3860,7 +3860,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.71";
+const APP_VERSION = "0.72";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -3868,11 +3868,9 @@ window.OneSignalDeferred = window.OneSignalDeferred || [];
 if(location.protocol === "https:"){
   OneSignalDeferred.push(async function(OneSignal){
     try{
-      await OneSignal.init({
-        appId: ONESIGNAL_APP_ID,
-        serviceWorkerPath: "sw.js",            // notre service worker importe le SDK OneSignal
-        serviceWorkerParam: { scope: "/" },
-      });
+      // Le SDK enregistre son propre worker (OneSignalSDKWorker.js, périmètre /push/onesignal/),
+      // indépendant de sw.js : aucun conflit avec le mode hors ligne.
+      await OneSignal.init({ appId: ONESIGNAL_APP_ID });
       _OS = OneSignal; pushPret = true;
       pushAbonne = OneSignal.User.PushSubscription.optedIn === true;
       OneSignal.User.PushSubscription.addEventListener("change", ev=>{
@@ -3882,7 +3880,7 @@ if(location.protocol === "https:"){
       });
       if(pushAbonne) synchroniserTagsPush();
       etatNotifs();
-    }catch(e){ pushErreur = String(e && e.message || e).slice(0,120); console.warn("OneSignal indisponible", e); etatNotifs(); }
+    }catch(e){ pushErreur = String(e && e.message || e).slice(0,220); console.warn("OneSignal indisponible", e); etatNotifs(); }
   });
 }
 /* Relit l'état réel de l'abonnement (utile après l'autorisation, qui arrive de façon asynchrone) */
