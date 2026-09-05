@@ -205,7 +205,7 @@
     <p class="centre" style="margin:10px 0 14px;font-size:17px;font-weight:700;color:var(--vert);letter-spacing:.01em">Petites pauses, grands effets.</p>
     <div class="devise"><span>PRÉVENIR</span><span>BOUGER</span><span>SOULAGER</span></div>
     <div class="carte" style="display:flex;gap:12px;align-items:center">
-      <div style="width:46px;height:46px;border-radius:50%;background:var(--vert-clair);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🧑‍⚕️</div>
+      <img src="claire-avatar.png" alt="Claire Betriu" style="width:52px;height:52px;border-radius:50%;border:2px solid var(--ambre);flex-shrink:0;filter:saturate(.9)">
       <p class="sub" style="margin:0;font-size:13.5px"><b style="color:var(--encre)">Conçue par Claire Betriu, ostéopathe D.O.</b><br>En cabinet libéral depuis 2008 — les conseils donnés en consultation, adaptés à votre journée de travail.</p>
     </div>
     <div class="carte">
@@ -2450,8 +2450,8 @@ function rendreAccueil(){
   const tip = tipDuJour(tick);
   const b=document.getElementById("bandeau-conseil");
   b.innerHTML = `<div onclick="basculerMotClaire()" style="cursor:pointer">
-      <div style="display:flex;gap:8px;align-items:center">
-        <span style="font-size:16px">🧑‍⚕️</span>
+      <div style="display:flex;gap:9px;align-items:center">
+        <img src="claire-avatar.png" alt="Claire" style="width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(255,255,255,.75);flex-shrink:0;filter:saturate(.9)">
         <b style="font-size:13.5px">Le mot de Claire</b>
         <span id="mot-claire-fleche" style="margin-left:auto;font-size:12px;opacity:.85">▾ l'astuce du jour</span>
       </div>
@@ -3889,7 +3889,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.83";
+const APP_VERSION = "0.84";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
