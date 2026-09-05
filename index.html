@@ -337,6 +337,7 @@
     </div>
     <button class="btn secondaire" onclick="refaireBilan()">Refaire tout mon bilan</button>
     <p class="note-legale">Vos données restent sur cet appareil (version prototype). Aucune information n'est transmise à votre employeur.</p>
+    <p class="note-legale" id="ligne-version" style="font-size:10.5px;opacity:.7;margin-top:6px"></p>
   </section>
 
   <!-- ======= BOUTON SOS FLOTTANT (stress ou coup de fatigue) ======= -->
@@ -1698,7 +1699,7 @@ function montrerOnglet(nom){
   });
   if(nom==="accueil"){ rendreAccueil(); montrer("s-accueil"); }
   if(nom==="poste"){ rendrePoste(); montrer("s-poste"); }
-  if(nom==="profil"){ rendreProfil(); montrer("s-profil"); }
+  if(nom==="profil"){ rendreProfil(); montrer("s-profil"); rafraichirEtatPush(); }
 }
 function navVisible(v){ document.getElementById("nav").style.display = v?"flex":"none"; }
 
@@ -1866,11 +1867,7 @@ function rendreBilan(){
         <p class="sub" style="margin:6px 0 12px;font-size:13px">Vos 5 rappels arrivent à vos horaires, uniquement vos jours de travail, <b>même app fermée</b>. Un seul geste : autoriser.${iosNonInstalle?"<br><b>Sur iPhone :</b> installez d'abord l'app sur l'écran d'accueil (Partager → « Sur l'écran d'accueil »), puis activez depuis « Mon profil ».":""}</p>
         <button class="btn" style="font-size:15px;padding:13px" onclick="activerNotifs()">🔔 Activer mes rappels</button>
       </div>
-      <div class="carte">
-        <b style="font-size:15px">📅 Dans mon agenda</b>
-        <p class="sub" style="margin:6px 0 12px;font-size:13px">L'alternative : vos 5 pauses s'ajoutent à votre calendrier, à vos horaires. Pratique si vous préférez tout voir dans votre agenda.</p>
-        <button class="btn secondaire" style="font-size:15px;padding:13px" onclick="telechargerAgenda(bilan.rappels_h, bilan.jours)">📅 Ajouter à mon agenda</button>
-      </div>
+      <p class="sub" style="font-size:12.5px;text-align:center;margin-top:4px">Vous préférez votre calendrier ? <span onclick="telechargerAgenda(bilan.rappels_h, bilan.jours)" style="color:var(--vert);font-weight:700;text-decoration:underline;cursor:pointer">📅 Ajouter les 5 rappels à mon agenda</span></p>
       <p class="sub" style="font-size:12.5px">Vous pourrez changer d'avis à tout moment dans « Mon profil ».</p>`;
   }
 
@@ -3863,8 +3860,9 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
+const APP_VERSION = "0.71";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
-let pushPret = false, pushAbonne = false, _OS = null;
+let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 if(location.protocol === "https:"){
@@ -3884,8 +3882,26 @@ if(location.protocol === "https:"){
       });
       if(pushAbonne) synchroniserTagsPush();
       etatNotifs();
-    }catch(e){ console.warn("OneSignal indisponible", e); etatNotifs(); }
+    }catch(e){ pushErreur = String(e && e.message || e).slice(0,120); console.warn("OneSignal indisponible", e); etatNotifs(); }
   });
+}
+/* Relit l'état réel de l'abonnement (utile après l'autorisation, qui arrive de façon asynchrone) */
+function rafraichirEtatPush(){
+  try{ if(_OS && _OS.User && _OS.User.PushSubscription) pushAbonne = _OS.User.PushSubscription.optedIn === true; }catch(e){}
+  etatNotifs();
+}
+/* Ligne discrète en bas de « Mon profil » : version installée + état technique des rappels */
+function ligneVersion(){
+  const el = document.getElementById("ligne-version"); if(!el) return;
+  let etat;
+  if(location.protocol!=="https:") etat = "hors ligne (local)";
+  else if(pushAbonne) etat = "abonné ✅";
+  else if(pushErreur) etat = "erreur : "+pushErreur;
+  else if(!pushPret) etat = "service en chargement…";
+  else if(iosNonInstalle) etat = "iPhone non installé sur l'écran d'accueil";
+  else if("Notification" in window) etat = "prêt · autorisation "+({granted:"accordée",denied:"refusée",default:"non demandée"}[Notification.permission]||Notification.permission);
+  else etat = "notifications non gérées par ce navigateur";
+  el.textContent = `Mon poste & moi · version ${APP_VERSION} · rappels : ${etat}`;
 }
 /* Étiquettes envoyées à OneSignal : horaires des 5 rappels, jours de travail, journée off éventuelle */
 function synchroniserTagsPush(){
@@ -3900,8 +3916,10 @@ function synchroniserTagsPush(){
   try{ _OS.User.addTags(tags); }catch(e){ console.warn("tags OneSignal", e); }
 }
 function etatNotifs(){
+  ligneVersion();
   const el=document.getElementById("notif-etat"); if(!el) return;
   if(location.protocol!=="https:"){ el.textContent="Disponibles uniquement sur la version en ligne de l'app (HTTPS)."; return; }
+  if(pushErreur){ el.textContent="⚠️ Le service de rappels n'a pas pu démarrer sur cet appareil ("+pushErreur+"). Utilisez « 📅 Rappels dans mon agenda » en attendant."; return; }
   if(pushAbonne){
     el.textContent="✅ Rappels activés : vos 5 rappels arrivent sur ce téléphone à vos horaires, même app fermée.";
     marquerChip("chip-activer","✅ Rappels activés");
@@ -3918,9 +3936,13 @@ function activerNotifs(){
   if(iosNonInstalle){ etatNotifs(); toast("Installez d'abord l'app sur l'écran d'accueil 📲"); return; }
   if(!pushPret || !_OS){ toast("Service de rappels en cours de chargement… réessayez dans un instant"); return; }
   toast("Autorisez les notifications dans la fenêtre qui s'ouvre…");
+  const apres = () => {
+    // l'abonnement OneSignal s'enregistre quelques secondes après l'autorisation : on re-vérifie
+    let n = 0; const t = setInterval(()=>{ rafraichirEtatPush(); n++; if(pushAbonne || n > 15) clearInterval(t); }, 1000);
+  };
   try{
-    _OS.Slidedown.promptPush({force:true}).catch(()=>_OS.Notifications.requestPermission());
-  }catch(e){ _OS.Notifications.requestPermission(); }
+    _OS.Slidedown.promptPush({force:true}).then(apres).catch(()=>_OS.Notifications.requestPermission().then(apres));
+  }catch(e){ _OS.Notifications.requestPermission().then(apres); }
 }
 function montrerNotif(titre, corps){
   if(!("Notification" in window) || Notification.permission!=="granted") return false;

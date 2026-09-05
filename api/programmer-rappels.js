@@ -36,7 +36,15 @@ async function listerAbonnes(appId, auth){
     offset += 300;
   }
   // abonnés valides ayant déclaré leurs horaires (étiquette h0 posée par l'app)
-  return tous.filter(p => p.notification_types > 0 && !p.invalid_identifier && p.tags && p.tags.h0);
+  const valides = tous.filter(p => p.notification_types > 0 && !p.invalid_identifier && p.tags && p.tags.h0);
+  valides.diag = {
+    total: tous.length,
+    abonnesActifs: tous.filter(p => p.notification_types > 0).length,
+    sansHoraires: tous.filter(p => p.notification_types > 0 && !(p.tags && p.tags.h0)).length,
+    desabonnes: tous.filter(p => !(p.notification_types > 0)).length,
+    appareils: tous.slice(0,20).map(p => ({ type: p.device_type, os: p.device_os, navigateur: p.device_model, actif: p.notification_types > 0, tags: Object.keys(p.tags||{}).length })),
+  };
+  return valides;
 }
 
 module.exports = async (req, res) => {
@@ -109,5 +117,6 @@ module.exports = async (req, res) => {
   return res.status(200).json({
     date: dateJour, jourSemaine, heureParis: `${p2(paris.getHours())}:${p2(paris.getMinutes())}`, fuseau: gmt,
     abonnes: abonnes.length, actifsAujourdhui: actifs.length, apercu, envois: resultats,
+    diagnostic: abonnes.diag,
   });
 };
