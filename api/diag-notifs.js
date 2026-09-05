@@ -4,9 +4,10 @@ module.exports = async (req, res) => {
   const APP_ID = process.env.ONESIGNAL_APP_ID, KEY = process.env.ONESIGNAL_REST_API_KEY;
   if(!APP_ID || !KEY) return res.status(500).json({ erreur: "variables OneSignal manquantes" });
   const auth = KEY.startsWith("os_v2_") ? `Key ${KEY}` : `Basic ${KEY}`;
-  const n = Math.min(100, Math.max(1, parseInt(req.query && req.query.n, 10) || 60));
+  const n = Math.min(50, Math.max(1, parseInt(req.query && req.query.n, 10) || 50));   // OneSignal : 50 max par page
+  const offset = Math.max(0, parseInt(req.query && req.query.offset, 10) || 0);
   try{
-    const r = await fetch(`https://onesignal.com/api/v1/notifications?app_id=${APP_ID}&limit=${n}&kind=1`, { headers: { Authorization: auth } });
+    const r = await fetch(`https://onesignal.com/api/v1/notifications?app_id=${APP_ID}&limit=${n}&offset=${offset}&kind=1`, { headers: { Authorization: auth } });
     if(!r.ok) return res.status(502).json({ erreur: "OneSignal " + r.status, detail: (await r.text()).slice(0, 300) });
     const d = await r.json();
     const fr = ts => ts ? new Date(ts * 1000).toLocaleString("fr-FR", { timeZone: "Europe/Paris", day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" }) : null;
