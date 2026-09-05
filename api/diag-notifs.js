@@ -7,7 +7,9 @@ module.exports = async (req, res) => {
   const n = Math.min(50, Math.max(1, parseInt(req.query && req.query.n, 10) || 50));   // OneSignal : 50 max par page
   const offset = Math.max(0, parseInt(req.query && req.query.offset, 10) || 0);
   try{
-    const r = await fetch(`https://onesignal.com/api/v1/notifications?app_id=${APP_ID}&limit=${n}&offset=${offset}&kind=1`, { headers: { Authorization: auth } });
+    // kind=1 : envois de l'app uniquement ; ?tout=1 : inclut aussi les messages envoyés depuis le tableau de bord
+    const kind = (req.query && req.query.tout === "1") ? "" : "&kind=1";
+    const r = await fetch(`https://onesignal.com/api/v1/notifications?app_id=${APP_ID}&limit=${n}&offset=${offset}${kind}`, { headers: { Authorization: auth } });
     if(!r.ok) return res.status(502).json({ erreur: "OneSignal " + r.status, detail: (await r.text()).slice(0, 300) });
     const d = await r.json();
     const fr = ts => ts ? new Date(ts * 1000).toLocaleString("fr-FR", { timeZone: "Europe/Paris", day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" }) : null;
@@ -19,6 +21,7 @@ module.exports = async (req, res) => {
       terminee: fr(x.completed_at),
       annulee: !!x.canceled,
       tel: String((x.include_subscription_ids || x.include_player_ids || [])[0] || "").slice(0, 8),
+      cible: x.included_segments ? "segments:" + x.included_segments.join(",") : null,
       serie: x.data && x.data.serie || null,
       livres: x.successful, echecs: x.failed, erreurs: x.errored, enAttente: x.remaining, ouverts: x.converted,
     }));
