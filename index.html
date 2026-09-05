@@ -3858,7 +3858,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.77";
+const APP_VERSION = "0.78";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -4070,7 +4070,14 @@ const RAPPELS_DEF = [
   {t:"16:00", lbl:"Fin de journée", msg:"🧘 Une dernière pause pour finir la journée léger."},
 ];
 function horairesRappels(){ return lire("rappels_h") || RAPPELS_DEF.map(r=>r.t); }
-function majHoraire(i,val){ const h=horairesRappels(); h[i]=val; sauver("rappels_h",h); synchroniserTagsPush(); toast("Horaire mis à jour : "+val+" ✅"); }
+/* Modification d'un horaire : on laisse l'utilisateur finir ses réglages (20 s sans changement)
+   avant de reprogrammer les 14 jours — sinon chaque saisie relançait 50 envois. */
+let _planDiffereT = null;
+function planifierRappelsPushDiffere(){
+  clearTimeout(_planDiffereT);
+  _planDiffereT = setTimeout(()=>{ synchroniserTagsPush(); }, 20000);
+}
+function majHoraire(i,val){ const h=horairesRappels(); h[i]=val; sauver("rappels_h",h); planifierRappelsPushDiffere(); toast("Horaire mis à jour : "+val+" ✅ (rappels reprogrammés dans 20 s)"); }
 /* Rappels locaux (app ouverte) : uniquement si le push n'est pas actif, pour éviter les doublons */
 function verifierRappels(){
   if(pushAbonne) return;
