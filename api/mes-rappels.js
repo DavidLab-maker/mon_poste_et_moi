@@ -74,10 +74,11 @@ module.exports = async (req, res) => {
   const aujourdhui = dateParis(maintenant);
   const depuis = (/^\d{4}-\d{2}-\d{2}$/.test(b.depuis || "") && b.depuis >= aujourdhui) ? b.depuis : aujourdhui;
 
-  // 1) annulations (anciens horaires) — les erreurs sont ignorées (déjà envoyée, déjà supprimée…)
+  // 1) annulations (anciens horaires, ou désactivation) — les erreurs sont ignorées (déjà envoyée, déjà supprimée…)
   const annules = await parLots(annuler, id =>
     fetch(`https://onesignal.com/api/v1/notifications/${id}?app_id=${APP_ID}`, { method: "DELETE", headers: entetes })
       .then(r => r.ok).catch(() => false), 8);
+  if(b.desactiver) return res.status(200).json({ desactive: true, annules: annules.filter(Boolean).length });
 
   // 2) programmation de la fenêtre demandée
   const taches = [];

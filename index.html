@@ -318,7 +318,7 @@
       <b style="font-size:15px">🔔 Rappels de pauses</b>
       <p class="sub" style="margin:6px 0 10px;font-size:13px" id="notif-etat">Disponibles uniquement sur la version en ligne de l'app.</p>
       <div class="chips">
-        <span class="chip" id="chip-activer" onclick="activerNotifs()">🔔 Activer les rappels ⭐</span>
+        <span class="chip" id="chip-activer" onclick="basculerRappels()">🔔 Activer les rappels ⭐</span>
         <span class="chip" id="chip-tester" onclick="testerNotif()">Tester une notification</span>
       </div>
       <p class="sub" style="font-size:11.5px;margin:10px 0 0">⭐ Les rappels arrivent sur votre téléphone à vos 5 horaires, vos jours de travail, <b>même app fermée</b> — et un appui sur le rappel ouvre directement la pause à faire. Sur iPhone, l'app doit d'abord être installée sur l'écran d'accueil.</p>
@@ -3858,7 +3858,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.75";
+const APP_VERSION = "0.76";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -3969,19 +3969,45 @@ function etatNotifs(){
   const el=document.getElementById("notif-etat"); if(!el) return;
   if(location.protocol!=="https:"){ el.textContent="Disponibles uniquement sur la version en ligne de l'app (HTTPS)."; return; }
   if(pushErreur){ el.textContent="⚠️ Le service de rappels n'a pas pu démarrer sur cet appareil ("+pushErreur+"). Fermez et rouvrez l'app, puis réessayez."; return; }
+  const chip=document.getElementById("chip-activer");
   if(pushAbonne){
-    el.textContent="✅ Rappels activés : vos 5 rappels arrivent sur ce téléphone à vos horaires, même app fermée.";
-    marquerChip("chip-activer","✅ Rappels activés");
+    el.textContent="✅ Rappels activés : vos 5 rappels arrivent sur ce téléphone à vos horaires, même app fermée. Touchez le bouton pour les désactiver.";
+    marquerChip("chip-activer","✅ Rappels activés · désactiver");
     return;
   }
+  if(chip){ chip.classList.remove("ok"); chip.textContent="🔔 Activer les rappels ⭐"; }
   if(iosNonInstalle){ el.textContent="Sur iPhone, installez d'abord l'app sur l'écran d'accueil (bouton Partager → « Sur l'écran d'accueil »), puis ouvrez-la depuis son icône pour activer les rappels."; return; }
   if(!("Notification" in window)){ el.textContent="Ce navigateur ne gère pas les notifications. Installez l'app sur l'écran d'accueil depuis Chrome (Android) ou Safari (iPhone)."; return; }
   if(Notification.permission==="denied") el.textContent="🚫 Notifications refusées dans les réglages du navigateur — à réactiver dans les paramètres du site, ou utilisez l'agenda.";
   else el.textContent="Touchez « Activer les rappels » puis autorisez les notifications : elles arriveront même app fermée.";
 }
+/* Interrupteur : actifs → on désactive ; inactifs → on active */
+function basculerRappels(){ if(pushAbonne) desactiverRappels(); else activerNotifs(); }
+async function desactiverRappels(){
+  if(!_OS){ toast("Service de rappels indisponible pour le moment"); return; }
+  const plan = lire("push_plan") || {};
+  const ids = Object.values(plan.notifs || {}).filter(Boolean);
+  let sid = null; try{ sid = _OS.User.PushSubscription.id; }catch(e){}
+  // 1) annuler les rappels déjà programmés côté OneSignal
+  if(sid && ids.length){
+    try{ await fetch("/api/mes-rappels", { method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ sub:sid, annuler:ids, desactiver:true }) }); }catch(e){}
+  }
+  sauver("push_plan", null);
+  // 2) se désabonner (réactivable d'un appui, sans nouvelle autorisation du téléphone)
+  try{ await _OS.User.PushSubscription.optOut(); }catch(e){}
+  pushAbonne = false; etatNotifs();
+  toast("Rappels désactivés — réactivables d'un appui");
+}
 function activerNotifs(){
   if(location.protocol!=="https:"){ etatNotifs(); toast("Disponible uniquement sur la version en ligne de l'app"); return; }
   if(pushAbonne){ etatNotifs(); toast("Les rappels sont déjà activés ✅"); return; }
+  // déjà autorisé mais désactivé par l'utilisateur : simple ré-abonnement
+  if(pushPret && _OS && ("Notification" in window) && Notification.permission==="granted"){
+    _OS.User.PushSubscription.optIn().then(()=>{ rafraichirEtatPush(); if(pushAbonne) synchroniserTagsPush(); }).catch(()=>{});
+    let n=0; const t=setInterval(()=>{ rafraichirEtatPush(); n++; if(pushAbonne || n>10) clearInterval(t); }, 800);
+    return;
+  }
   if(iosNonInstalle){ etatNotifs(); toast("Installez d'abord l'app sur l'écran d'accueil 📲"); return; }
   if(!pushPret || !_OS){ toast("Service de rappels en cours de chargement… réessayez dans un instant"); return; }
   toast("Autorisez les notifications dans la fenêtre qui s'ouvre…");
