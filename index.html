@@ -319,10 +319,9 @@
       <p class="sub" style="margin:6px 0 10px;font-size:13px" id="notif-etat">Disponibles uniquement sur la version en ligne de l'app.</p>
       <div class="chips">
         <span class="chip" id="chip-activer" onclick="activerNotifs()">🔔 Activer les rappels ⭐</span>
-        <span class="chip" id="chip-agenda" onclick="telechargerAgenda()">📅 Rappels dans mon agenda</span>
         <span class="chip" id="chip-tester" onclick="testerNotif()">Tester une notification</span>
       </div>
-      <p class="sub" style="font-size:11.5px;margin:10px 0 0">⭐ Les rappels arrivent sur votre téléphone à vos 5 horaires, vos jours de travail, <b>même app fermée</b>. Sur iPhone, l'app doit d'abord être installée sur l'écran d'accueil. L'agenda reste une alternative si vous préférez vos rappels dans votre calendrier.</p>
+      <p class="sub" style="font-size:11.5px;margin:10px 0 0">⭐ Les rappels arrivent sur votre téléphone à vos 5 horaires, vos jours de travail, <b>même app fermée</b> — et un appui sur le rappel ouvre directement la pause à faire. Sur iPhone, l'app doit d'abord être installée sur l'écran d'accueil.</p>
       <p class="sub" style="font-size:11.5px;margin:6px 0 0">Horaires réglés lors de votre bilan — modifiables via « Signaler un changement » ci-dessous.</p>
     </div>
     <div class="carte">
@@ -1867,8 +1866,7 @@ function rendreBilan(){
         <p class="sub" style="margin:6px 0 12px;font-size:13px">Vos 5 rappels arrivent à vos horaires, uniquement vos jours de travail, <b>même app fermée</b>. Un seul geste : autoriser.${iosNonInstalle?"<br><b>Sur iPhone :</b> installez d'abord l'app sur l'écran d'accueil (Partager → « Sur l'écran d'accueil »), puis activez depuis « Mon profil ».":""}</p>
         <button class="btn" style="font-size:15px;padding:13px" onclick="activerNotifs()">🔔 Activer mes rappels</button>
       </div>
-      <p class="sub" style="font-size:12.5px;text-align:center;margin-top:4px">Vous préférez votre calendrier ? <span onclick="telechargerAgenda(bilan.rappels_h, bilan.jours)" style="color:var(--vert);font-weight:700;text-decoration:underline;cursor:pointer">📅 Ajouter les 5 rappels à mon agenda</span></p>
-      <p class="sub" style="font-size:12.5px">Vous pourrez changer d'avis à tout moment dans « Mon profil ».</p>`;
+      <p class="sub" style="font-size:12.5px">Un appui sur un rappel ouvre directement la pause à faire. Vous pourrez changer d'avis à tout moment dans « Mon profil ».</p>`;
   }
 
   if(editionSeule){
@@ -3860,7 +3858,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.73";
+const APP_VERSION = "0.74";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -3931,7 +3929,7 @@ async function planifierRappelsPush(force){
   const jours = (profil.jours && profil.jours.length) ? profil.jours : [1,2,3,4,5];
   const auj = dateLocale();
   const off = (lire("travailj_"+auj) === false) ? [auj] : [];
-  const signature = JSON.stringify({ sid, h, jours, off });
+  const signature = JSON.stringify({ sid, h, jours, off, lien:1 });   // « lien » : version du format des rappels
   const plan = lire("push_plan") || {};
   let annuler = [], depuis = auj, notifs = plan.notifs || {};
   if(plan.signature !== signature){
@@ -3959,14 +3957,14 @@ function etatNotifs(){
   ligneVersion();
   const el=document.getElementById("notif-etat"); if(!el) return;
   if(location.protocol!=="https:"){ el.textContent="Disponibles uniquement sur la version en ligne de l'app (HTTPS)."; return; }
-  if(pushErreur){ el.textContent="⚠️ Le service de rappels n'a pas pu démarrer sur cet appareil ("+pushErreur+"). Utilisez « 📅 Rappels dans mon agenda » en attendant."; return; }
+  if(pushErreur){ el.textContent="⚠️ Le service de rappels n'a pas pu démarrer sur cet appareil ("+pushErreur+"). Fermez et rouvrez l'app, puis réessayez."; return; }
   if(pushAbonne){
     el.textContent="✅ Rappels activés : vos 5 rappels arrivent sur ce téléphone à vos horaires, même app fermée.";
     marquerChip("chip-activer","✅ Rappels activés");
     return;
   }
   if(iosNonInstalle){ el.textContent="Sur iPhone, installez d'abord l'app sur l'écran d'accueil (bouton Partager → « Sur l'écran d'accueil »), puis ouvrez-la depuis son icône pour activer les rappels."; return; }
-  if(!("Notification" in window)){ el.textContent="Ce navigateur ne gère pas les notifications — utilisez « 📅 Rappels dans mon agenda »."; return; }
+  if(!("Notification" in window)){ el.textContent="Ce navigateur ne gère pas les notifications. Installez l'app sur l'écran d'accueil depuis Chrome (Android) ou Safari (iPhone)."; return; }
   if(Notification.permission==="denied") el.textContent="🚫 Notifications refusées dans les réglages du navigateur — à réactiver dans les paramètres du site, ou utilisez l'agenda.";
   else el.textContent="Touchez « Activer les rappels » puis autorisez les notifications : elles arriveront même app fermée.";
 }
@@ -4001,42 +3999,27 @@ function testerNotif(){
   const ok = montrerNotif("Mon poste & moi", "🔔 Test réussi ! Les rappels fonctionnent sur cet appareil.");
   toast(ok ? "Notification de test envoyée 🔔" : "Notification impossible sur cet appareil");
 }
-/* Rappels garantis même app fermée : fichier agenda (.ics) aux 5 horaires, jours de travail uniquement.
-   Les overrides permettent l'appel depuis le bilan, avant que le profil ne soit enregistré. */
-function telechargerAgenda(hOverride, joursOverride){
-  marquerChip("chip-agenda");
-  setTimeout(()=>{ const c=document.getElementById("chip-agenda"); if(c) c.classList.remove("ok"); }, 1400);
-  const h = (hOverride && hOverride.length) ? hOverride : horairesRappels();
-  const jours = (joursOverride && joursOverride.length) ? joursOverride
-    : (profil && profil.jours && profil.jours.length) ? profil.jours : [1,2,3,4,5];
-  const BY = {0:"SU",1:"MO",2:"TU",3:"WE",4:"TH",5:"FR",6:"SA"};
-  const byday = jours.map(j=>BY[j]).join(",");
-  const d = new Date();
-  const ymd = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`;
-  const esc = s => s.replace(/\\/g,"\\\\").replace(/,/g,"\\,").replace(/;/g,"\\;");
-  let ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Mon poste et moi//FR\r\nCALSCALE:GREGORIAN\r\n";
-  RAPPELS_DEF.forEach((r,i)=>{
-    const [hh,mm] = (h[i]||r.t).split(":").map(Number);
-    const deb = hh*60+mm, fin = deb+5;
-    const p2 = n => String(n).padStart(2,"0");
-    ics += "BEGIN:VEVENT\r\n"
-      + `UID:mpm-rappel-${i}@monposteetmoi\r\n`
-      + `DTSTAMP:${ymd}T000000\r\n`
-      + `DTSTART:${ymd}T${p2(hh)}${p2(mm)}00\r\n`
-      + `DTEND:${ymd}T${p2(Math.floor(fin/60))}${p2(fin%60)}00\r\n`
-      + `RRULE:FREQ=WEEKLY;BYDAY=${byday}\r\n`
-      + `SUMMARY:${esc(r.lbl + " — Mon poste & moi")}\r\n`
-      + `DESCRIPTION:${esc(r.msg)}\r\n`
-      + "BEGIN:VALARM\r\nACTION:DISPLAY\r\n"
-      + `DESCRIPTION:${esc(r.msg)}\r\n`
-      + "TRIGGER:PT0M\r\nEND:VALARM\r\nEND:VEVENT\r\n";
-  });
-  ics += "END:VCALENDAR\r\n";
-  const a = document.createElement("a");
-  a.href = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
-  a.download = "rappels-mon-poste-et-moi.ics";
-  document.body.appendChild(a); a.click(); a.remove();
-  toast("Fichier créé 📅 — ouvrez-le pour ajouter les 5 rappels à votre agenda");
+/* Ouverture depuis un rappel push (« ?rappel=N » dans l'adresse) : on lance directement
+   la pause du créneau — Matinée → pause active du matin, Rééquilibrage → retour au neutre,
+   Midi / Après-midi / Fin de journée → l'étape correspondante du rituel du jour. */
+function seanceDuRappel(i){
+  if(i === 1) return "neutre_30";
+  if(!profil || !estJourTravail(new Date())) return null;
+  const prog = programmeDuJour();
+  const idx = {0:1, 2:2, 3:3, 4:4}[i];
+  return (idx !== undefined && prog[idx]) ? prog[idx].id : null;
+}
+function ouvrirDepuisRappel(){
+  const r = new URLSearchParams(location.search).get("rappel");
+  if(r === null) return;
+  history.replaceState(null, "", location.pathname);       // ne pas relancer au prochain rechargement
+  if(!profil) return;
+  const i = parseInt(r, 10);
+  setTimeout(()=>{
+    const id = seanceDuRappel(i);
+    if(id && SEQUENCES[id]){ navVisible(false); lancerSeance(id); }
+    else toast("Votre rituel du jour vous attend 👇");
+  }, 900);
 }
 /* Rappels aux heures clés, avec RATTRAPAGE : si l'heure est passée (écran verrouillé,
    app en arrière-plan…), le rappel part dès que l'app revient, dans une fenêtre de 90 min.
@@ -4071,6 +4054,7 @@ setInterval(verifierRappels, 60000);
 document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") verifierRappels(); });
 verifierRappels();
 etatNotifs();
+ouvrirDepuisRappel();
 </script>
 </body>
 </html>

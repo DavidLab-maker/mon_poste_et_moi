@@ -98,7 +98,7 @@ module.exports = async (req, res) => {
       include_subscription_ids: [sub],
       headings: { en: "Mon poste & moi", fr: "Mon poste & moi" },
       contents: { en: RAPPELS[t.i].msg, fr: RAPPELS[t.i].msg },
-      url: URL_APP,
+      url: URL_APP + "?rappel=" + t.i,                       // un appui ouvre directement la pause du créneau
       chrome_web_icon: URL_APP + "icon-192.png",
       firefox_icon: URL_APP + "icon-192.png",
       send_after: new Date(t.quand).toISOString().replace("T", " ").slice(0, 19) + " GMT+0000",
