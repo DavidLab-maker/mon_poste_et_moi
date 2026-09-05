@@ -205,7 +205,7 @@
     <p class="centre" style="margin:10px 0 14px;font-size:17px;font-weight:700;color:var(--vert);letter-spacing:.01em">Petites pauses, grands effets.</p>
     <div class="devise"><span>PRÉVENIR</span><span>BOUGER</span><span>SOULAGER</span></div>
     <div class="carte" style="display:flex;gap:12px;align-items:center">
-      <img src="claire-avatar.png" alt="Claire Betriu" style="height:64px;display:block;flex-shrink:0">
+      <img src="claire-avatar.png" alt="Claire Betriu" style="height:76px;display:block;flex-shrink:0">
       <p class="sub" style="margin:0;font-size:13.5px"><b style="color:var(--encre)">Conçue par Claire Betriu, ostéopathe D.O.</b><br>En cabinet libéral depuis 2008 — les conseils donnés en consultation, adaptés à votre journée de travail.</p>
     </div>
     <div class="carte">
@@ -2450,7 +2450,7 @@ function rendreAccueil(){
   const tip = tipDuJour(tick);
   const b=document.getElementById("bandeau-conseil");
   b.innerHTML = `<div onclick="basculerMotClaire()" style="cursor:pointer;display:flex;gap:12px;align-items:flex-start">
-      <img src="claire-avatar.png" alt="Claire" style="height:66px;display:block;flex-shrink:0;margin-top:-2px">
+      <img src="claire-avatar.png" alt="Claire" style="height:82px;display:block;flex-shrink:0;margin-top:-2px">
       <div style="flex:1;min-width:0">
       <div style="display:flex;gap:9px;align-items:center">
         <b style="font-size:13.5px">Le mot de Claire</b>
@@ -3891,7 +3891,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.85";
+const APP_VERSION = "0.86";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
