@@ -42,7 +42,9 @@ async function listerAbonnes(appId, auth){
     abonnesActifs: tous.filter(p => p.notification_types > 0).length,
     sansHoraires: tous.filter(p => p.notification_types > 0 && !(p.tags && p.tags.h0)).length,
     desabonnes: tous.filter(p => !(p.notification_types > 0)).length,
-    appareils: tous.slice(0,20).map(p => ({ type: p.device_type, os: p.device_os, navigateur: p.device_model, actif: p.notification_types > 0, tags: Object.keys(p.tags||{}).length })),
+    appareils: tous.slice(0,20).map(p => ({ id: String(p.id||"").slice(0,8), type: p.device_type, os: p.device_os, navigateur: p.device_model,
+      notification_types: p.notification_types, invalide: !!p.invalid_identifier, cree: p.created_at, actif: p.last_active,
+      tags: p.tags || {} })),
   };
   return valides;
 }
