@@ -3858,7 +3858,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.79";
+const APP_VERSION = "0.80";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -3930,6 +3930,8 @@ function synchroniserTagsPush(){
   const h = horairesRappels();
   const jours = (profil.jours && profil.jours.length) ? profil.jours : [1,2,3,4,5];
   const code = codeAppareil();
+  // Le code devient l'« External ID » OneSignal : visible en colonne et cherchable dans Audience → Subscriptions
+  try{ if(lire("code_onesignal") !== code){ _OS.login(code).then(()=>sauver("code_onesignal", code)).catch(()=>{}); } }catch(e){}
   try{ _OS.User.addAlias("code_appareil", code); }catch(e){}
   const tags = { v:"1", code };
   RAPPELS_DEF.forEach((r,i)=>{ tags["h"+i] = h[i] || r.t; });
