@@ -3858,7 +3858,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.74";
+const APP_VERSION = "0.75";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -3877,6 +3877,17 @@ if(location.protocol === "https:"){
         if(pushAbonne){ synchroniserTagsPush(); toast("Rappels activés ✅ — même app fermée"); }
       });
       if(pushAbonne) synchroniserTagsPush();
+      // App déjà ouverte au moment de l'appui sur un rappel : on lance la pause sans rechargement
+      OneSignal.Notifications.addEventListener("click", ev=>{
+        try{
+          const u = ev && ev.result && ev.result.url ? new URL(ev.result.url, location.href) : null;
+          const r = u ? u.searchParams.get("rappel") : null;
+          if(r === null || !profil) return;
+          const id = seanceDuRappel(parseInt(r, 10));
+          if(id && SEQUENCES[id]){ navVisible(false); lancerSeance(id); }
+          else { navVisible(true); montrerOnglet("accueil"); toast("Votre rituel du jour vous attend 👇"); }
+        }catch(e){}
+      });
       etatNotifs();
     }catch(e){ pushErreur = String(e && e.message || e).slice(0,220); console.warn("OneSignal indisponible", e); etatNotifs(); }
   });
