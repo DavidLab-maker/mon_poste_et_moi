@@ -3511,9 +3511,22 @@ function rendrePoste(){
   // Votre poste en photo (auto-diagnostic guidé — l'analyse IA viendra avec la version connectée)
   html += `<p class="moment">📸 Votre poste passe au scanner</p>
     <div class="carte">
-      <p class="sub" style="margin-bottom:12px;font-size:13.5px">Prenez votre poste en photo, puis vérifiez-le point par point. La photo reste sur votre appareil — rien n'est envoyé.</p>
-      <input type="file" accept="image/*" id="photo-poste" style="display:none" onchange="afficherPhoto(this)">
-      <button class="btn secondaire" onclick="document.getElementById('photo-poste').click()">📷 Prendre / choisir une photo</button>
+      <p class="sub" style="margin-bottom:10px;font-size:13.5px">Photographiez-vous à votre poste, puis vérifiez-le point par point avec la liste de l'ostéo. La photo reste sur votre appareil — rien n'est envoyé.</p>
+      <div style="background:var(--vert-clair);border-radius:12px;padding:11px 13px;margin-bottom:12px">
+        <b style="font-size:13px;color:var(--vert)">📐 Comment prendre la bonne photo</b>
+        <ul style="margin:6px 0 0 16px;padding:0;font-size:12.5px;line-height:1.55;color:var(--gris)">
+          <li><b>Vous, assis·e ou debout comme d'habitude</b> — pas en pose « parfaite » : c'est votre vraie position qui compte.</li>
+          <li><b>Vue de profil</b>, téléphone à hauteur de votre coude, à 2-3 mètres (un collègue, ou le téléphone posé sur une étagère).</li>
+          <li>Dans le cadre : <b>la tête, l'écran, les mains sur le clavier, le siège et les pieds</b>.</li>
+          <li>Lumière suffisante, pas de contre-jour devant une fenêtre.</li>
+        </ul>
+      </div>
+      <input type="file" accept="image/*" capture="environment" id="photo-poste-cam" style="display:none" onchange="afficherPhoto(this)">
+      <input type="file" accept="image/*" id="photo-poste-gal" style="display:none" onchange="afficherPhoto(this)">
+      <div style="display:flex;gap:10px">
+        <button class="btn" style="flex:1;font-size:14.5px;padding:13px" onclick="document.getElementById('photo-poste-cam').click()">📷 Prendre une photo</button>
+        <button class="btn secondaire" style="flex:1;font-size:14.5px;padding:13px" onclick="document.getElementById('photo-poste-gal').click()">🖼️ Choisir une photo</button>
+      </div>
       <div id="photo-zone"></div>
     </div>`;
 
@@ -3600,7 +3613,7 @@ function afficherPhoto(input){
     <img src="${url}" style="width:100%;border-radius:12px;margin:14px 0 12px" alt="Votre poste de travail">
     <b style="font-size:14.5px">${points.length?"Vérifiez sur votre photo les points relevés dans votre bilan :":"Vérifiez ces points essentiels sur votre photo :"}</b>
     <div style="margin-top:10px">${liste}</div>
-    <p class="sub" style="font-size:12px;margin:6px 0 0">🔎 L'analyse automatique de la photo par intelligence artificielle arrivera avec la version connectée de l'application.</p>`;
+    <p class="sub" style="font-size:12px;margin:6px 0 0">💡 Un point non coché ? Le conseil et le schéma correspondants sont juste au-dessus, dans « On règle ça en priorité ».</p>`;
 }
 
 /* =========================================================
@@ -3860,7 +3873,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.81";
+const APP_VERSION = "0.82";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
