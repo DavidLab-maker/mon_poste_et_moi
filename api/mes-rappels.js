@@ -54,6 +54,28 @@ function lireCorps(req){
   if(req.body && typeof req.body === "object") return req.body;
   try{ return JSON.parse(req.body || "{}"); }catch(e){ return {}; }
 }
+/* Auto-nettoyage : annule les rappels encore en attente pour CE téléphone qui n'appartiennent pas
+   à la série conservée (série = null → tout annuler). Protège contre les orphelins (app fermée
+   avant d'avoir enregistré les identifiants, ancienne installation…). Parcourt jusqu'à 1000 envois récents. */
+async function annulerEnAttente(APP_ID, entetes, sub, serieGardee){
+  const pages = Array.from({ length: 20 }, (_, k) => k * 50);
+  const lots = await parLots(pages, off =>
+    fetch(`https://onesignal.com/api/v1/notifications?app_id=${APP_ID}&limit=50&offset=${off}&kind=1`, { headers: entetes })
+      .then(r => r.ok ? r.json() : { notifications: [] }).then(d => d.notifications || []).catch(() => []), 5);
+  const cibles = [];
+  lots.flat().forEach(n => {
+    const dest = n.include_subscription_ids || n.include_player_ids || [];
+    if(!dest.includes(sub)) return;
+    if(n.canceled || !(n.remaining > 0)) return;                     // déjà annulé ou déjà parti
+    const s = n.data && n.data.serie;
+    if(serieGardee && s === serieGardee) return;                      // série en cours : on garde
+    cibles.push(n.id);
+  });
+  const ok = await parLots(cibles, id =>
+    fetch(`https://onesignal.com/api/v1/notifications/${id}?app_id=${APP_ID}`, { method: "DELETE", headers: entetes })
+      .then(r => r.ok).catch(() => false), 8);
+  return ok.filter(Boolean).length;
+}
 
 module.exports = async (req, res) => {
   if(req.method !== "POST") return res.status(405).json({ erreur: "POST attendu" });
@@ -81,7 +103,11 @@ module.exports = async (req, res) => {
   const annules = await parLots(annuler, id =>
     fetch(`https://onesignal.com/api/v1/notifications/${id}?app_id=${APP_ID}`, { method: "DELETE", headers: entetes })
       .then(r => r.ok).catch(() => false), 8);
-  if(b.desactiver) return res.status(200).json({ desactive: true, annules: annules.filter(Boolean).length });
+  // 1 bis) auto-nettoyage des orphelins : à la désactivation (tout) ou quand la programmation repart de zéro
+  let nettoyes = 0;
+  if(b.desactiver) nettoyes = await annulerEnAttente(APP_ID, entetes, sub, null);
+  else if(annuler.length || b.nettoyer) nettoyes = await annulerEnAttente(APP_ID, entetes, sub, serie);
+  if(b.desactiver) return res.status(200).json({ desactive: true, annules: annules.filter(Boolean).length, nettoyes });
 
   // 2) programmation de la fenêtre demandée
   const taches = [];
@@ -108,6 +134,7 @@ module.exports = async (req, res) => {
       send_after: new Date(t.quand).toISOString().replace("T", " ").slice(0, 19) + " GMT+0000",
       ttl: 7200,                                                  // téléphone hors réseau : livré jusqu'à 2 h plus tard
       idempotency_key: uuidDepuis(`${sub}|${serie}|${t.ymd}|${t.i}|${t.h}`),
+      data: { mpm: 1, serie, slot: t.i },                         // marquage : permet l'auto-nettoyage par série
     };
     try{
       const r = await fetch("https://onesignal.com/api/v1/notifications", { method: "POST", headers: entetes, body: JSON.stringify(corps) });
@@ -134,7 +161,7 @@ module.exports = async (req, res) => {
 
   const jusqu = ajouterJours(depuis, nbJours - 1);
   return res.status(200).json({
-    aujourdhui, depuis, jusqu, annules: annules.filter(Boolean).length,
+    aujourdhui, depuis, jusqu, annules: annules.filter(Boolean).length, nettoyes,
     programmes, nbProgrammes: programmes.filter(p => p.ok).length, confirmation,
   });
 };

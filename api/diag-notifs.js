@@ -17,7 +17,8 @@ module.exports = async (req, res) => {
       prevue: fr(x.send_after),
       terminee: fr(x.completed_at),
       annulee: !!x.canceled,
-      destinataires: (x.include_subscription_ids || x.include_player_ids || []).length,
+      tel: String((x.include_subscription_ids || x.include_player_ids || [])[0] || "").slice(0, 8),
+      serie: x.data && x.data.serie || null,
       livres: x.successful, echecs: x.failed, erreurs: x.errored, enAttente: x.remaining, ouverts: x.converted,
     }));
     return res.status(200).json({ total: d.total_count, affiches: liste.length, maintenant: fr(Date.now()/1000), notifications: liste });
