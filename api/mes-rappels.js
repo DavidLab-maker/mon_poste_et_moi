@@ -10,12 +10,14 @@
 
 const crypto = require("crypto");
 
+/* Les 5 rappels = les 5 rituels de la journée, mêmes titres que dans l'app (RAPPELS_DEF / programmeDuJour) :
+   le titre de la notification est celui du rituel, et l'appui ouvre ce rituel (?rappel=N). */
 const RAPPELS = [
-  { t:"10:00", msg:"🎯 C'est l'heure de votre pause active du matin — 2 minutes suffisent." },
-  { t:"11:15", msg:"📐 Rééquilibrage éclair : bassin, épaules, tête — 30 secondes." },
-  { t:"12:30", msg:"🍽️ Pause du midi : on relâche la pression avant de repartir." },
-  { t:"14:00", msg:"🚶 Début d'après-midi : on bouge un peu !" },
-  { t:"16:00", msg:"🧘 Une dernière pause pour finir la journée léger." },
+  { t:"09:00", titre:"☀️ Réveil du corps",        msg:"2 minutes pour démarrer la journée en douceur." },
+  { t:"10:30", titre:"🎯 Matinée — pause active", msg:"Votre pause active sur place — 2 minutes suffisent." },
+  { t:"12:30", titre:"🍽️ Pause repas",            msg:"On relâche la pression avant de repartir." },
+  { t:"14:30", titre:"🚶 Après-midi — on bouge",  msg:"On bouge un peu ! Un appui ouvre la pause." },
+  { t:"16:00", titre:"🧘 Fin d'après-midi",       msg:"Une dernière pause pour finir léger." },
 ];
 const URL_APP = "https://mon-poste-et-moi.vercel.app/";
 const FUSEAU = "Europe/Paris";
@@ -126,13 +128,14 @@ module.exports = async (req, res) => {
     const corps = {
       app_id: APP_ID,
       include_subscription_ids: [sub],
-      headings: { en: "Mon poste & moi", fr: "Mon poste & moi" },
+      headings: { en: RAPPELS[t.i].titre, fr: RAPPELS[t.i].titre },   // titre = celui du rituel dans l'app
       contents: { en: RAPPELS[t.i].msg, fr: RAPPELS[t.i].msg },
-      url: URL_APP + "?rappel=" + t.i,                       // un appui ouvre directement la pause du créneau
+      url: URL_APP + "?rappel=" + t.i,                       // un appui ouvre directement le rituel N du jour
       chrome_web_icon: URL_APP + "icon-192.png",
       firefox_icon: URL_APP + "icon-192.png",
       send_after: new Date(t.quand).toISOString().replace("T", " ").slice(0, 19) + " GMT+0000",
       ttl: 7200,                                                  // téléphone hors réseau : livré jusqu'à 2 h plus tard
+      priority: 10,                                               // haute priorité : réveille Chrome même en économie d'énergie
       idempotency_key: uuidDepuis(`${sub}|${serie}|${t.ymd}|${t.i}|${t.h}`),
       data: { mpm: 1, serie, slot: t.i },                         // marquage : permet l'auto-nettoyage par série
     };

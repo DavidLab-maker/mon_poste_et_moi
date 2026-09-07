@@ -323,7 +323,8 @@
       </div>
       <p class="sub" style="font-size:11.5px;margin:10px 0 0">⭐ Les rappels arrivent sur votre téléphone à vos 5 horaires, vos jours de travail, <b>même app fermée</b> — et un appui sur le rappel ouvre directement la pause à faire. Sur iPhone, l'app doit d'abord être installée sur l'écran d'accueil.</p>
       <p class="sub" style="font-size:11px;margin:6px 0 0">Confidentialité : en activant les rappels, votre prénom, un code d'appareil et vos horaires de pause sont transmis à notre service de notifications (OneSignal), uniquement pour vous envoyer vos rappels. Vos réponses au bilan et votre suivi restent sur votre téléphone. Désactiver les rappels arrête ces envois.</p>
-      <p class="sub" style="font-size:11.5px;margin:6px 0 0">Horaires réglés lors de votre bilan — modifiables via « Signaler un changement » ci-dessous.</p>
+      <div id="notif-horaires" style="margin-top:10px"></div>
+      <p class="sub" style="font-size:11.5px;margin:6px 0 0">Chaque rappel porte le nom du rituel qu'il ouvre. Modifiez une heure ici : les rappels sont reprogrammés automatiquement.</p>
     </div>
     <div class="carte">
       <b style="font-size:15px">🔄 Signaler un changement</b>
@@ -2116,6 +2117,19 @@ function composerMix(jour, slot, pool, premier, exclure, zonesPrises){
   return mid;
 }
 
+/* Les 5 rappels = les 5 rituels de la journée, dans le même ordre et avec les mêmes titres
+   (voir programmeDuJour juste dessous) : un appui sur le rappel N ouvre le rituel N. Les mêmes
+   libellés sont repris côté serveur (api/mes-rappels.js). Horaires modifiables dans Profil → Rappels ;
+   jamais les jours de repos. Rappels locaux (app ouverte) avec rattrapage 90 min si pas de push. */
+const RAPPELS_DEF = [
+  {t:"09:00", lbl:"Réveil du corps",         msg:"☀️ Réveil du corps : 2 minutes pour démarrer la journée en douceur."},
+  {t:"10:30", lbl:"Matinée — pause active",  msg:"🎯 Matinée : votre pause active sur place — 2 minutes suffisent."},
+  {t:"12:30", lbl:"Pause repas",             msg:"🍽️ Pause repas : on relâche la pression avant de repartir."},
+  {t:"14:30", lbl:"Après-midi — on bouge",   msg:"🚶 Après-midi : on bouge un peu !"},
+  {t:"16:00", lbl:"Fin d'après-midi",        msg:"🧘 Fin d'après-midi : une dernière pause pour finir léger."},
+];
+function horairesRappels(){ return lire("rappels_h") || RAPPELS_DEF.map(r=>r.t); }
+
 function programmeDuJour(){
   /* LE RITUEL DU JOUR — le même squelette pour tous, adapté au métier,
      même sans douleur déclarée :
@@ -2568,9 +2582,13 @@ function rendreAccueil(){
     </div>`;
 
   // Le rituel d'abord (c'est l'action !), les suivis et encarts d'info ensuite
+  const hRappels = horairesRappels();
   document.getElementById("programme").innerHTML = htmlRituel + prog.map((x,i)=>{
     const s=SEQUENCES[x.id]; const faite=faites.includes(x.id);
-    return `<p class="moment">${x.moment}</p>
+    // l'heure du rappel correspondant, en regard du rituel : les 5 rappels suivent les 5 rituels
+    // (le titre est un dégradé « clip text » : on redonne une vraie couleur à l'heure, sinon elle est invisible)
+    const hr = (!repos && hRappels[i]) ? `<span style="margin-left:8px;font-weight:700;letter-spacing:0;color:var(--vert-mid);-webkit-text-fill-color:var(--vert-mid);opacity:.85">🔔 ${hRappels[i]}</span>` : "";
+    return `<p class="moment">${x.moment}${hr}</p>
       <div class="carte seance ${faite?'faite':''}" onclick="lancerSeance('${x.id}')">
         <div class="pastille">${faite?'✔️':s.ico}</div>
         <div class="infos"><b>${s.titre}</b><span>${zoneBadges(s.zone)} ${s.duree} · ${s.zone}</span></div>
@@ -2809,7 +2827,10 @@ function parler(txt){
   if(!voixActive || !("speechSynthesis" in window)) return;
   try{
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(txt);
+    // Écriture inclusive « réaligné·e » : le point médian ferait dire « réaligné-e » ; à l'oral
+    // le féminin s'entend pareil, on retire donc la terminaison. Les « · » séparateurs deviennent des virgules.
+    const oral = String(txt).replace(/·e\b/g, "").replace(/\s*·\s*/g, ", ");
+    const u = new SpeechSynthesisUtterance(oral);
     u.lang = "fr-FR"; u.rate = 0.92; u.pitch = 1.02;
     if(!voixChoisie) voixChoisie = choisirVoix();
     if(voixChoisie) u.voice = voixChoisie;
@@ -3891,7 +3912,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.86";
+const APP_VERSION = "0.87";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -3991,7 +4012,7 @@ async function planifierRappelsPush(force){
   const jours = (profil.jours && profil.jours.length) ? profil.jours : [1,2,3,4,5];
   const auj = dateLocale();
   const off = (lire("travailj_"+auj) === false) ? [auj] : [];
-  const signature = JSON.stringify({ sid, h, jours, off, lien:2 });   // « lien » : version du format des rappels
+  const signature = JSON.stringify({ sid, h, jours, off, lien:3 });   // « lien » : version du format des rappels (3 = titres des rituels)
   const plan = lire("push_plan") || {};
   let annuler = [], depuis = auj, notifs = plan.notifs || {}, serie = plan.serie;
   if(plan.signature !== signature || !serie){
@@ -4016,6 +4037,21 @@ async function planifierRappelsPush(force){
   }catch(e){ console.warn("planification des rappels", e); }
   finally{ _planEnCours = false; ligneVersion(); }
 }
+/* Ce qui est réellement programmé pour AUJOURD'HUI (d'après les identifiants renvoyés par le serveur) :
+   permet de vérifier d'un coup d'œil qu'aucun créneau ne manque. */
+function rappelsDuJourHtml(){
+  const plan = lire("push_plan"); if(!plan || !plan.notifs) return "";
+  if(!estJourTravail(new Date())) return "<br><span style='font-size:12px'>Aujourd'hui : jour de repos, aucun rappel.</span>";
+  const auj = dateLocale(), h = horairesRappels(), now = new Date(), nowM = now.getHours()*60 + now.getMinutes();
+  const aVenir = [], manquants = [];
+  RAPPELS_DEF.forEach((r,i)=>{
+    const hi = h[i] || r.t, [hh,mm] = hi.split(":").map(Number);
+    if(hh*60 + mm < nowM) return;                                   // déjà passé : rien à vérifier
+    (plan.notifs[auj+"#"+i] ? aVenir : manquants).push(hi);
+  });
+  if(!aVenir.length && !manquants.length) return "<br><span style='font-size:12px'>Aujourd'hui : les 5 rappels sont passés.</span>";
+  return `<br><span style="font-size:12px">Aujourd'hui, encore à venir : ${aVenir.join(" · ") || "aucun"}${manquants.length ? " ⚠️ non programmé : "+manquants.join(", ")+" — fermez et rouvrez l'app" : ""}</span>`;
+}
 function etatNotifs(){
   ligneVersion();
   const el=document.getElementById("notif-etat"); if(!el) return;
@@ -4023,7 +4059,9 @@ function etatNotifs(){
   if(pushErreur){ el.textContent="⚠️ Le service de rappels n'a pas pu démarrer sur cet appareil ("+pushErreur+"). Fermez et rouvrez l'app, puis réessayez."; return; }
   const chip=document.getElementById("chip-activer");
   if(pushAbonne){
-    el.textContent="✅ Rappels activés : vos 5 rappels arrivent sur ce téléphone à vos horaires, même app fermée. Touchez le bouton pour les désactiver.";
+    el.innerHTML="✅ Rappels activés : vos 5 rappels arrivent sur ce téléphone à vos horaires, même app fermée. Touchez le bouton pour les désactiver."
+      + rappelsDuJourHtml()
+      + `<br><span style="font-size:11.5px;opacity:.75">Un rappel arrive sans son ? Sur Android, appui long sur la notification → « Par défaut ».</span>`;
     marquerChip("chip-activer","✅ Rappels activés · désactiver");
     return;
   }
@@ -4088,15 +4126,12 @@ function testerNotif(){
   const ok = montrerNotif("Mon poste & moi", "🔔 Test réussi ! Les rappels fonctionnent sur cet appareil.");
   toast(ok ? "Notification de test envoyée 🔔" : "Notification impossible sur cet appareil");
 }
-/* Ouverture depuis un rappel push (« ?rappel=N » dans l'adresse) : on lance directement
-   la pause du créneau — Matinée → pause active du matin, Rééquilibrage → retour au neutre,
-   Midi / Après-midi / Fin de journée → l'étape correspondante du rituel du jour. */
+/* Ouverture depuis un rappel push (« ?rappel=N » dans l'adresse) : les 5 rappels sont les
+   5 rituels du jour, dans l'ordre — le rappel N ouvre directement le rituel N du jour. */
 function seanceDuRappel(i){
-  if(i === 1) return "neutre_30";
   if(!profil || !estJourTravail(new Date())) return null;
   const prog = programmeDuJour();
-  const idx = {0:1, 2:2, 3:3, 4:4}[i];
-  return (idx !== undefined && prog[idx]) ? prog[idx].id : null;
+  return (i >= 0 && i < prog.length && prog[i]) ? prog[i].id : null;
 }
 function ouvrirDepuisRappel(){
   const r = new URLSearchParams(location.search).get("rappel");
@@ -4110,17 +4145,8 @@ function ouvrirDepuisRappel(){
     else toast("Votre rituel du jour vous attend 👇");
   }, 900);
 }
-/* Rappels aux heures clés, avec RATTRAPAGE : si l'heure est passée (écran verrouillé,
-   app en arrière-plan…), le rappel part dès que l'app revient, dans une fenêtre de 90 min.
-   Horaires par défaut modifiables dans Profil → Rappels. Jamais les jours de repos. */
-const RAPPELS_DEF = [
-  {t:"10:00", lbl:"Matinée",        msg:"🎯 C'est l'heure de votre pause active du matin — 2 minutes suffisent."},
-  {t:"11:15", lbl:"Rééquilibrage",  msg:"📐 Rééquilibrage éclair : bassin, épaules, tête — 30 secondes."},
-  {t:"12:30", lbl:"Pause du midi",  msg:"🍽️ Pause du midi : on relâche la pression avant de repartir."},
-  {t:"14:00", lbl:"Après-midi",     msg:"🚶 Début d'après-midi : on bouge un peu !"},
-  {t:"16:00", lbl:"Fin de journée", msg:"🧘 Une dernière pause pour finir la journée léger."},
-];
-function horairesRappels(){ return lire("rappels_h") || RAPPELS_DEF.map(r=>r.t); }
+/* RAPPELS_DEF et horairesRappels() sont définis plus haut, juste avant programmeDuJour (les 5 rappels
+   suivent les 5 rituels ; l'accueil affiche l'heure de rappel en regard de chaque rituel). */
 /* Modification d'un horaire : on laisse l'utilisateur finir ses réglages (20 s sans changement)
    avant de reprogrammer les 14 jours — sinon chaque saisie relançait 50 envois. */
 let _planDiffereT = null;
@@ -4142,7 +4168,7 @@ function verifierRappels(){
     const cible = hh*60 + mm;
     if(minutesActuelles >= cible && minutesActuelles <= cible + 90){
       const cle="notifj_"+i+"_"+clesJour();
-      if(!lire(cle)){ sauver(cle,true); montrerNotif("Mon poste & moi", r.msg); }
+      if(!lire(cle)){ sauver(cle,true); montrerNotif(r.msg.slice(0,2)+" "+r.lbl, r.msg.replace(/^\S+\s/, "")); }
     }
   });
 }

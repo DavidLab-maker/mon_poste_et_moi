@@ -7,11 +7,11 @@
    Appel manuel de contrôle : /api/programmer-rappels?apercu=1 → compte sans envoyer. */
 
 const RAPPELS = [
-  { t:"10:00", msg:"🎯 C'est l'heure de votre pause active du matin — 2 minutes suffisent." },
-  { t:"11:15", msg:"📐 Rééquilibrage éclair : bassin, épaules, tête — 30 secondes." },
-  { t:"12:30", msg:"🍽️ Pause du midi : on relâche la pression avant de repartir." },
-  { t:"14:00", msg:"🚶 Début d'après-midi : on bouge un peu !" },
-  { t:"16:00", msg:"🧘 Une dernière pause pour finir la journée léger." },
+  { t:"09:00", msg:"☀️ Réveil du corps : 2 minutes pour démarrer la journée en douceur." },
+  { t:"10:30", msg:"🎯 Matinée : votre pause active sur place — 2 minutes suffisent." },
+  { t:"12:30", msg:"🍽️ Pause repas : on relâche la pression avant de repartir." },
+  { t:"14:30", msg:"🚶 Après-midi : on bouge un peu !" },
+  { t:"16:00", msg:"🧘 Fin d'après-midi : une dernière pause pour finir léger." },
 ];
 const URL_APP = "https://mon-poste-et-moi.vercel.app/";
 const FUSEAU = "Europe/Paris";
