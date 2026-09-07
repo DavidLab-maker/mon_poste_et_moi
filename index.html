@@ -4032,7 +4032,10 @@ async function planifierRappelsPush(force){
     if(!r.ok) throw new Error(d.erreur || ("HTTP "+r.status));
     (d.programmes||[]).forEach(p => { if(p.ok && p.id) notifs[p.date+"#"+p.slot] = p.id; });
     Object.keys(notifs).forEach(k => { if(k.slice(0,10) < auj) delete notifs[k]; });   // purge du passé
-    sauver("push_plan", { signature, serie, notifs, jusqu: d.jusqu || plan.jusqu || null, maj: new Date().toISOString(), nb: d.nbProgrammes });
+    // Un envoi a échoué (rafale, réseau) ? On ne considère pas la fenêtre comme acquise : la prochaine
+    // ouverture redemande depuis aujourd'hui — la clé d'idempotence évite tout doublon des rappels déjà créés.
+    const rates = (d.programmes||[]).filter(p => !p.ok).length;
+    sauver("push_plan", { signature, serie, notifs, jusqu: rates ? auj : (d.jusqu || plan.jusqu || null), maj: new Date().toISOString(), nb: d.nbProgrammes, rates });
     if(!plan.signature) toast("Rappels programmés ✅ — une notification de confirmation arrive");
   }catch(e){ console.warn("planification des rappels", e); }
   finally{ _planEnCours = false; ligneVersion(); }

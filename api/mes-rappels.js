@@ -140,11 +140,17 @@ module.exports = async (req, res) => {
       data: { mpm: 1, serie, slot: t.i },                         // marquage : permet l'auto-nettoyage par série
     };
     try{
-      const r = await fetch("https://onesignal.com/api/v1/notifications", { method: "POST", headers: entetes, body: JSON.stringify(corps) });
-      const d = await r.json().catch(() => ({}));
-      return { date: t.ymd, slot: t.i, heure: t.h, id: d.id || null, ok: r.ok && !!d.id, erreurs: d.errors };
+      // OneSignal limite les rafales (429) : jusqu'à 3 essais espacés, pour ne laisser aucun trou dans la semaine
+      let r, d = {};
+      for(let essai = 0; essai < 3; essai++){
+        r = await fetch("https://onesignal.com/api/v1/notifications", { method: "POST", headers: entetes, body: JSON.stringify(corps) });
+        if(r.status !== 429) break;
+        await new Promise(x => setTimeout(x, 700 * (essai + 1)));
+      }
+      d = await r.json().catch(() => ({}));
+      return { date: t.ymd, slot: t.i, heure: t.h, id: d.id || null, ok: r.ok && !!d.id, erreurs: d.errors || (r.ok ? undefined : ["HTTP " + r.status]) };
     }catch(e){ return { date: t.ymd, slot: t.i, heure: t.h, id: null, ok: false, erreurs: [e.message] }; }
-  }, 8);
+  }, 6);
 
   // 3) confirmation immédiate (première activation) : la preuve que ça marche, dans la main
   let confirmation = null;
