@@ -3912,7 +3912,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.87";
+const APP_VERSION = "0.88";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -4055,6 +4055,25 @@ function rappelsDuJourHtml(){
   if(!aVenir.length && !manquants.length) return "<br><span style='font-size:12px'>Aujourd'hui : les 5 rappels sont passés.</span>";
   return `<br><span style="font-size:12px">Aujourd'hui, encore à venir : ${aVenir.join(" · ") || "aucun"}${manquants.length ? " ⚠️ non programmé : "+manquants.join(", ")+" — fermez et rouvrez l'app" : ""}</span>`;
 }
+/* Journal de réception écrit par OneSignalSDKWorker.js (cache « mpm-recus ») : ce que CE téléphone
+   a réellement reçu aujourd'hui, et si une notification a été affichée. Lecture seule, locale. */
+async function lireRecus(){
+  if(!("caches" in window)) return [];
+  try{
+    const c = await caches.open("mpm-recus"), cles = await c.keys(), out = [];
+    for(const k of cles){ const r = await c.match(k); if(r){ try{ out.push(await r.json()); }catch(e){} } }
+    return out.sort((a,b)=>a.t-b.t);
+  }catch(e){ return []; }
+}
+async function afficherRecus(){
+  const el = document.getElementById("rappels-recus"); if(!el) return;
+  const auj = dateLocale();
+  const recus = (await lireRecus()).filter(r => dateLocale(new Date(r.t)) === auj);
+  if(!recus.length){ el.innerHTML = ""; return; }
+  const hm = t => { const d = new Date(t); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); };
+  const items = recus.map(r => hm(r.t) + (r.affichees > 0 ? " ✅" : " ⚠️ reçu sans affichage"));
+  el.innerHTML = `<br><span style="font-size:12px">Reçus aujourd'hui sur ce téléphone : ${items.join(" · ")}</span>`;
+}
 function etatNotifs(){
   ligneVersion();
   const el=document.getElementById("notif-etat"); if(!el) return;
@@ -4064,8 +4083,11 @@ function etatNotifs(){
   if(pushAbonne){
     el.innerHTML="✅ Rappels activés : vos 5 rappels arrivent sur ce téléphone à vos horaires, même app fermée. Touchez le bouton pour les désactiver."
       + rappelsDuJourHtml()
-      + `<br><span style="font-size:11.5px;opacity:.75">Un rappel arrive sans son ? Sur Android, appui long sur la notification → « Par défaut ».</span>`;
+      + `<span id="rappels-recus"></span>`
+      + `<br><span style="font-size:11.5px;opacity:.75">Un rappel arrive sans son ? Sur Android, appui long sur la notification → « Par défaut ». `
+      + `Des rappels programmés n'arrivent pas ? Réglages Android → Applications → Chrome → Batterie → « Non restreinte » (sur Samsung : retirer Chrome des applications en veille profonde).</span>`;
     marquerChip("chip-activer","✅ Rappels activés · désactiver");
+    afficherRecus();
     return;
   }
   if(chip){ chip.classList.remove("ok"); chip.textContent="🔔 Activer les rappels ⭐"; }

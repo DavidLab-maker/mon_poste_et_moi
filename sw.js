@@ -1,6 +1,6 @@
 /* Mon poste & moi — service worker : installation PWA + fonctionnement hors ligne.
    (Les notifications push ont leur propre worker : OneSignalSDKWorker.js) */
-const CACHE = "monposteetmoi-v087";
+const CACHE = "monposteetmoi-v088";
 const FICHIERS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./logo-cygne.png", "./claire-avatar.png"];
 
 self.addEventListener("install", (e) => {
@@ -10,7 +10,7 @@ self.addEventListener("install", (e) => {
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys().then((cles) =>
-      Promise.all(cles.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+      Promise.all(cles.filter((k) => k.startsWith("monposteetmoi-") && k !== CACHE).map((k) => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
 });
