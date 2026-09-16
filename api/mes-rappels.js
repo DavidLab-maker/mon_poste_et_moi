@@ -151,7 +151,7 @@ module.exports = async (req, res) => {
       chrome_web_icon: URL_APP + "icon-192.png",
       firefox_icon: URL_APP + "icon-192.png",
       send_after: new Date(t.quand).toISOString().replace("T", " ").slice(0, 19) + " GMT+0000",
-      ttl: 7200,                                                  // téléphone hors réseau : livré jusqu'à 2 h plus tard
+      ttl: 14400,                                                 // téléphone en veille profonde : livré (en retard) jusqu'à 4 h plus tard plutôt que jamais
       priority: 10,                                               // haute priorité : réveille Chrome même en économie d'énergie
       idempotency_key: uuidDepuis(`${sub}|${serie}|${t.ymd}|${t.i}|${t.h}`),
       data: { mpm: 1, serie, slot: t.i },                         // marquage : permet l'auto-nettoyage par série
