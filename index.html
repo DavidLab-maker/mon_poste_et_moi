@@ -2823,7 +2823,26 @@ if("speechSynthesis" in window){
   voixChoisie = choisirVoix();
   speechSynthesis.onvoiceschanged = ()=>{ voixChoisie = choisirVoix(); };
 }
-function parler(txt){
+/* Voix de Claire : enregistrements MP3 dans voix/<séquence>_<étape>.mp3, listés dans voix/index.json.
+   S'il existe un enregistrement pour la consigne, on le joue ; sinon (ou en cas d'erreur) → synthèse vocale. */
+let VOIX_DISPO = {}, _audioVoix = null;
+fetch("voix/index.json").then(r => r.ok ? r.json() : {}).then(j => { VOIX_DISPO = j || {}; }).catch(() => {});
+function cleVoix(e, idx){ return (e && e.src ? e.src : seanceEnCours) + "_" + (e && e.srcIdx !== undefined ? e.srcIdx : idx); }
+function parler(txt, cle){
+  if(!voixActive) return;
+  stopVoix();
+  if(cle && VOIX_DISPO[cle]){
+    try{
+      const a = new Audio("voix/" + cle + ".mp3");
+      a.onerror = () => { if(_audioVoix === a) parlerTTS(txt); };
+      _audioVoix = a;
+      a.play().catch(() => { if(_audioVoix === a) parlerTTS(txt); });
+      return;
+    }catch(e){}
+  }
+  parlerTTS(txt);
+}
+function parlerTTS(txt){
   if(!voixActive || !("speechSynthesis" in window)) return;
   try{
     speechSynthesis.cancel();
@@ -2837,12 +2856,15 @@ function parler(txt){
     speechSynthesis.speak(u);
   }catch(e){}
 }
-function stopVoix(){ try{ speechSynthesis.cancel(); }catch(e){} }
+function stopVoix(){
+  try{ if(_audioVoix){ _audioVoix.pause(); _audioVoix.src = ""; _audioVoix = null; } }catch(e){}
+  try{ if("speechSynthesis" in window) speechSynthesis.cancel(); }catch(e){}
+}
 function basculerVoix(){
   voixActive = !voixActive; sauver("voix", voixActive);
   document.getElementById("p-voix").textContent = voixActive ? "🔊" : "🔇";
   if(!voixActive) stopVoix();
-  else { const s=SEQUENCES[seanceEnCours]; if(s) parler(s.etapes[etapeIdx].t); }
+  else { const s=SEQUENCES[seanceEnCours]; if(s){ const e=s.etapes[etapeIdx]; parler(e.t, cleVoix(e, etapeIdx)); } }
 }
 
 let secLecture=0;
@@ -2874,7 +2896,7 @@ function demarrerEtape(){
       svgZone(zoneEtape, 24) +
       `<span style="font-weight:800;color:#c0632b;font-size:14px">${zoneEtape.charAt(0).toUpperCase()+zoneEtape.slice(1)}</span>` : "");
   document.getElementById("p-texte").textContent=e.t;
-  parler(e.t); // voix guide : la consigne est lue à voix haute
+  parler(e.t, cleVoix(e, etapeIdx)); // voix guide : la voix de Claire si enregistrée, sinon synthèse
   secRestantes=e.s;
   secLecture=4; // temps de lecture de la consigne avant le décompte
   document.getElementById("p-temps").textContent="📖";
@@ -2932,7 +2954,7 @@ function etapeSuivante(){
     const f = FELICITATIONS[Math.floor(Math.random()*FELICITATIONS.length)];
     document.getElementById("fin-titre").innerHTML = f.t.replace(" !","&nbsp;!");
     document.getElementById("fin-msg").textContent = f.m;
-    parler(f.t+" "+f.m);
+    parler(f.t+" "+f.m, "_fin_" + FELICITATIONS.indexOf(f));
     montrer("s-fin");
     lancerConfettis();
   }
@@ -3912,7 +3934,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.97";
+const APP_VERSION = "0.98";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
