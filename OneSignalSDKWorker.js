@@ -7,7 +7,7 @@ importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
    2) Si, 2,5 s après réception, le SDK OneSignal n'a affiché aucune notification pour ce message
       (ex. : app à l'écran et page qui ne répond pas), le worker l'affiche lui-même, avec la MÊME
       étiquette (tag = App ID) que le SDK : si celui-ci affiche ensuite, il remplace la nôtre — jamais deux. */
-const MPM_WORKER = 4;
+const MPM_WORKER = 5;
 const APP_ID_DEFAUT = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 const ICONE = "/icon-192.png";
 function appId() {
@@ -29,7 +29,9 @@ self.addEventListener("push", (event) => {
   const idOS = (p && p.custom && p.custom.i) || null;
   const quand = Date.now();
   event.waitUntil((async () => {
-    await new Promise((r) => setTimeout(r, 2500));
+    // 700 ms : le SDK affiche en général en moins de 300 ms ; au-delà, on affiche nous-mêmes avant que le téléphone
+    // en veille profonde ne gèle le worker (sinon Chrome montre « ce site a été mis à jour en arrière-plan »)
+    await new Promise((r) => setTimeout(r, 700));
     let liste = [];
     try { liste = await self.registration.getNotifications(); } catch (e) {}
     const dejaAffichee = liste.some((n) => {
@@ -41,10 +43,15 @@ self.addEventListener("push", (event) => {
         const titre = p.title || p.heading || "Mon poste & moi";
         const corps = p.alert || p.body || p.content || "";
         const url = (p.custom && p.custom.u) || p.url || "/";
-        await self.registration.showNotification(titre, {
-          body: corps, icon: p.icon || ICONE, badge: ICONE, tag: appId(), renotify: true,
-          data: { url, mpm: 1, id: idOS },
-        });
+        try {
+          await self.registration.showNotification(titre, {
+            body: corps, icon: p.icon || ICONE, badge: ICONE, tag: appId(), renotify: true,
+            data: { url, mpm: 1, id: idOS },
+          });
+        } catch (e1) {
+          // options minimales en dernier recours (icône inaccessible, etc.)
+          await self.registration.showNotification(titre, { body: corps, tag: appId(), data: { url, mpm: 1, id: idOS } });
+        }
         secours = true;
       } catch (e) {}
     }
