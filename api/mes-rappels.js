@@ -110,7 +110,7 @@ module.exports = async (req, res) => {
         headings: { en: "🔔 Test de rappel", fr: "🔔 Test de rappel" },
         contents: { en: "Si vous lisez ceci, les rappels arrivent bien sur ce téléphone. Petites pauses, grands effets.",
                     fr: "Si vous lisez ceci, les rappels arrivent bien sur ce téléphone. Petites pauses, grands effets." },
-        url: URL_APP, chrome_web_icon: URL_APP + "icon-192.png", firefox_icon: URL_APP + "icon-192.png",
+        url: URL_APP + "?rappel=test", chrome_web_icon: URL_APP + "icon-192.png", firefox_icon: URL_APP + "icon-192.png",
         ttl: 600, priority: 10, data: { mpm: 1, test: 1 },
       })});
       const d = await r.json().catch(() => ({}));
