@@ -3934,7 +3934,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.99";
+const APP_VERSION = "1.00";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -4124,7 +4124,7 @@ async function afficherRecus(){
   const tous = await lireRecus();
   if(!tous.length){ el.innerHTML = ""; return; }
   const hm = t => { const d = new Date(t); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); };
-  const etiq = r => hm(r.t) + (r.affichees > 0 ? (r.secours ? " ✅ (secours)" : " ✅") : " ⚠️ reçu sans affichage");
+  const etiq = r => hm(r.t) + (r.affichees > 0 ? (r.secours ? " ✅ (secours)" : " ✅") : " ⚠️ reçu sans affichage" + (r.erreur ? " (" + r.erreur + ")" : ""));
   // 7 derniers jours, groupés par jour (le plus récent en premier) : permet de voir les jours entiers sans réception
   const parJour = {};
   tous.forEach(r => { const j = dateLocale(new Date(r.t)); (parJour[j] = parJour[j] || []).push(r); });

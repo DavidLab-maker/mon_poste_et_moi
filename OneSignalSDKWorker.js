@@ -7,7 +7,7 @@ importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
    2) Si, 2,5 s après réception, le SDK OneSignal n'a affiché aucune notification pour ce message
       (ex. : app à l'écran et page qui ne répond pas), le worker l'affiche lui-même, avec la MÊME
       étiquette (tag = App ID) que le SDK : si celui-ci affiche ensuite, il remplace la nôtre — jamais deux. */
-const MPM_WORKER = 5;
+const MPM_WORKER = 6;
 const APP_ID_DEFAUT = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 const ICONE = "/icon-192.png";
 function appId() {
@@ -37,29 +37,26 @@ self.addEventListener("push", (event) => {
     const dejaAffichee = liste.some((n) => {
       try { return !!idOS && JSON.stringify(n.data || {}).includes(idOS); } catch (e) { return false; }
     });
-    let secours = false;
+    let secours = false, erreur = null;
     if (!dejaAffichee && p) {
-      try {
-        const titre = p.title || p.heading || "Mon poste & moi";
-        const corps = p.alert || p.body || p.content || "";
-        const url = (p.custom && p.custom.u) || p.url || "/";
+      const titre = p.title || p.heading || "Mon poste & moi";
+      const corps = p.alert || p.body || p.content || "";
+      const url = (p.custom && p.custom.u) || p.url || "/";
+      const options = { body: corps, icon: p.icon || ICONE, badge: ICONE, tag: appId(), renotify: true, data: { url, mpm: 1, id: idOS } };
+      // 3 tentatives (0 s, 1,5 s, 4 s) : en veille profonde, Android peut refuser l'affichage un court instant
+      for (let essai = 0; essai < 3 && !secours; essai++) {
+        if (essai) await new Promise((r) => setTimeout(r, essai === 1 ? 1500 : 2500));
         try {
-          await self.registration.showNotification(titre, {
-            body: corps, icon: p.icon || ICONE, badge: ICONE, tag: appId(), renotify: true,
-            data: { url, mpm: 1, id: idOS },
-          });
-        } catch (e1) {
-          // options minimales en dernier recours (icône inaccessible, etc.)
-          await self.registration.showNotification(titre, { body: corps, tag: appId(), data: { url, mpm: 1, id: idOS } });
-        }
-        secours = true;
-      } catch (e) {}
-    }
+          await self.registration.showNotification(titre, essai < 2 ? options : { body: corps, tag: appId(), data: options.data });
+          secours = true; erreur = null;
+        } catch (e) { erreur = String(e && e.message || e).slice(0, 120); }
+      }
+    } else if (!p) erreur = "charge utile illisible";
     try {
       const c = await caches.open("mpm-recus");
       await c.put("/recus/" + quand, new Response(JSON.stringify({
         t: quand, slot: (a.slot !== undefined ? a.slot : null), serie: a.serie || null,
-        affichees: (dejaAffichee || secours) ? 1 : 0, secours, worker: MPM_WORKER,
+        affichees: (dejaAffichee || secours) ? 1 : 0, secours, erreur, worker: MPM_WORKER,
       }), { headers: { "Content-Type": "application/json" } }));
       const cles = await c.keys();
       if (cles.length > 60) {
