@@ -3912,7 +3912,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.91";
+const APP_VERSION = "0.92";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -3982,7 +3982,8 @@ function ligneVersion(){
   else if(pushAbonne){
     const plan = lire("push_plan");
     etat = "abonné ✅" + (plan && plan.jusqu ? " · programmés jusqu'au " + new Date(plan.jusqu+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short"}) : " · programmation en cours…")
-         + (workerRappels === undefined ? "" : workerRappels === null ? " · worker ancien ⚠️" : " · worker v" + workerRappels);
+         + (workerRappels === undefined ? "" : workerRappels === null ? " · worker ancien ⚠️" : " · worker v" + workerRappels)
+         + (("Notification" in window) ? " · autorisation " + ({granted:"accordée",denied:"REFUSÉE ⚠️",default:"non demandée ⚠️"}[Notification.permission]||Notification.permission) : "");
   }
   else if(pushErreur) etat = "erreur : "+pushErreur;
   else if(!pushPret) etat = "service en chargement…";
@@ -4105,7 +4106,12 @@ function etatNotifs(){
   if(pushErreur){ el.textContent="⚠️ Le service de rappels n'a pas pu démarrer sur cet appareil ("+pushErreur+"). Fermez et rouvrez l'app, puis réessayez."; return; }
   const chip=document.getElementById("chip-activer");
   if(pushAbonne){
-    el.innerHTML="✅ Rappels activés : vos 5 rappels arrivent sur ce téléphone à vos horaires, même app fermée. Touchez le bouton pour les désactiver."
+    // abonné côté OneSignal mais notifications bloquées côté téléphone : c'est LE cas où « tout est livré » et rien ne s'affiche
+    const bloque = ("Notification" in window) && Notification.permission !== "granted";
+    el.innerHTML=(bloque
+        ? `<b style="color:#b5432b">⚠️ Les notifications de l'app sont bloquées par le téléphone</b> (autorisation « ${Notification.permission==="denied"?"refusée":"non demandée"} »). Les rappels partent bien mais Android ne les affiche pas. Réglages Android → Applications → « Mon poste & moi » (ou Chrome) → Notifications → Autoriser, puis rouvrez l'app.<br>`
+        : "")
+      + "✅ Rappels activés : vos 5 rappels arrivent sur ce téléphone à vos horaires, même app fermée. Touchez le bouton pour les désactiver."
       + rappelsDuJourHtml()
       + `<span id="rappels-recus"></span>`
       + `<br><span style="font-size:11.5px;opacity:.75">Un rappel arrive sans son ? Sur Android, appui long sur la notification → « Par défaut ». `
