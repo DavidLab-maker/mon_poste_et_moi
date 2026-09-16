@@ -3912,7 +3912,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.93";
+const APP_VERSION = "0.94";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -3953,6 +3953,8 @@ if(location.protocol === "https:"){
    à chaque nouvelle version de l'app, on force la mise à jour du worker, puis on lui demande sa version
    (message { mpm:"version" } → { mpmWorker:N }) pour l'afficher dans la ligne technique du profil. */
 let workerRappels = undefined;   // undefined = pas encore interrogé, null = pas de réponse (ancien worker)
+let jetonTel = null, jetonSDK = null;   // jeton push réel du navigateur vs jeton connu du SDK OneSignal (doivent être identiques)
+function jetonCourt(t){ if(!t) return "—"; const s = String(t).split("/").pop(); return s.slice(0,6) + "…" + s.slice(-4); }
 async function verifierWorkerRappels(){
   if(!("serviceWorker" in navigator)) return;
   try{
@@ -3960,6 +3962,8 @@ async function verifierWorkerRappels(){
     const reg = regs.find(r => /\/push\/onesignal\//.test(r.scope) || [r.active, r.waiting, r.installing].some(w => w && /OneSignalSDKWorker/.test(w.scriptURL)));
     if(!reg) return;
     if(lire("os_worker_maj") !== APP_VERSION){ try{ await reg.update(); }catch(e){} sauver("os_worker_maj", APP_VERSION); await new Promise(r => setTimeout(r, 1500)); }
+    try{ const ps = await reg.pushManager.getSubscription(); jetonTel = ps ? ps.endpoint : null; }catch(e){}
+    try{ jetonSDK = _OS && _OS.User && _OS.User.PushSubscription ? (_OS.User.PushSubscription.token || null) : null; }catch(e){}
     workerRappels = await new Promise(res => {
       const t = setTimeout(()=>res(null), 2500);
       const h = ev => { if(ev.data && ev.data.mpmWorker !== undefined){ clearTimeout(t); navigator.serviceWorker.removeEventListener("message", h); res(ev.data.mpmWorker); } };
@@ -3983,7 +3987,8 @@ function ligneVersion(){
     const plan = lire("push_plan");
     etat = "abonné ✅" + (plan && plan.jusqu ? " · programmés jusqu'au " + new Date(plan.jusqu+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short"}) : " · programmation en cours…")
          + (workerRappels === undefined ? "" : workerRappels === null ? " · worker ancien ⚠️" : " · worker v" + workerRappels)
-         + (("Notification" in window) ? " · autorisation " + ({granted:"accordée",denied:"REFUSÉE ⚠️",default:"non demandée ⚠️"}[Notification.permission]||Notification.permission) : "");
+         + (("Notification" in window) ? " · autorisation " + ({granted:"accordée",denied:"REFUSÉE ⚠️",default:"non demandée ⚠️"}[Notification.permission]||Notification.permission) : "")
+         + (jetonTel || jetonSDK ? " · jeton téléphone " + jetonCourt(jetonTel) + (jetonSDK && jetonSDK !== jetonTel ? " ≠ SDK " + jetonCourt(jetonSDK) + " ⚠️" : " (= SDK)") : "");
   }
   else if(pushErreur) etat = "erreur : "+pushErreur;
   else if(!pushPret) etat = "service en chargement…";

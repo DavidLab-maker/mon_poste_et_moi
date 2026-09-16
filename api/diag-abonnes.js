@@ -6,6 +6,7 @@ module.exports = async (req, res) => {
   if(!APP_ID || !KEY) return res.status(500).json({ erreur: "variables OneSignal manquantes" });
   const auth = KEY.startsWith("os_v2_") ? `Key ${KEY}` : `Basic ${KEY}`;
   const entetes = { Authorization: auth };
+  const jetonCourt = t => { if(!t) return null; const s = String(t).split("/").pop(); return s.slice(0,6) + "…" + s.slice(-4); };
   const fr = ts => { if(!ts) return null; const n = typeof ts === "string" ? Date.parse(ts) : (ts > 1e12 ? ts : ts * 1000); return isNaN(n) ? ts : new Date(n).toLocaleString("fr-FR", { timeZone: "Europe/Paris" }); };
   try{
     const r = await fetch(`https://onesignal.com/api/v1/notifications?app_id=${APP_ID}&limit=50&kind=1`, { headers: entetes });
@@ -25,7 +26,7 @@ module.exports = async (req, res) => {
       } else fiche.utilisateur = "HTTP " + u.status + " " + JSON.stringify(j).slice(0,160);
       const lp = await fetch(`https://onesignal.com/api/v1/players/${sub}?app_id=${APP_ID}`, { headers: entetes });
       const p = await lp.json().catch(() => ({}));
-      fiche.legacy = lp.ok ? { jeton: String(p.identifier || "").slice(0, 40) + "…", jeton_invalide: p.invalid_identifier, notification_types: p.notification_types,
+      fiche.legacy = lp.ok ? { jeton: jetonCourt(p.identifier), jeton_invalide: p.invalid_identifier, notification_types: p.notification_types,
         derniere_activite: fr(p.last_active), cree: fr(p.created_at), sessions: p.session_count, modele: p.device_model, os: p.device_os, sdk: p.sdk,
         externe: p.external_user_id, tags: p.tags, test_type: p.test_type } : { erreur: "players HTTP " + lp.status };
       const idn = await fetch(`https://api.onesignal.com/apps/${APP_ID}/subscriptions/${sub}/user/identity`, { headers: entetes });

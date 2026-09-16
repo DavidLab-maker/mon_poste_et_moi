@@ -60,7 +60,7 @@ function lireCorps(req){
    à la série conservée (série = null → tout annuler). Protège contre les orphelins (app fermée
    avant d'avoir enregistré les identifiants, ancienne installation…). Parcourt jusqu'à 1000 envois récents. */
 async function annulerEnAttente(APP_ID, entetes, sub, serieGardee){
-  const pages = Array.from({ length: 20 }, (_, k) => k * 50);
+  const pages = Array.from({ length: 6 }, (_, k) => k * 50);   // 300 envois récents suffisent (2 téléphones) et ménagent le quota API OneSignal
   const lots = await parLots(pages, off =>
     fetch(`https://onesignal.com/api/v1/notifications?app_id=${APP_ID}&limit=50&offset=${off}&kind=1`, { headers: entetes })
       .then(r => r.ok ? r.json() : { notifications: [] }).then(d => d.notifications || []).catch(() => []), 5);
