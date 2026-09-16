@@ -3912,7 +3912,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.95";
+const APP_VERSION = "0.96";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -3922,7 +3922,9 @@ if(location.protocol === "https:"){
     try{
       // Le SDK enregistre son propre worker (OneSignalSDKWorker.js, périmètre /push/onesignal/),
       // indépendant de sw.js : aucun conflit avec le mode hors ligne.
-      await OneSignal.init({ appId: ONESIGNAL_APP_ID });
+      // Appui sur un rappel : ramener la fenêtre déjà ouverte de l'app (« origin » + « focus ») et lui transmettre
+      // le clic, plutôt que d'ouvrir une nouvelle fenêtre en arrière-plan ; app fermée → ouverture normale du lien.
+      await OneSignal.init({ appId: ONESIGNAL_APP_ID, notificationClickHandlerMatch: "origin", notificationClickHandlerAction: "focus" });
       _OS = OneSignal; pushPret = true;
       pushAbonne = OneSignal.User.PushSubscription.optedIn === true;
       OneSignal.User.PushSubscription.addEventListener("change", ev=>{

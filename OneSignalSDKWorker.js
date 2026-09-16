@@ -7,7 +7,7 @@ importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
    2) Si, 2,5 s après réception, le SDK OneSignal n'a affiché aucune notification pour ce message
       (ex. : app à l'écran et page qui ne répond pas), le worker l'affiche lui-même, avec la MÊME
       étiquette (tag = App ID) que le SDK : si celui-ci affiche ensuite, il remplace la nôtre — jamais deux. */
-const MPM_WORKER = 3;
+const MPM_WORKER = 4;
 const APP_ID_DEFAUT = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 const ICONE = "/icon-192.png";
 function appId() {
@@ -71,7 +71,13 @@ self.addEventListener("notificationclick", (event) => {
   const url = new URL(d.url || "/", self.location.origin).href;
   event.waitUntil((async () => {
     const cl = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-    for (const c of cl) { if (c.url.startsWith(self.location.origin) && "focus" in c) { try { await c.navigate(url); } catch (e) {} return c.focus(); } }
+    for (const c of cl) {
+      if (!c.url.startsWith(self.location.origin) || !("focus" in c)) continue;
+      // d'abord ramener la fenêtre au premier plan (l'activation utilisateur du clic est encore valable), puis naviguer
+      let w = c; try { w = (await c.focus()) || c; } catch (e) {}
+      try { const n = await w.navigate(url); if (n && "focus" in n) { try { await n.focus(); } catch (e) {} } } catch (e) {}
+      return;
+    }
     return self.clients.openWindow(url);
   })());
 });
