@@ -111,7 +111,9 @@ module.exports = async (req, res) => {
         contents: { en: "Si vous lisez ceci, les rappels arrivent bien sur ce téléphone. Petites pauses, grands effets.",
                     fr: "Si vous lisez ceci, les rappels arrivent bien sur ce téléphone. Petites pauses, grands effets." },
         url: URL_APP + "?rappel=test", chrome_web_icon: URL_APP + "icon-192.png", firefox_icon: URL_APP + "icon-192.png",
-        ttl: 3600, priority: 10, data: { mpm: 1, test: 1 },   // 1 h : si Android retarde la remise, le test arrive en retard plutôt que jamais (le journal le date)
+        ttl: 3600, priority: 10, data: { mpm: 1, test: 1 },
+        // 15 s de délai : le temps de quitter l'app ou de verrouiller l'écran — c'est en arrière-plan que les rappels arrivent
+        send_after: new Date(Date.now() + 15000).toISOString().replace("T", " ").slice(0, 19) + " GMT+0000",   // 1 h : si Android retarde la remise, le test arrive en retard plutôt que jamais (le journal le date)
       })});
       const d = await r.json().catch(() => ({}));
       return res.status(200).json({ test: true, ok: r.ok && !!d.id, id: d.id || null, erreurs: d.errors });

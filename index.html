@@ -3898,9 +3898,9 @@ if("serviceWorker" in navigator && location.protocol==="https:"){
 /* Toast : confirmation visuelle de chaque appui sur un bouton */
 const _toastEl=document.createElement("div"); _toastEl.id="toast"; document.body.appendChild(_toastEl);
 let _toastT=null;
-function toast(msg){
+function toast(msg, duree){
   _toastEl.textContent=msg; _toastEl.classList.add("vu");
-  clearTimeout(_toastT); _toastT=setTimeout(()=>_toastEl.classList.remove("vu"), 2400);
+  clearTimeout(_toastT); _toastT=setTimeout(()=>_toastEl.classList.remove("vu"), duree || 2400);
 }
 function marquerChip(id, txt){
   const c=document.getElementById(id);
@@ -3912,7 +3912,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.96";
+const APP_VERSION = "0.97";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -4237,7 +4237,7 @@ function testerNotif(){
   // locale — si elle n'arrive pas alors que le téléphone est en main, le problème est dans les réglages du téléphone.
   let sid = null; try{ if(pushAbonne && _OS) sid = _OS.User.PushSubscription.id; }catch(e){}
   if(sid){
-    toast("Test envoyé par le serveur… il doit apparaître d'ici quelques secondes, même app fermée");
+    toast("Test envoyé : quittez l'app ou verrouillez l'écran, la notification arrive dans 15 secondes", 6000);
     fetch("/api/mes-rappels", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ sub:sid, test:true }) })
       .then(r=>r.json()).then(d=>{
         if(!d.ok) toast("Le serveur n'a pas pu envoyer le test : " + ((d.erreurs||[]).join(", ") || "erreur inconnue"));
