@@ -3912,7 +3912,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.90";
+const APP_VERSION = "0.91";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -3931,6 +3931,7 @@ if(location.protocol === "https:"){
         if(pushAbonne){ synchroniserTagsPush(); toast("Rappels activés ✅ — même app fermée"); }
       });
       if(pushAbonne) synchroniserTagsPush();
+      verifierWorkerRappels();
       // App déjà ouverte au moment de l'appui sur un rappel : on lance la pause sans rechargement
       OneSignal.Notifications.addEventListener("click", ev=>{
         try{
@@ -3948,6 +3949,26 @@ if(location.protocol === "https:"){
     }catch(e){ pushErreur = String(e && e.message || e).slice(0,220); console.warn("OneSignal indisponible", e); etatNotifs(); }
   });
 }
+/* Le SDK OneSignal ne recharge pas notre OneSignalSDKWorker.js tant que sa propre version ne change pas :
+   à chaque nouvelle version de l'app, on force la mise à jour du worker, puis on lui demande sa version
+   (message { mpm:"version" } → { mpmWorker:N }) pour l'afficher dans la ligne technique du profil. */
+let workerRappels = undefined;   // undefined = pas encore interrogé, null = pas de réponse (ancien worker)
+async function verifierWorkerRappels(){
+  if(!("serviceWorker" in navigator)) return;
+  try{
+    const regs = await navigator.serviceWorker.getRegistrations();
+    const reg = regs.find(r => /\/push\/onesignal\//.test(r.scope) || [r.active, r.waiting, r.installing].some(w => w && /OneSignalSDKWorker/.test(w.scriptURL)));
+    if(!reg) return;
+    if(lire("os_worker_maj") !== APP_VERSION){ try{ await reg.update(); }catch(e){} sauver("os_worker_maj", APP_VERSION); await new Promise(r => setTimeout(r, 1500)); }
+    workerRappels = await new Promise(res => {
+      const t = setTimeout(()=>res(null), 2500);
+      const h = ev => { if(ev.data && ev.data.mpmWorker !== undefined){ clearTimeout(t); navigator.serviceWorker.removeEventListener("message", h); res(ev.data.mpmWorker); } };
+      navigator.serviceWorker.addEventListener("message", h);
+      const w = reg.active || reg.waiting; if(w) w.postMessage({ mpm:"version" }); else res(null);
+    });
+  }catch(e){ workerRappels = null; }
+  ligneVersion();
+}
 /* Relit l'état réel de l'abonnement (utile après l'autorisation, qui arrive de façon asynchrone) */
 function rafraichirEtatPush(){
   try{ if(_OS && _OS.User && _OS.User.PushSubscription) pushAbonne = _OS.User.PushSubscription.optedIn === true; }catch(e){}
@@ -3960,7 +3981,8 @@ function ligneVersion(){
   if(location.protocol!=="https:") etat = "hors ligne (local)";
   else if(pushAbonne){
     const plan = lire("push_plan");
-    etat = "abonné ✅" + (plan && plan.jusqu ? " · programmés jusqu'au " + new Date(plan.jusqu+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short"}) : " · programmation en cours…");
+    etat = "abonné ✅" + (plan && plan.jusqu ? " · programmés jusqu'au " + new Date(plan.jusqu+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short"}) : " · programmation en cours…")
+         + (workerRappels === undefined ? "" : workerRappels === null ? " · worker ancien ⚠️" : " · worker v" + workerRappels);
   }
   else if(pushErreur) etat = "erreur : "+pushErreur;
   else if(!pushPret) etat = "service en chargement…";

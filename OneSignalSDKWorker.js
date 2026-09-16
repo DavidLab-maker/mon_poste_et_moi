@@ -1,11 +1,26 @@
 importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
 
-/* Filet de sécurité + journal de réception (local au téléphone).
+/* Filet de sécurité + journal de réception (local au téléphone). Version MPM_WORKER : l'app l'interroge
+   (message { mpm:"version" }) pour afficher si ce worker est bien à jour.
    1) Chaque push reçu est noté dans le cache « mpm-recus » (heure, créneau, affichage) — lisible par
       l'app dans Mon profil → Rappels. Rien n'est envoyé nulle part.
-   2) Si, 2,5 s après réception, le SDK OneSignal n'a affiché aucune notification pour ce message,
-      le worker l'affiche lui-même (titre, texte, icône, lien du rappel). Un appui ouvre l'app. */
+   2) Si, 2,5 s après réception, le SDK OneSignal n'a affiché aucune notification pour ce message
+      (ex. : app à l'écran et page qui ne répond pas), le worker l'affiche lui-même, avec la MÊME
+      étiquette (tag = App ID) que le SDK : si celui-ci affiche ensuite, il remplace la nôtre — jamais deux. */
+const MPM_WORKER = 3;
+const APP_ID_DEFAUT = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 const ICONE = "/icon-192.png";
+function appId() {
+  try { const m = self.location.search.match(/appId=([0-9a-z-]+)/i); if (m) return m[1]; } catch (e) {}
+  return APP_ID_DEFAUT;
+}
+
+self.addEventListener("message", (event) => {
+  const d = event.data;
+  if (d && d.mpm === "version" && event.source) {
+    try { event.source.postMessage({ mpmWorker: MPM_WORKER }); } catch (e) {}
+  }
+});
 
 self.addEventListener("push", (event) => {
   let p = null;
@@ -18,7 +33,7 @@ self.addEventListener("push", (event) => {
     let liste = [];
     try { liste = await self.registration.getNotifications(); } catch (e) {}
     const dejaAffichee = liste.some((n) => {
-      try { const s = JSON.stringify(n.data || {}); return (idOS && s.includes(idOS)) || (n.tag && idOS && n.tag === "mpm-" + idOS); } catch (e) { return false; }
+      try { return !!idOS && JSON.stringify(n.data || {}).includes(idOS); } catch (e) { return false; }
     });
     let secours = false;
     if (!dejaAffichee && p) {
@@ -27,8 +42,8 @@ self.addEventListener("push", (event) => {
         const corps = p.alert || p.body || p.content || "";
         const url = (p.custom && p.custom.u) || p.url || "/";
         await self.registration.showNotification(titre, {
-          body: corps, icon: p.icon || ICONE, badge: ICONE, tag: "mpm-" + (idOS || quand),
-          data: { url, mpm: 1, id: idOS }, renotify: false,
+          body: corps, icon: p.icon || ICONE, badge: ICONE, tag: appId(), renotify: true,
+          data: { url, mpm: 1, id: idOS },
         });
         secours = true;
       } catch (e) {}
@@ -37,7 +52,7 @@ self.addEventListener("push", (event) => {
       const c = await caches.open("mpm-recus");
       await c.put("/recus/" + quand, new Response(JSON.stringify({
         t: quand, slot: (a.slot !== undefined ? a.slot : null), serie: a.serie || null,
-        affichees: dejaAffichee ? 1 : (secours ? 1 : 0), secours,
+        affichees: (dejaAffichee || secours) ? 1 : 0, secours, worker: MPM_WORKER,
       }), { headers: { "Content-Type": "application/json" } }));
       const cles = await c.keys();
       if (cles.length > 60) {
