@@ -101,6 +101,23 @@ module.exports = async (req, res) => {
   const aujourdhui = dateParis(maintenant);
   const depuis = (/^\d{4}-\d{2}-\d{2}$/.test(b.depuis || "") && b.depuis >= aujourdhui) ? b.depuis : aujourdhui;
 
+  // 0) test immédiat demandé depuis l'app (bouton « Tester une notification ») : un vrai push, pas une
+  //    notification locale — c'est le seul test qui prouve que la chaîne complète fonctionne
+  if(b.test){
+    try{
+      const r = await fetch("https://onesignal.com/api/v1/notifications", { method: "POST", headers: entetes, body: JSON.stringify({
+        app_id: APP_ID, include_subscription_ids: [sub],
+        headings: { en: "🔔 Test de rappel", fr: "🔔 Test de rappel" },
+        contents: { en: "Si vous lisez ceci, les rappels arrivent bien sur ce téléphone. Petites pauses, grands effets.",
+                    fr: "Si vous lisez ceci, les rappels arrivent bien sur ce téléphone. Petites pauses, grands effets." },
+        url: URL_APP, chrome_web_icon: URL_APP + "icon-192.png", firefox_icon: URL_APP + "icon-192.png",
+        ttl: 600, priority: 10, data: { mpm: 1, test: 1 },
+      })});
+      const d = await r.json().catch(() => ({}));
+      return res.status(200).json({ test: true, ok: r.ok && !!d.id, id: d.id || null, erreurs: d.errors });
+    }catch(e){ return res.status(502).json({ test: true, ok: false, erreurs: [e.message] }); }
+  }
+
   // 1) annulations (anciens horaires, ou désactivation) — les erreurs sont ignorées (déjà envoyée, déjà supprimée…)
   const annules = await parLots(annuler, id =>
     fetch(`https://onesignal.com/api/v1/notifications/${id}?app_id=${APP_ID}`, { method: "DELETE", headers: entetes })

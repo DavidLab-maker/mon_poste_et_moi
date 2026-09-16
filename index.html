@@ -3912,7 +3912,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.88";
+const APP_VERSION = "0.89";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -4071,7 +4071,7 @@ async function afficherRecus(){
   const recus = (await lireRecus()).filter(r => dateLocale(new Date(r.t)) === auj);
   if(!recus.length){ el.innerHTML = ""; return; }
   const hm = t => { const d = new Date(t); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); };
-  const items = recus.map(r => hm(r.t) + (r.affichees > 0 ? " ✅" : " ⚠️ reçu sans affichage"));
+  const items = recus.map(r => hm(r.t) + (r.affichees > 0 ? (r.secours ? " ✅ (secours)" : " ✅") : " ⚠️ reçu sans affichage"));
   el.innerHTML = `<br><span style="font-size:12px">Reçus aujourd'hui sur ce téléphone : ${items.join(" · ")}</span>`;
 }
 function etatNotifs(){
@@ -4148,8 +4148,20 @@ function testerNotif(){
   if(c){ c.classList.add("ok"); setTimeout(()=>c.classList.remove("ok"), 1400); }
   if(location.protocol!=="https:"){ toast("Test possible uniquement sur la version en ligne (https)"); return; }
   if(Notification.permission!=="granted"){ activerNotifs(); return; }
-  const ok = montrerNotif("Mon poste & moi", "🔔 Test réussi ! Les rappels fonctionnent sur cet appareil.");
-  toast(ok ? "Notification de test envoyée 🔔" : "Notification impossible sur cet appareil");
+  // Rappels actifs : un VRAI push envoyé par le serveur (même chemin que les rappels), pas une notification
+  // locale — si elle n'arrive pas alors que le téléphone est en main, le problème est dans les réglages du téléphone.
+  let sid = null; try{ if(pushAbonne && _OS) sid = _OS.User.PushSubscription.id; }catch(e){}
+  if(sid){
+    toast("Test envoyé par le serveur… il doit apparaître d'ici quelques secondes, même app fermée");
+    fetch("/api/mes-rappels", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ sub:sid, test:true }) })
+      .then(r=>r.json()).then(d=>{
+        if(!d.ok) toast("Le serveur n'a pas pu envoyer le test : " + ((d.erreurs||[]).join(", ") || "erreur inconnue"));
+        else setTimeout(()=>{ afficherRecus(); }, 6000);
+      }).catch(()=>toast("Serveur injoignable — vérifiez la connexion"));
+    return;
+  }
+  const ok = montrerNotif("Mon poste & moi", "🔔 Test local réussi. Activez les rappels pour tester le vrai envoi.");
+  toast(ok ? "Notification locale affichée 🔔" : "Notification impossible sur cet appareil");
 }
 /* Ouverture depuis un rappel push (« ?rappel=N » dans l'adresse) : les 5 rappels sont les
    5 rituels du jour, dans l'ordre — le rappel N ouvre directement le rituel N du jour. */
