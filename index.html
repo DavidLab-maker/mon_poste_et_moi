@@ -3912,7 +3912,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "0.94";
+const APP_VERSION = "0.95";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -4129,6 +4129,8 @@ function etatNotifs(){
       + `<br><span style="font-size:11.5px;opacity:.75">Un rappel arrive sans son ? Sur Android, appui long sur la notification → « Par défaut ». `
       + `Des rappels programmés n'arrivent pas ? Réglages Android → Applications → Chrome → Batterie → « Non restreinte » (sur Samsung : retirer Chrome des applications en veille profonde).</span>`;
     marquerChip("chip-activer","✅ Rappels activés · désactiver");
+    el.innerHTML += `<br><span class="chip" style="margin-top:8px;display:inline-block" onclick="reinitialiserRappels()">🔁 Réinitialiser la liaison des rappels</span>
+      <span style="font-size:11px;opacity:.7;display:block;margin-top:4px">Si les tests n'arrivent plus alors que tout est « accordé » : repart d'une liaison neuve avec Google. Votre profil est conservé.</span>`;
     afficherRecus();
     return;
   }
@@ -4140,6 +4142,45 @@ function etatNotifs(){
 }
 /* Interrupteur : actifs → on désactive ; inactifs → on active */
 function basculerRappels(){ if(pushAbonne) desactiverRappels(); else activerNotifs(); }
+/* Liaison neuve : annule les rappels programmés pour l'ancien abonnement, supprime l'abonnement push du
+   navigateur, le worker OneSignal et sa base locale, puis recharge — le SDK recrée un abonnement (nouveau
+   jeton Google), l'app le reprogramme. Le profil, le suivi et les réglages ne sont pas touchés. */
+async function reinitialiserRappels(){
+  if(!confirm("Réinitialiser la liaison des rappels avec ce téléphone ?\n\nVotre profil et votre suivi sont conservés. Les rappels seront reprogrammés automatiquement.")) return;
+  toast("Réinitialisation de la liaison…");
+  try{
+    const plan = lire("push_plan") || {}; let sid = null; try{ sid = _OS.User.PushSubscription.id; }catch(e){}
+    if(sid) await fetch("/api/mes-rappels", { method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ sub:sid, annuler:Object.values(plan.notifs||{}).filter(Boolean), desactiver:true }) }).catch(()=>{});
+  }catch(e){}
+  sauver("push_plan", null); sauver("code_onesignal", null); sauver("os_worker_maj", null);
+  try{
+    const regs = await navigator.serviceWorker.getRegistrations();
+    for(const r of regs){
+      const src = r.scope + " " + [r.active, r.waiting, r.installing].map(w => w && w.scriptURL || "").join(" ");
+      if(!/push\/onesignal|OneSignalSDKWorker/.test(src)) continue;
+      try{ const ps = await r.pushManager.getSubscription(); if(ps) await ps.unsubscribe(); }catch(e){}
+      try{ await r.unregister(); }catch(e){}
+    }
+  }catch(e){}
+  for(const nom of ["ONE_SIGNAL_SDK_DB"]){
+    try{ await new Promise(res => { const q = indexedDB.deleteDatabase(nom); q.onsuccess = q.onerror = q.onblocked = () => res(); setTimeout(res, 3000); }); }catch(e){}
+  }
+  try{ Object.keys(localStorage).filter(k => /^onesignal|^os_|OneSignal/i.test(k) && !k.startsWith("eq_")).forEach(k => localStorage.removeItem(k)); }catch(e){}
+  sauver("reinit_rappels", new Date().toISOString());
+  location.reload();
+}
+/* Après une réinitialisation : le SDK recrée l'abonnement si l'autorisation est déjà accordée ; sinon on guide */
+function suiteReinitialisation(){
+  if(!lire("reinit_rappels")) return;
+  sauver("reinit_rappels", null);
+  setTimeout(()=>{
+    navVisible(true); montrerOnglet("profil");
+    if(pushAbonne) toast("Liaison réinitialisée ✅ — nouveau jeton, rappels reprogrammés. Refaites un test.");
+    else if(pushPret && _OS && Notification.permission === "granted"){ activerNotifs(); toast("Liaison réinitialisée — réactivation des rappels en cours…"); }
+    else toast("Liaison réinitialisée — touchez « Activer les rappels »");
+  }, 2500);
+}
 async function desactiverRappels(){
   if(!_OS){ toast("Service de rappels indisponible pour le moment"); return; }
   const plan = lire("push_plan") || {};
@@ -4257,6 +4298,7 @@ document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState=
 verifierRappels();
 etatNotifs();
 ouvrirDepuisRappel();
+suiteReinitialisation();
 </script>
 </body>
 </html>
