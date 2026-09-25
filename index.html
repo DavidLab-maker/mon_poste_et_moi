@@ -3934,7 +3934,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "1.01";
+const APP_VERSION = "1.02";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -3985,15 +3985,26 @@ async function verifierWorkerRappels(){
     const regs = await navigator.serviceWorker.getRegistrations();
     const reg = regs.find(r => /\/push\/onesignal\//.test(r.scope) || [r.active, r.waiting, r.installing].some(w => w && /OneSignalSDKWorker/.test(w.scriptURL)));
     if(!reg) return;
-    if(lire("os_worker_maj") !== APP_VERSION){ try{ await reg.update(); }catch(e){} sauver("os_worker_maj", APP_VERSION); await new Promise(r => setTimeout(r, 1500)); }
+    if(lire("os_worker_maj") !== APP_VERSION){
+      try{ await reg.update(); }catch(e){}
+      sauver("os_worker_maj", APP_VERSION);
+      // attendre la fin de l'installation du nouveau worker (jusqu'à 20 s : il charge le SDK OneSignal depuis le réseau)
+      await new Promise(res => {
+        const w = reg.installing || reg.waiting; if(!w) return res();
+        const t = setTimeout(res, 20000);
+        w.addEventListener("statechange", () => { if(w.state === "activated" || w.state === "redundant"){ clearTimeout(t); setTimeout(res, 300); } });
+      });
+    }
     try{ const ps = await reg.pushManager.getSubscription(); jetonTel = ps ? ps.endpoint : null; }catch(e){}
     try{ jetonSDK = _OS && _OS.User && _OS.User.PushSubscription ? (_OS.User.PushSubscription.token || null) : null; }catch(e){}
-    workerRappels = await new Promise(res => {
-      const t = setTimeout(()=>res(null), 2500);
+    const demander = () => new Promise(res => {
+      const t = setTimeout(()=>{ navigator.serviceWorker.removeEventListener("message", h); res(null); }, 3000);
       const h = ev => { if(ev.data && ev.data.mpmWorker !== undefined){ clearTimeout(t); navigator.serviceWorker.removeEventListener("message", h); res(ev.data.mpmWorker); } };
       navigator.serviceWorker.addEventListener("message", h);
       const w = reg.active || reg.waiting; if(w) w.postMessage({ mpm:"version" }); else res(null);
     });
+    workerRappels = await demander();
+    if(workerRappels === null){ await new Promise(r => setTimeout(r, 3000)); workerRappels = await demander(); }   // 2e chance (worker en cours de démarrage)
   }catch(e){ workerRappels = null; }
   ligneVersion();
 }
