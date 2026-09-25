@@ -1690,7 +1690,7 @@ function montrerOnglet(nom){
   ["accueil","poste","profil"].forEach(n=>{
     document.getElementById("nav-"+n).classList.toggle("actif", n===nom);
   });
-  if(nom==="accueil"){ rendreAccueil(); montrer("s-accueil"); }
+  if(nom==="accueil"){ rendreAccueil(); montrer("s-accueil"); afficherRattrapage(); }
   if(nom==="poste"){ rendrePoste(); montrer("s-poste"); }
   if(nom==="profil"){ rendreProfil(); montrer("s-profil"); rafraichirEtatPush(); }
 }
@@ -2583,7 +2583,7 @@ function rendreAccueil(){
 
   // Le rituel d'abord (c'est l'action !), les suivis et encarts d'info ensuite
   const hRappels = horairesRappels();
-  document.getElementById("programme").innerHTML = htmlRituel + prog.map((x,i)=>{
+  document.getElementById("programme").innerHTML = `<div id="rattrapage"></div>` + htmlRituel + prog.map((x,i)=>{
     const s=SEQUENCES[x.id]; const faite=faites.includes(x.id);
     // l'heure du rappel correspondant, en regard du rituel : les 5 rappels suivent les 5 rituels
     // (le titre est un dégradé « clip text » : on redonne une vraie couleur à l'heure, sinon elle est invisible)
@@ -3936,7 +3936,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "1.05";
+const APP_VERSION = "1.06";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -4135,6 +4135,36 @@ function rappelsDuJourHtml(){
 }
 /* Journal de réception écrit par OneSignalSDKWorker.js (cache « mpm-recus ») : ce que CE téléphone
    a réellement reçu aujourd'hui, et si une notification a été affichée. Lecture seule, locale. */
+/* Rattrapage : un rappel programmé aujourd'hui n'a pas atteint le téléphone (perte silencieuse Android/Google) ?
+   À l'ouverture de l'app, on le signale et on propose la pause manquée — tant que le rituel n'est pas fait
+   et que l'heure suivante n'est pas passée depuis longtemps (fenêtre de 3 h). */
+async function afficherRattrapage(){
+  const el = document.getElementById("rattrapage"); if(!el) return;
+  el.innerHTML = "";
+  if(!pushAbonne || !profil || !estJourTravail(new Date())) return;
+  const plan = lire("push_plan"); if(!plan || !plan.notifs) return;
+  const auj = dateLocale(), h = horairesRappels(), now = Date.now();
+  const recus = (await lireRecus()).filter(r => !r.clic && dateLocale(new Date(r.t)) === auj);
+  const faites = faitesAujourdhui(), prog = programmeDuJour();
+  const manques = [];
+  RAPPELS_DEF.forEach((r, i) => {
+    if(!plan.notifs[auj + "#" + i]) return;                       // ce créneau n'était pas programmé
+    const [hh, mm] = (h[i] || r.t).split(":").map(Number);
+    const d = new Date(); d.setHours(hh, mm, 0, 0); const t = d.getTime();
+    if(now < t + 10*60000 || now > t + 3*3600000) return;         // trop tôt (10 min) ou trop tard (3 h)
+    const recu = recus.some(x => Math.abs(x.t - t) < 90*60000 && (x.slot === null || x.slot === undefined || x.slot === i));
+    if(recu) return;
+    if(prog[i] && faites.includes(prog[i].id)) return;             // rituel déjà fait : rien à rattraper
+    manques.push({ i, heure: h[i] || r.t, id: prog[i] && prog[i].id, moment: prog[i] && prog[i].moment });
+  });
+  if(!manques.length) return;
+  const m = manques[manques.length - 1];
+  if(!m.id || !SEQUENCES[m.id]) return;
+  el.innerHTML = `<div class="carte" style="background:#fff6e8;border:1.5px solid var(--ambre);cursor:pointer;margin-bottom:12px" onclick="lancerSeance('${m.id}')">
+      <b style="font-size:14px">🔔 Le rappel de ${m.heure} ne vous est pas parvenu</b>
+      <p class="sub" style="font-size:12.5px;margin:4px 0 0">Le téléphone n'a rien reçu (perte ponctuelle côté Android). La pause est toujours là : <b>${SEQUENCES[m.id].titre}</b> — touchez pour la faire maintenant ›</p>
+    </div>`;
+}
 async function lireRecus(){
   if(!("caches" in window)) return [];
   try{

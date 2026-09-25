@@ -5,7 +5,7 @@
       passent APRÈS les nôtres et sont neutralisés pour nos notifications (stopImmediatePropagation).
    Un seul worker pour un seul périmètre : deux scripts sur « / » se remplaçaient l'un l'autre, et quand
    l'ancien sw.js (sans gestion du push) était actif, Chrome affichait « ce site a été mis à jour en arrière-plan ». */
-const CACHE = "monposteetmoi-v105";
+const CACHE = "monposteetmoi-v106";
 const FICHIERS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./logo-cygne.png", "./claire-avatar.png"];
 const MPM_WORKER = 9;
 const APP_ID_DEFAUT = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
