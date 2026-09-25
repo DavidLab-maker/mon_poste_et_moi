@@ -3910,7 +3910,9 @@ if(profil){ navVisible(true); montrerOnglet("accueil"); }
 
 /* PWA : actif uniquement une fois l'app hébergée en ligne (HTTPS) — sans effet en local */
 if("serviceWorker" in navigator && location.protocol==="https:"){
-  navigator.serviceWorker.register("sw.js").catch(()=>{});
+  // Un SEUL worker sur « / » : exactement la même adresse que celle qu'enregistre le SDK OneSignal
+  // (sw.js + appId + sdkVersion), sinon les deux enregistrements se remplacent l'un l'autre.
+  navigator.serviceWorker.register("sw.js?appId=71872c50-5f1b-48ea-900a-7fa346a3e5e0&sdkVersion=160610").catch(()=>{});
 }
 
 /* =========================================================
@@ -3934,7 +3936,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "1.04";
+const APP_VERSION = "1.05";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -3946,7 +3948,9 @@ if(location.protocol === "https:"){
       // indépendant de sw.js : aucun conflit avec le mode hors ligne.
       // Appui sur un rappel : ramener la fenêtre déjà ouverte de l'app (« origin » + « focus ») et lui transmettre
       // le clic, plutôt que d'ouvrir une nouvelle fenêtre en arrière-plan ; app fermée → ouverture normale du lien.
-      await OneSignal.init({ appId: ONESIGNAL_APP_ID, notificationClickHandlerMatch: "origin", notificationClickHandlerAction: "focus" });
+      await OneSignal.init({ appId: ONESIGNAL_APP_ID, notificationClickHandlerMatch: "origin", notificationClickHandlerAction: "focus",
+        // le worker OneSignal EST sw.js, sur « / » (voir sw.js) — on l'impose ici, quel que soit le réglage du tableau de bord
+        serviceWorkerOverrideForTypical: true, serviceWorkerPath: "sw.js", serviceWorkerParam: { scope: "/" } });
       _OS = OneSignal; pushPret = true;
       pushAbonne = OneSignal.User.PushSubscription.optedIn === true;
       OneSignal.User.PushSubscription.addEventListener("change", ev=>{
@@ -3984,7 +3988,9 @@ async function verifierWorkerRappels(){
   if(!("serviceWorker" in navigator)) return;
   try{
     const regs = await navigator.serviceWorker.getRegistrations();
-    const reg = regs.find(r => /\/push\/onesignal\//.test(r.scope) || [r.active, r.waiting, r.installing].some(w => w && /OneSignalSDKWorker/.test(w.scriptURL)));
+    // le worker des rappels est sw.js sur « / » (anciens téléphones : OneSignalSDKWorker.js, sur « / » ou /push/onesignal/)
+    const reg = regs.find(r => new URL(r.scope).pathname === "/")
+             || regs.find(r => /\/push\/onesignal\//.test(r.scope) || [r.active, r.waiting, r.installing].some(w => w && /OneSignalSDKWorker/.test(w.scriptURL)));
     // diagnostic lisible dans la ligne technique : chaque enregistrement de worker, son script et son état
     const court = w => w ? (w.scriptURL.split("/").pop().split("?")[0] + ":" + w.state) : "";
     diagSW = regs.map(r => new URL(r.scope).pathname + "→" + [r.installing, r.waiting, r.active].map(court).filter(Boolean).join("|")).join(" ; ") || "aucun worker";
@@ -4200,9 +4206,10 @@ async function reinitialiserRappels(){
     const regs = await navigator.serviceWorker.getRegistrations();
     for(const r of regs){
       const src = r.scope + " " + [r.active, r.waiting, r.installing].map(w => w && w.scriptURL || "").join(" ");
-      if(!/push\/onesignal|OneSignalSDKWorker/.test(src)) continue;
+      // tout enregistrement portant un abonnement push : on le résilie ; les anciens workers OneSignal sont retirés,
+      // sw.js (hors ligne) reste en place et sera réabonné par le SDK au rechargement
       try{ const ps = await r.pushManager.getSubscription(); if(ps) await ps.unsubscribe(); }catch(e){}
-      try{ await r.unregister(); }catch(e){}
+      if(/push\/onesignal|OneSignalSDKWorker/.test(src)){ try{ await r.unregister(); }catch(e){} }
     }
   }catch(e){}
   for(const nom of ["ONE_SIGNAL_SDK_DB"]){
