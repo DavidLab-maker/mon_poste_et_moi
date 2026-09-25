@@ -3934,7 +3934,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "1.03";
+const APP_VERSION = "1.04";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -3977,6 +3977,7 @@ if(location.protocol === "https:"){
    à chaque nouvelle version de l'app, on force la mise à jour du worker, puis on lui demande sa version
    (message { mpm:"version" } → { mpmWorker:N }) pour l'afficher dans la ligne technique du profil. */
 let workerRappels = undefined;   // undefined = pas encore interrogé, null = pas de réponse (ancien worker)
+let diagSW = "";                 // état des workers enregistrés (diagnostic)
 let jetonTel = null, jetonSDK = null;   // jeton push réel du navigateur vs jeton connu du SDK OneSignal (doivent être identiques)
 function jetonCourt(t){ if(!t) return "—"; const s = String(t).split("/").pop(); return s.slice(0,6) + "…" + s.slice(-4); }
 async function verifierWorkerRappels(){
@@ -3984,9 +3985,12 @@ async function verifierWorkerRappels(){
   try{
     const regs = await navigator.serviceWorker.getRegistrations();
     const reg = regs.find(r => /\/push\/onesignal\//.test(r.scope) || [r.active, r.waiting, r.installing].some(w => w && /OneSignalSDKWorker/.test(w.scriptURL)));
-    if(!reg) return;
+    // diagnostic lisible dans la ligne technique : chaque enregistrement de worker, son script et son état
+    const court = w => w ? (w.scriptURL.split("/").pop().split("?")[0] + ":" + w.state) : "";
+    diagSW = regs.map(r => new URL(r.scope).pathname + "→" + [r.installing, r.waiting, r.active].map(court).filter(Boolean).join("|")).join(" ; ") || "aucun worker";
+    if(!reg){ diagSW += " ; OneSignal absent"; ligneVersion(); return; }
     if(lire("os_worker_maj") !== APP_VERSION){
-      try{ await reg.update(); }catch(e){}
+      try{ await reg.update(); diagSW += " ; maj ok"; }catch(e){ diagSW += " ; maj erreur " + String(e && e.message || e).slice(0, 80); }
       sauver("os_worker_maj", APP_VERSION);
       // attendre la fin de l'installation du nouveau worker (jusqu'à 20 s : il charge le SDK OneSignal depuis le réseau)
       await new Promise(res => {
@@ -4024,7 +4028,7 @@ function ligneVersion(){
   else if(pushAbonne){
     const plan = lire("push_plan");
     etat = "abonné ✅" + (plan && plan.jusqu ? " · programmés jusqu'au " + new Date(plan.jusqu+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"short"}) : " · programmation en cours…")
-         + (workerRappels === undefined ? "" : workerRappels === null ? " · worker ancien ⚠️" : " · worker v" + workerRappels)
+         + (workerRappels === undefined ? "" : workerRappels === null ? " · worker ancien ⚠️ [" + diagSW + "]" : " · worker v" + workerRappels)
          + (("Notification" in window) ? " · autorisation " + ({granted:"accordée",denied:"REFUSÉE ⚠️",default:"non demandée ⚠️"}[Notification.permission]||Notification.permission) : "")
          + (jetonTel || jetonSDK ? " · jeton téléphone " + jetonCourt(jetonTel) + (jetonSDK && jetonSDK !== jetonTel ? " ≠ SDK " + jetonCourt(jetonSDK) + " ⚠️" : " (= SDK)") : "");
   }
