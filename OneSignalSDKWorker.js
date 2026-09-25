@@ -6,7 +6,7 @@
    - un appui ramène l'app au premier plan et ouvre le rituel du rappel ;
    - journal local de réception dans le cache « mpm-recus » (lisible dans Mon profil → Rappels) ;
    - l'ouverture est signalée à OneSignal (statistique « ouverts »), au mieux. */
-const MPM_WORKER = 7;
+const MPM_WORKER = 8;
 const APP_ID_DEFAUT = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 const ICONE = "/icon-192.png";
 function appId() {
@@ -104,8 +104,11 @@ self.addEventListener("notificationclose", (event) => {
 /* ---- version du worker, demandée par l'app ---- */
 self.addEventListener("message", (event) => {
   const d = event.data;
-  if (d && d.mpm === "version" && event.source) {
-    try { event.source.postMessage({ mpmWorker: MPM_WORKER }); } catch (e) {}
+  if (d && d.mpm === "version") {
+    const rep = { mpmWorker: MPM_WORKER };
+    // canal direct (MessageChannel) si fourni : ne dépend pas de la file d'attente des messages de la page
+    if (event.ports && event.ports[0]) { try { event.ports[0].postMessage(rep); } catch (e) {} }
+    if (event.source) { try { event.source.postMessage(rep); } catch (e) {} }
   }
 });
 

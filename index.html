@@ -3934,7 +3934,7 @@ function marquerChip(id, txt){
    à OneSignal sous forme d'étiquettes (h0..h4, j0..j6, off) ; chaque matin,
    la tâche Vercel /api/programmer-rappels programme les envois du jour.
    ========================================================= */
-const APP_VERSION = "1.02";
+const APP_VERSION = "1.03";
 const ONESIGNAL_APP_ID = "71872c50-5f1b-48ea-900a-7fa346a3e5e0";
 let pushPret = false, pushAbonne = false, _OS = null, pushErreur = "";
 const iosNonInstalle = /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -3998,10 +3998,13 @@ async function verifierWorkerRappels(){
     try{ const ps = await reg.pushManager.getSubscription(); jetonTel = ps ? ps.endpoint : null; }catch(e){}
     try{ jetonSDK = _OS && _OS.User && _OS.User.PushSubscription ? (_OS.User.PushSubscription.token || null) : null; }catch(e){}
     const demander = () => new Promise(res => {
-      const t = setTimeout(()=>{ navigator.serviceWorker.removeEventListener("message", h); res(null); }, 3000);
-      const h = ev => { if(ev.data && ev.data.mpmWorker !== undefined){ clearTimeout(t); navigator.serviceWorker.removeEventListener("message", h); res(ev.data.mpmWorker); } };
+      const t = setTimeout(()=>{ navigator.serviceWorker.removeEventListener("message", h); res(null); }, 4000);
+      const fini = v => { clearTimeout(t); navigator.serviceWorker.removeEventListener("message", h); res(v); };
+      const h = ev => { if(ev.data && ev.data.mpmWorker !== undefined) fini(ev.data.mpmWorker); };
+      try{ navigator.serviceWorker.startMessages(); }catch(e){}          // sinon les réponses restent en file d'attente
       navigator.serviceWorker.addEventListener("message", h);
-      const w = reg.active || reg.waiting; if(w) w.postMessage({ mpm:"version" }); else res(null);
+      const ch = new MessageChannel(); ch.port1.onmessage = ev => { if(ev.data && ev.data.mpmWorker !== undefined) fini(ev.data.mpmWorker); };
+      const w = reg.active || reg.waiting; if(w) w.postMessage({ mpm:"version" }, [ch.port2]); else res(null);
     });
     workerRappels = await demander();
     if(workerRappels === null){ await new Promise(r => setTimeout(r, 3000)); workerRappels = await demander(); }   // 2e chance (worker en cours de démarrage)
